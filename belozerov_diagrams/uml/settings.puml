@@ -1,0 +1,20 @@
+@startuml
+() User
+User -> UserSettings: changes
+
+class UserSettings {
+    id: Int
+    +username: String
+    +privacy: PrivacyRules
+    +displaySettings: DisplaySettings
+}
+
+class DisplaySettings {
+    +theme: AppTheme
+    +scalingFactor: Double
+    +defaultFilter: Filter
+    +defaultSort: Sort
+}
+
+UserSettings --|> DisplaySettings
+@enduml

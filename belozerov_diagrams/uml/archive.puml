@@ -1,0 +1,27 @@
+@startuml
+class MainColumn {
+    elements: ColumnElem[]
+    +sort: Sort
+    +filter: Filter
+
+    +addElement(elem: ColumnElem)
+    +removeElement(id: Int)
+}
+
+class ArchiveColumn {
+    elements: ColumnElem[]
+}
+
+interface ColumnElem {
+    id: Int
+    creationDate: Date
+    +modifiedDate: Date
+    +isArchived: Boolean
+}
+
+() User
+User -> ColumnElem: moves the element
+
+ColumnElem --> MainColumn: !isArchived
+ColumnElem --> ArchiveColumn: isArchived
+@enduml

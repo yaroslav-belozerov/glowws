@@ -1,0 +1,17 @@
+@startuml
+() User
+
+class FeedbackForm {
+    +title: String
+    +details: String
+    +rating: Int
+    +screenshots: Screenshot[]
+}
+
+interface FeedbackProvider {
+    +sendFeedback(form: FeedbackForm)
+}
+
+User -> FeedbackForm: fills out
+FeedbackProvider --* FeedbackForm
+@enduml

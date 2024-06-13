@@ -1,0 +1,23 @@
+@startuml
+interface Point {
+    content: PointContent
+    +setContent(content: PointContent)
+}
+
+Idea --* Point
+
+abstract PointContent
+
+PointContent ..|> MediaPointContent
+PointContent ..|> URLPointContent
+PointContent ..|> TextPointContent
+PointContent ..|> LinkerPointContent
+
+class Idea {
+    +points: Point[]
+    +keyPointId: Int
+    +addPoint(point: Point)
+    +removePoint(id: Int)
+}
+
+@enduml
