@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.yaabelozerov.glowws.ui.screen.MainScreen
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,28 +21,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             GlowwsTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    MainScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    GlowwsTheme {
-        Greeting("Android")
     }
 }
