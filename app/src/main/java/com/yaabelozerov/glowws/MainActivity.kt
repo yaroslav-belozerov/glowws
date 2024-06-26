@@ -14,8 +14,10 @@ import androidx.room.Room
 import com.yaabelozerov.glowws.data.local.room.Group
 import com.yaabelozerov.glowws.data.local.room.Idea
 import com.yaabelozerov.glowws.data.local.room.IdeaDatabase
+import com.yaabelozerov.glowws.data.local.room.Point
 import com.yaabelozerov.glowws.ui.screen.MainScreen
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 
@@ -28,12 +30,6 @@ class MainActivity : ComponentActivity() {
             applicationContext, IdeaDatabase::class.java, "glowws.db"
         ).build()
         val dao = db.ideaDao()
-
-//        runBlocking {
-//            val id = dao.createGroup(Group(0, "test_group2"))
-//            dao.insert(Idea(0, id, "test_idea"))
-//            dao.insert(Idea(0, id, "test_idea"))
-//        }
 
         setContent {
             GlowwsTheme {
