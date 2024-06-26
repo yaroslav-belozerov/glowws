@@ -27,12 +27,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yaabelozerov.glowws.data.local.room.Group
-import com.yaabelozerov.glowws.data.local.room.Idea
+import com.yaabelozerov.glowws.domain.model.GroupDomainModel
+import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.ui.theme.Typography
 
 @Composable
-fun MainScreen(modifier: Modifier, ideas: Map<Group, List<Idea>> = emptyMap()) {
+fun MainScreen(modifier: Modifier, ideas: Map<GroupDomainModel, List<IdeaDomainModel>> = emptyMap()) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -74,20 +74,21 @@ fun MainScreen(modifier: Modifier, ideas: Map<Group, List<Idea>> = emptyMap()) {
         }
         items(ideas.keys.toList()) { id ->
             if (ideas[id]!!.size == 1) {
-                Idea(ideas[id]!!.first().content)
+                Idea(ideas[id]!!.first().content, ideas[id]!!.first().onClick)
             } else {
-                Project(name = id.name, ideaPreviews = ideas[id]!!.map { it.content })
+                Project(name = id.name, ideas = ideas[id]!!)
             }
         }
     }
 }
 
 @Composable
-fun Idea(previewText: String) {
+fun Idea(previewText: String, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primaryContainer)
+            .clickable { onClick() }
     ) {
         Text(
             text = previewText,
@@ -99,10 +100,12 @@ fun Idea(previewText: String) {
 }
 
 @Composable
-fun NestedIdea(previewText: String) {
+fun NestedIdea(previewText: String, onClick: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
     ) {
         Text(
             text = previewText, modifier = Modifier.padding(8.dp), style = Typography.bodyLarge
@@ -111,7 +114,7 @@ fun NestedIdea(previewText: String) {
 }
 
 @Composable
-fun Project(name: String, ideaPreviews: List<String>) {
+fun Project(name: String, ideas: List<IdeaDomainModel>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,8 +127,8 @@ fun Project(name: String, ideaPreviews: List<String>) {
             text = name, fontSize = 24.sp, fontWeight = FontWeight.SemiBold
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            ideaPreviews.forEach {
-                NestedIdea(previewText = it)
+            ideas.forEach {
+                NestedIdea(previewText = it.content, onClick = it.onClick)
             }
         }
     }
@@ -140,11 +143,13 @@ fun MainScreenPreview() {
 @Preview
 @Composable
 fun IdeaPreview() {
-    Idea(previewText = "Idea preview")
+    Idea(previewText = "Idea preview") {
+
+    }
 }
 
 @Preview
 @Composable
 fun ProjectPreview() {
-    Project("Project!", listOf("Project idea preview!"))
+    Project("Project!", listOf(IdeaDomainModel(0, {}, "Project idea preview!")))
 }
