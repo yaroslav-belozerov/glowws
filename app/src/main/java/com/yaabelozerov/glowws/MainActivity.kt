@@ -43,21 +43,17 @@ import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.ui.screen.IdeaScreen
 import com.yaabelozerov.glowws.ui.screen.MainScreen
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        val db = Room.databaseBuilder(
-            applicationContext, IdeaDatabase::class.java, "glowws.db"
-        ).build()
-        val dao = db.ideaDao()
-        val mapper = IdeaMapper()
 
         setContent {
             val navController = rememberNavController()
@@ -69,34 +65,18 @@ class MainActivity : ComponentActivity() {
                             MainScreen(
                                 modifier = Modifier.padding(
                                     innerPadding
-                                ),
-                                ideas = mapper.toDomainModel(dao.getGroupsWithIdeas()
-                                    .collectAsState(
-                                        initial = emptyMap()
-                                    ).value,
-                                    onClick = { navController.navigate("IdeaScreen/$it") },
-                                    onRemove = {
-                                        GlobalScope.launch {
-                                            withContext(Dispatchers.IO) {
-                                                dao.deleteIdea(
-                                                    it
-                                                )
-                                            }
-                                        }
-                                    })
+                                ), ideas = emptyMap()
                             )
                         }
                         composable(
                             "IdeaScreen/{id}",
                             arguments = listOf(navArgument("id") { type = NavType.LongType })
                         ) { backStackEntry ->
-                            IdeaScreen(modifier = Modifier.padding(
-                                innerPadding
-                            ),
-                                points = dao.getIdeaPoints(backStackEntry.arguments?.getLong("id")!!)
-                                    .collectAsState(
-                                        initial = emptyList()
-                                    ).value.map { PointDomainModel(it.content, it.isMain) })
+                            IdeaScreen(
+                                modifier = Modifier.padding(
+                                    innerPadding
+                                ), points = emptyList()
+                            )
                         }
                         composable("CreateIdea") {
                             val textFieldState = remember { mutableStateOf("") }
@@ -125,13 +105,6 @@ class MainActivity : ComponentActivity() {
                                     }
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Button(onClick = {
-                                        GlobalScope.launch {
-                                            withContext(Dispatchers.IO) {
-                                                dao.createIdeaAndGroup(
-                                                    textFieldState.value
-                                                )
-                                            }
-                                        }
                                         navController.popBackStack()
                                     }, modifier = Modifier.weight(1f)) {
                                         Row(

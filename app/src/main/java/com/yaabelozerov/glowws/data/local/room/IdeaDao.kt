@@ -26,7 +26,7 @@ interface IdeaDao {
     fun getGroupsWithIdeas(): Flow<Map<Group, List<Idea>>>
 
     @Query(
-        "SELECT * FROM `idea` JOIN point ON ideaId = ideaParentId WHERE ideaId = :ideaId"
+        "SELECT * FROM point WHERE ideaParentId = :ideaId"
     )
     fun getIdeaPoints(ideaId: Long): Flow<List<Point>>
 
