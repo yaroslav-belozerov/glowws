@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,7 +15,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -29,11 +27,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yaabelozerov.glowws.data.local.room.IdeaEntity
+import com.yaabelozerov.glowws.data.local.room.Group
+import com.yaabelozerov.glowws.data.local.room.Idea
 import com.yaabelozerov.glowws.ui.theme.Typography
 
 @Composable
-fun MainScreen(modifier: Modifier, ideas: List<IdeaEntity> = emptyList()) {
+fun MainScreen(modifier: Modifier, ideas: Map<Group, List<Idea>> = emptyMap()) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -73,8 +72,12 @@ fun MainScreen(modifier: Modifier, ideas: List<IdeaEntity> = emptyList()) {
                     tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
             }
         }
-        items(ideas) {
-            Idea(previewText = it.content)
+        items(ideas.keys.toList()) { id ->
+            if (ideas[id]!!.size == 1) {
+                Idea(ideas[id]!!.first().content)
+            } else {
+                Project(name = id.name, ideaPreviews = ideas[id]!!.map { it.content })
+            }
         }
     }
 }
@@ -131,7 +134,7 @@ fun Project(name: String, ideaPreviews: List<String>) {
 @Preview
 @Composable
 fun MainScreenPreview() {
-    MainScreen(modifier = Modifier, ideas = (1..5).map { IdeaEntity(0, "Idea preview") })
+    MainScreen(modifier = Modifier, ideas = emptyMap())
 }
 
 @Preview

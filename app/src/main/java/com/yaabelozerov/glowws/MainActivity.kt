@@ -8,17 +8,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.room.Room
-import androidx.room.RoomDatabase
+import com.yaabelozerov.glowws.data.local.room.Group
+import com.yaabelozerov.glowws.data.local.room.Idea
 import com.yaabelozerov.glowws.data.local.room.IdeaDatabase
-import com.yaabelozerov.glowws.data.local.room.IdeaEntity
 import com.yaabelozerov.glowws.ui.screen.MainScreen
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
@@ -27,23 +25,24 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val db = Room.databaseBuilder(
-            applicationContext, IdeaDatabase::class.java, "idea.db"
+            applicationContext, IdeaDatabase::class.java, "glowws.db"
         ).build()
         val dao = db.ideaDao()
 
-        runBlocking {
-            dao.insert(IdeaEntity(0, "First idea"))
-            dao.insert(IdeaEntity(0, "Second idea"))
-            dao.insert(IdeaEntity(0, "Third idea"))
-        }
+//        runBlocking {
+//            val id = dao.createGroup(Group(0, "test_group2"))
+//            dao.insert(Idea(0, id, "test_idea"))
+//            dao.insert(Idea(0, id, "test_idea"))
+//        }
 
         setContent {
             GlowwsTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(modifier = Modifier.padding(innerPadding),
-                        ideas = dao.getAll().collectAsState(
-                            initial = emptyList()
-                        ).value.also { Log.i("MainActivity", "ideas: $it") })
+                    MainScreen(
+                        modifier = Modifier.padding(innerPadding), ideas = dao.getGroupsWithIdeas().collectAsState(
+                            initial = emptyMap()
+                        ).value
+                    )
                 }
             }
         }
