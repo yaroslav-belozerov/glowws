@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
@@ -28,10 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yaabelozerov.glowws.data.local.room.IdeaEntity
 import com.yaabelozerov.glowws.ui.theme.Typography
 
 @Composable
-fun MainScreen(modifier: Modifier) {
+fun MainScreen(modifier: Modifier, ideas: List<IdeaEntity> = emptyList()) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -71,31 +73,42 @@ fun MainScreen(modifier: Modifier) {
                     tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
             }
         }
-        items(3) {
-            Idea()
-        }
-        item {
-            Project()
-        }
-        items(3) {
-            Idea()
+        items(ideas) {
+            Idea(previewText = it.content)
         }
     }
 }
 
 @Composable
-fun Idea() {
+fun Idea(previewText: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primaryContainer)
     ) {
-        Text(text = "Idea!", Modifier.padding(16.dp), style = Typography.bodyLarge)
+        Text(
+            text = previewText,
+            Modifier.padding(16.dp),
+            style = Typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
     }
 }
 
 @Composable
-fun Project() {
+fun NestedIdea(previewText: String) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = previewText, modifier = Modifier.padding(8.dp), style = Typography.bodyLarge
+        )
+    }
+}
+
+@Composable
+fun Project(name: String, ideaPreviews: List<String>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -105,20 +118,11 @@ fun Project() {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Project!", fontSize = 24.sp, fontWeight = FontWeight.SemiBold
+            text = name, fontSize = 24.sp, fontWeight = FontWeight.SemiBold
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            (1..3).forEach {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Project idea!",
-                        modifier = Modifier.padding(8.dp),
-                        style = Typography.bodyLarge
-                    )
-                }
+            ideaPreviews.forEach {
+                NestedIdea(previewText = it)
             }
         }
     }
@@ -127,5 +131,17 @@ fun Project() {
 @Preview
 @Composable
 fun MainScreenPreview() {
-    MainScreen(modifier = Modifier)
+    MainScreen(modifier = Modifier, ideas = (1..5).map { IdeaEntity(0, "Idea preview") })
+}
+
+@Preview
+@Composable
+fun IdeaPreview() {
+    Idea(previewText = "Idea preview")
+}
+
+@Preview
+@Composable
+fun ProjectPreview() {
+    Project("Project!", listOf("Project idea preview!"))
 }
