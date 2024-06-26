@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,7 +35,10 @@ import com.yaabelozerov.glowws.ui.theme.Typography
 
 @Composable
 fun MainScreen(
-    modifier: Modifier, ideas: Map<GroupDomainModel, List<IdeaDomainModel>> = emptyMap()
+    modifier: Modifier,
+    ideas: Map<GroupDomainModel, List<IdeaDomainModel>> = emptyMap(),
+    onAdd: (String) -> Unit,
+    onRemove: (Long) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -81,18 +83,18 @@ fun MainScreen(
             if (ideas[id]!!.size == 1) {
                 Idea(
                     ideas[id]!!.first().content,
-                    ideas[id]!!.first().onClick,
-                    ideas[id]!!.first().onDelete
+                    {},
+                    { onRemove(ideas[id]!!.first().id) },
                 )
             } else {
-                Project(name = id.name, ideas = ideas[id]!!)
+                Project(name = id.name, ideas = ideas[id]!!, onRemove = { id -> onRemove(id) })
             }
         }
     }
 }
 
 @Composable
-fun Idea(previewText: String, onClick: () -> Unit, onDelete: () -> Unit) {
+fun Idea(previewText: String, onClick: () -> Unit, onRemove: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
@@ -100,7 +102,9 @@ fun Idea(previewText: String, onClick: () -> Unit, onDelete: () -> Unit) {
             .clickable { onClick() }) {
         Text(
             text = previewText,
-            Modifier.padding(16.dp).weight(1f),
+            Modifier
+                .padding(16.dp)
+                .weight(1f),
             style = Typography.bodyLarge,
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
@@ -108,14 +112,14 @@ fun Idea(previewText: String, onClick: () -> Unit, onDelete: () -> Unit) {
         Icon(imageVector = Icons.Default.Delete,
             contentDescription = "delete idea icon",
             modifier = Modifier
-                .clickable { onDelete() }
+                .clickable { onRemove() }
                 .size(24.dp))
         Spacer(modifier = Modifier.width(16.dp))
     }
 }
 
 @Composable
-fun NestedIdea(previewText: String, onClick: () -> Unit, onDelete: () -> Unit) {
+fun NestedIdea(previewText: String, onClick: () -> Unit, onRemove: () -> Unit) {
     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
         modifier = Modifier
             .fillMaxWidth()
@@ -128,7 +132,7 @@ fun NestedIdea(previewText: String, onClick: () -> Unit, onDelete: () -> Unit) {
             Icon(imageVector = Icons.Default.Delete,
                 contentDescription = "delete idea icon",
                 modifier = Modifier
-                    .clickable { onDelete() }
+                    .clickable { onRemove() }
                     .size(24.dp))
             Spacer(modifier = Modifier.width(16.dp))
         }
@@ -136,7 +140,7 @@ fun NestedIdea(previewText: String, onClick: () -> Unit, onDelete: () -> Unit) {
 }
 
 @Composable
-fun Project(name: String, ideas: List<IdeaDomainModel>) {
+fun Project(name: String, ideas: List<IdeaDomainModel>, onRemove: (Long) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -150,7 +154,7 @@ fun Project(name: String, ideas: List<IdeaDomainModel>) {
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             ideas.forEach {
-                NestedIdea(previewText = it.content, onClick = it.onClick, onDelete = it.onDelete)
+                NestedIdea(previewText = it.content, onClick = {}, onRemove = { onRemove(it.id) })
             }
         }
     }
@@ -159,7 +163,7 @@ fun Project(name: String, ideas: List<IdeaDomainModel>) {
 @Preview
 @Composable
 fun MainScreenPreview() {
-    MainScreen(modifier = Modifier, ideas = emptyMap())
+    MainScreen(modifier = Modifier, ideas = emptyMap(), {}, {})
 }
 
 @Preview
@@ -171,5 +175,5 @@ fun IdeaPreview() {
 @Preview
 @Composable
 fun ProjectPreview() {
-    Project("Project!", listOf(IdeaDomainModel(0, {}, {}, "Project idea preview!")))
+    Project("Project!", listOf(IdeaDomainModel(0, "Project idea preview!")), {})
 }

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,7 +25,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.currentRecomposeScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -35,25 +35,20 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.room.Room
-import com.yaabelozerov.glowws.data.local.room.Idea
-import com.yaabelozerov.glowws.data.local.room.IdeaDatabase
-import com.yaabelozerov.glowws.domain.model.IdeaMapper
-import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.ui.screen.IdeaScreen
 import com.yaabelozerov.glowws.ui.screen.MainScreen
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
+import com.yaabelozerov.glowws.ui.viewmodel.MainScreenViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val vm: MainScreenViewModel by viewModels()
+        vm.getIdeas()
 
         setContent {
             val navController = rememberNavController()
@@ -65,7 +60,7 @@ class MainActivity : ComponentActivity() {
                             MainScreen(
                                 modifier = Modifier.padding(
                                     innerPadding
-                                ), ideas = emptyMap()
+                                ), ideas = vm.state.collectAsState().value.ideas, onAdd = {  }, onRemove = { id -> vm.removeIdea(id) }
                             )
                         }
                         composable(
@@ -75,7 +70,7 @@ class MainActivity : ComponentActivity() {
                             IdeaScreen(
                                 modifier = Modifier.padding(
                                     innerPadding
-                                ), points = emptyList()
+                                ), points = emptyList(), onRemove = { }
                             )
                         }
                         composable("CreateIdea") {
@@ -105,6 +100,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Button(onClick = {
+                                        vm.addIdea(textFieldState.value)
                                         navController.popBackStack()
                                     }, modifier = Modifier.weight(1f)) {
                                         Row(

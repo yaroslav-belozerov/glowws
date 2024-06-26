@@ -18,7 +18,7 @@ import com.yaabelozerov.glowws.data.local.room.Point
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 
 @Composable
-fun IdeaScreen(modifier: Modifier, points: List<PointDomainModel>) {
+fun IdeaScreen(modifier: Modifier, points: List<PointDomainModel>, onRemove: (Long) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -27,13 +27,13 @@ fun IdeaScreen(modifier: Modifier, points: List<PointDomainModel>) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         for (point in points) {
-            Point(point.content, point.isMain)
+            Point(point.content, point.isMain, onRemove = { onRemove(point.id) })
         }
     }
 }
 
 @Composable
-fun Point(text: String, isMain: Boolean) {
+fun Point(text: String, isMain: Boolean, onRemove: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = if (isMain) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.background)
@@ -49,9 +49,9 @@ fun Point(text: String, isMain: Boolean) {
 fun IdeaScreenPreview() {
     IdeaScreen(
         modifier = Modifier, points = listOf(
-            PointDomainModel("test_point1", false),
-            PointDomainModel("test_point2", true),
-            PointDomainModel("test_point2", false),
-        )
+            PointDomainModel(0, "test_point1", false),
+            PointDomainModel(0, "test_point2", true),
+            PointDomainModel(0, "test_point2", false),
+        ), onRemove = {}
     )
 }
