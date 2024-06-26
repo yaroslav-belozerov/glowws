@@ -35,10 +35,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.yaabelozerov.glowws.ui.screen.IdeaScreen
-import com.yaabelozerov.glowws.ui.screen.MainScreen
+import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreen
+import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
+import com.yaabelozerov.glowws.ui.screen.main.MainScreen
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
-import com.yaabelozerov.glowws.ui.viewmodel.MainScreenViewModel
+import com.yaabelozerov.glowws.ui.screen.main.MainScreenViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -47,8 +48,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val vm: MainScreenViewModel by viewModels()
-        vm.getIdeas()
+        val mvm: MainScreenViewModel by viewModels()
+        val ivm: IdeaScreenViewModel by viewModels()
+        mvm.getIdeas()
 
         setContent {
             val navController = rememberNavController()
@@ -57,21 +59,23 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize(), content = { innerPadding ->
                     NavHost(navController = navController, startDestination = "MainScreen") {
                         composable("MainScreen") {
-                            MainScreen(
-                                modifier = Modifier.padding(
-                                    innerPadding
-                                ), ideas = vm.state.collectAsState().value.ideas, onAdd = {  }, onRemove = { id -> vm.removeIdea(id) }
-                            )
+                            MainScreen(modifier = Modifier.padding(
+                                innerPadding
+                            ), ideas = mvm.state.collectAsState().value.ideas, onClick = { id ->
+                                ivm.getPointsByIdeaId(id)
+                                navController.navigate("IdeaScreen/${id}")
+                            }, onRemove = { id -> mvm.removeIdea(id) })
                         }
                         composable(
                             "IdeaScreen/{id}",
                             arguments = listOf(navArgument("id") { type = NavType.LongType })
                         ) { backStackEntry ->
-                            IdeaScreen(
-                                modifier = Modifier.padding(
-                                    innerPadding
-                                ), points = emptyList(), onRemove = { }
-                            )
+                            IdeaScreen(modifier = Modifier.padding(
+                                innerPadding
+                            ),
+                                points = ivm.state.collectAsState().value.points,
+                                onAdd = { ivm.addPoint(backStackEntry.arguments!!.getLong("id")) }, onSave = { pointId, newText -> ivm.modifyPoint(pointId, newText) },
+                                onRemove = { })
                         }
                         composable("CreateIdea") {
                             val textFieldState = remember { mutableStateOf("") }
@@ -100,7 +104,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Button(onClick = {
-                                        vm.addIdea(textFieldState.value)
+                                        mvm.addIdea(textFieldState.value)
                                         navController.popBackStack()
                                     }, modifier = Modifier.weight(1f)) {
                                         Row(

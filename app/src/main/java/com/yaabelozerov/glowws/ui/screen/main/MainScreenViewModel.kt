@@ -1,6 +1,5 @@
-package com.yaabelozerov.glowws.ui.viewmodel
+package com.yaabelozerov.glowws.ui.screen.main
 
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yaabelozerov.glowws.data.local.room.IdeaDao

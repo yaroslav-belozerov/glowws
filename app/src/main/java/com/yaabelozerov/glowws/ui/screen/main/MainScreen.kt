@@ -1,4 +1,4 @@
-package com.yaabelozerov.glowws.ui.screen
+package com.yaabelozerov.glowws.ui.screen.main
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -37,7 +37,7 @@ import com.yaabelozerov.glowws.ui.theme.Typography
 fun MainScreen(
     modifier: Modifier,
     ideas: Map<GroupDomainModel, List<IdeaDomainModel>> = emptyMap(),
-    onAdd: (String) -> Unit,
+    onClick: (Long) -> Unit,
     onRemove: (Long) -> Unit
 ) {
     LazyColumn(
@@ -48,42 +48,13 @@ fun MainScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(0.dp, 16.dp, 0.dp, 0.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Icon(imageVector = Icons.Default.Delete,
-                    contentDescription = "archive button",
-                    modifier = Modifier
-                        .clickable { Log.i("MainScreen", "Archive button clicked") }
-                        .size(32.dp),
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
-                Text(
-                    text = "Glowws",
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Icon(imageVector = Icons.Default.Settings,
-                    contentDescription = "settings button",
-                    modifier = Modifier
-                        .clickable {
-                            Log.i(
-                                "MainScreen", "Settings button clicked"
-                            )
-                        }
-                        .size(32.dp),
-                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
-            }
+            TitleBar()
         }
         items(ideas.keys.toList()) { id ->
             if (ideas[id]!!.size == 1) {
                 Idea(
                     ideas[id]!!.first().content,
-                    {},
+                    { onClick(ideas[id]!!.first().id) },
                     { onRemove(ideas[id]!!.first().id) },
                 )
             } else {
@@ -157,6 +128,41 @@ fun Project(name: String, ideas: List<IdeaDomainModel>, onRemove: (Long) -> Unit
                 NestedIdea(previewText = it.content, onClick = {}, onRemove = { onRemove(it.id) })
             }
         }
+    }
+}
+
+@Preview
+@Composable
+fun TitleBar() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(0.dp, 16.dp, 0.dp, 0.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        Icon(imageVector = Icons.Default.Delete,
+            contentDescription = "archive button",
+            modifier = Modifier
+                .clickable { Log.i("MainScreen", "Archive button clicked") }
+                .size(32.dp),
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+        Text(
+            text = "Glowws",
+            fontSize = 48.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Icon(imageVector = Icons.Default.Settings,
+            contentDescription = "settings button",
+            modifier = Modifier
+                .clickable {
+                    Log.i(
+                        "MainScreen", "Settings button clicked"
+                    )
+                }
+                .size(32.dp),
+            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
     }
 }
 

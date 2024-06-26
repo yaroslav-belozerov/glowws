@@ -1,9 +1,9 @@
 package com.yaabelozerov.glowws.data.local.room
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -30,8 +30,14 @@ interface IdeaDao {
     )
     fun getIdeaPoints(ideaId: Long): Flow<List<Point>>
 
-    @Insert
-    suspend fun insertPoint(point: Point)
+    @Query("SELECT * FROM point WHERE pointId = :pointId")
+    fun getPoint(pointId: Long): Flow<Point>
+
+    @Upsert
+    suspend fun upsertPoint(point: Point)
+
+    @Query("UPDATE point SET content = :newText WHERE pointId = :pointId")
+    suspend fun updatePoint(pointId: Long, newText: String)
 
     suspend fun createIdeaAndGroup(content: String): Long {
         val groupId = createGroup(Group(0, ""))
