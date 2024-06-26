@@ -1,6 +1,7 @@
 package com.yaabelozerov.glowws.data.local.room
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
@@ -16,6 +17,9 @@ interface IdeaDao {
     @Insert
     suspend fun insertIdea(idea: Idea): Long
 
+    @Query("DELETE FROM `idea` WHERE ideaId = :ideaId")
+    suspend fun deleteIdea(ideaId: Long)
+
     @Query(
         "SELECT * FROM `group` JOIN idea ON groupId = groupParentId"
     )
@@ -28,4 +32,9 @@ interface IdeaDao {
 
     @Insert
     suspend fun insertPoint(point: Point)
+
+    suspend fun createIdeaAndGroup(content: String): Long {
+        val groupId = createGroup(Group(0, ""))
+        return insertIdea(Idea(0, groupId, content))
+    }
 }

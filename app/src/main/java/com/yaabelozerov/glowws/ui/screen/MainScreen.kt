@@ -6,10 +6,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -32,10 +35,13 @@ import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.ui.theme.Typography
 
 @Composable
-fun MainScreen(modifier: Modifier, ideas: Map<GroupDomainModel, List<IdeaDomainModel>> = emptyMap()) {
+fun MainScreen(
+    modifier: Modifier, ideas: Map<GroupDomainModel, List<IdeaDomainModel>> = emptyMap()
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
+            .then(modifier)
             .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -43,7 +49,6 @@ fun MainScreen(modifier: Modifier, ideas: Map<GroupDomainModel, List<IdeaDomainM
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .then(modifier)
                     .padding(0.dp, 16.dp, 0.dp, 0.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -74,7 +79,11 @@ fun MainScreen(modifier: Modifier, ideas: Map<GroupDomainModel, List<IdeaDomainM
         }
         items(ideas.keys.toList()) { id ->
             if (ideas[id]!!.size == 1) {
-                Idea(ideas[id]!!.first().content, ideas[id]!!.first().onClick)
+                Idea(
+                    ideas[id]!!.first().content,
+                    ideas[id]!!.first().onClick,
+                    ideas[id]!!.first().onDelete
+                )
             } else {
                 Project(name = id.name, ideas = ideas[id]!!)
             }
@@ -83,33 +92,46 @@ fun MainScreen(modifier: Modifier, ideas: Map<GroupDomainModel, List<IdeaDomainM
 }
 
 @Composable
-fun Idea(previewText: String, onClick: () -> Unit) {
-    Column(
+fun Idea(previewText: String, onClick: () -> Unit, onDelete: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .clickable { onClick() }
-    ) {
+            .clickable { onClick() }) {
         Text(
             text = previewText,
-            Modifier.padding(16.dp),
+            Modifier.padding(16.dp).weight(1f),
             style = Typography.bodyLarge,
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
+        Spacer(modifier = Modifier.width(16.dp))
+        Icon(imageVector = Icons.Default.Delete,
+            contentDescription = "delete idea icon",
+            modifier = Modifier
+                .clickable { onDelete() }
+                .size(24.dp))
+        Spacer(modifier = Modifier.width(16.dp))
     }
 }
 
 @Composable
-fun NestedIdea(previewText: String, onClick: () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+fun NestedIdea(previewText: String, onClick: () -> Unit, onDelete: () -> Unit) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
-    ) {
-        Text(
-            text = previewText, modifier = Modifier.padding(8.dp), style = Typography.bodyLarge
-        )
+            .clickable { onClick() }) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = previewText, modifier = Modifier.padding(8.dp), style = Typography.bodyLarge
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(imageVector = Icons.Default.Delete,
+                contentDescription = "delete idea icon",
+                modifier = Modifier
+                    .clickable { onDelete() }
+                    .size(24.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+        }
     }
 }
 
@@ -128,7 +150,7 @@ fun Project(name: String, ideas: List<IdeaDomainModel>) {
         )
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             ideas.forEach {
-                NestedIdea(previewText = it.content, onClick = it.onClick)
+                NestedIdea(previewText = it.content, onClick = it.onClick, onDelete = it.onDelete)
             }
         }
     }
@@ -143,13 +165,11 @@ fun MainScreenPreview() {
 @Preview
 @Composable
 fun IdeaPreview() {
-    Idea(previewText = "Idea preview") {
-
-    }
+    Idea(previewText = "Idea preview", {}, {})
 }
 
 @Preview
 @Composable
 fun ProjectPreview() {
-    Project("Project!", listOf(IdeaDomainModel(0, {}, "Project idea preview!")))
+    Project("Project!", listOf(IdeaDomainModel(0, {}, {}, "Project idea preview!")))
 }

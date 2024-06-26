@@ -3,5 +3,6 @@ package com.yaabelozerov.glowws.domain.model
 data class IdeaDomainModel(
     val id: Long,
     val onClick: () -> Unit,
+    val onDelete: () -> Unit,
     val content: String
 )
