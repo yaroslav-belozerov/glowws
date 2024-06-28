@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,7 +28,13 @@ import androidx.compose.ui.unit.dp
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 
 @Composable
-fun IdeaScreen(modifier: Modifier, points: List<PointDomainModel>, onAdd: () -> Unit, onSave: (Long, String) -> Unit, onRemove: (Long) -> Unit) {
+fun IdeaScreen(
+    modifier: Modifier,
+    points: List<PointDomainModel>,
+    onAdd: () -> Unit,
+    onSave: (Long, String, Boolean) -> Unit,
+    onRemove: (Long) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -37,7 +44,10 @@ fun IdeaScreen(modifier: Modifier, points: List<PointDomainModel>, onAdd: () -> 
     ) {
         for (point in points) {
             AddPointLine(onAdd = onAdd)
-            Point(point.content, point.isMain, onSave = { newtext -> onSave(point.id, newtext) }, onRemove = { onRemove(point.id) })
+            Point(point.content,
+                point.isMain,
+                onSave = { newText, isMain -> onSave(point.id, newText, isMain) },
+                onRemove = { onRemove(point.id) })
         }
         AddPointLine(onAdd = onAdd)
     }
@@ -64,21 +74,30 @@ fun AddPointLine(onAdd: () -> Unit) {
 }
 
 @Composable
-fun Point(text: String, isMain: Boolean, onSave: (String) -> Unit, onRemove: () -> Unit) {
+fun Point(text: String, isMain: Boolean, onSave: (String, Boolean) -> Unit, onRemove: () -> Unit) {
     val isBeingModified = remember {
         mutableStateOf(false)
     }
-    val currentText = remember {
-        mutableStateOf(text)
-    }
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { isBeingModified.value = !isBeingModified.value },
-        colors = CardDefaults.cardColors(containerColor = if (isMain) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { isBeingModified.value = !isBeingModified.value },
+        colors = CardDefaults.cardColors(containerColor = if (isMain && !isBeingModified.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer)
     ) {
         if (!isBeingModified.value) Text(
             modifier = Modifier.padding(8.dp), text = text
         ) else Column(Modifier.fillMaxWidth()) {
-            TextField(value = currentText.value, onValueChange = { currentText.value = it }, modifier = Modifier.fillMaxWidth())
+            val currentText = remember {
+                mutableStateOf(text)
+            }
+            val currentMainStatus = remember {
+                mutableStateOf(isMain)
+            }
+            TextField(
+                value = currentText.value,
+                onValueChange = { currentText.value = it },
+                modifier = Modifier.fillMaxWidth()
+            )
             Row(Modifier.fillMaxWidth()) {
                 OutlinedButton(onClick = {
                     isBeingModified.value = false
@@ -93,11 +112,14 @@ fun Point(text: String, isMain: Boolean, onSave: (String) -> Unit, onRemove: () 
                     Text(text = "Delete")
                 }
                 Button(modifier = Modifier.weight(1f), onClick = {
-                    onSave(currentText.value)
+                    onSave(currentText.value, currentMainStatus.value)
                     isBeingModified.value = false
                 }) {
                     Text(text = "Save")
                 }
+            }
+            OutlinedButton(onClick = { currentMainStatus.value = !currentMainStatus.value }) {
+                Text(text = if (currentMainStatus.value) "Set not main" else "Set main")
             }
         }
     }
@@ -110,5 +132,5 @@ fun IdeaScreenPreview() {
         PointDomainModel(0, "test_point1", false),
         PointDomainModel(0, "test_point2", true),
         PointDomainModel(0, "test_point2", false),
-    ), onAdd = {}, onSave = { a,b ->}, onRemove = {})
+    ), onAdd = {}, onSave = { a, b, c -> }, onRemove = {})
 }

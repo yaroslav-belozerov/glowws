@@ -38,9 +38,11 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    fun addIdea(idea: String) {
+    fun addIdea(idea: String, callback: ((Long) -> Unit)? = null) {
         viewModelScope.launch {
-            dao.createIdeaAndGroup(idea)
+            val id = dao.createIdeaAndGroup(idea)
+            callback?.invoke(id)
+            getIdeas()
         }
     }
 }

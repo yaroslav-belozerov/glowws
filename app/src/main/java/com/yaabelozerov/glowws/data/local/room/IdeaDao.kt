@@ -40,7 +40,7 @@ interface IdeaDao {
     suspend fun deletePoint(pointId: Long)
 
     @Query("UPDATE point SET content = :newText WHERE pointId = :pointId")
-    suspend fun updatePoint(pointId: Long, newText: String)
+    suspend fun updatePointContent(pointId: Long, newText: String)
 
     suspend fun createIdeaAndGroup(content: String): Long {
         val groupId = createGroup(Group(0, ""))

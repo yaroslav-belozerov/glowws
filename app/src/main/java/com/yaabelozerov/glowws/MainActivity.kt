@@ -1,7 +1,6 @@
 package com.yaabelozerov.glowws
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -64,8 +63,8 @@ class MainActivity : ComponentActivity() {
                             MainScreen(modifier = Modifier.padding(
                                 innerPadding
                             ), ideas = mvm.state.collectAsState().value.ideas, onClick = { id ->
-                                ivm.getPointsByIdeaId(id)
                                 navController.navigate("IdeaScreen/${id}")
+                                ivm.refreshPoints(id)
                             }, onRemove = { id -> mvm.removeIdea(id) })
                         }
                         composable(
@@ -76,9 +75,20 @@ class MainActivity : ComponentActivity() {
                                 innerPadding
                             ),
                                 points = ivm.state.collectAsState().value.points,
-                                onAdd = { ivm.addPoint(backStackEntry.arguments!!.getLong("id")) },
-                                onSave = { pointId, newText -> ivm.modifyPoint(pointId, newText) },
-                                onRemove = { pointId -> ivm.removePoint(pointId) })
+                                onAdd = {
+                                    ivm.addPoint(backStackEntry.arguments!!.getLong("id")!!)
+                                    ivm.refreshPoints(backStackEntry.arguments!!.getLong("id")!!)
+                                },
+                                onSave = { pointId, newText, isMain ->
+                                    ivm.modifyPoint(
+                                        pointId, newText, isMain
+                                    )
+                                    ivm.refreshPoints(backStackEntry.arguments!!.getLong("id")!!)
+                                },
+                                onRemove = { pointId ->
+                                    ivm.removePoint(pointId)
+                                    ivm.refreshPoints(backStackEntry.arguments!!.getLong("id")!!)
+                                })
                         }
                         composable("CreateIdea") {
                             val textFieldState = remember { mutableStateOf("") }
@@ -127,7 +137,12 @@ class MainActivity : ComponentActivity() {
                     }
                 }, floatingActionButton = {
                     if (navController.currentBackStackEntryAsState().value?.destination?.route == "MainScreen") {
-                        FloatingActionButton(onClick = { navController.navigate("CreateIdea") }) {
+                        FloatingActionButton(onClick = {
+                            mvm.addIdea("", callback = { id ->
+                                ivm.refreshPoints(id)
+                                navController.navigate("IdeaScreen/${id}")
+                            })
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "add idea button"
