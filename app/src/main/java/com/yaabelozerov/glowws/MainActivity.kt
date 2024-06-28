@@ -1,6 +1,7 @@
 package com.yaabelozerov.glowws
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -33,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreen
@@ -124,10 +126,13 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }, floatingActionButton = {
-                    FloatingActionButton(onClick = { navController.navigate("CreateIdea") }) {
-                        Icon(
-                            imageVector = Icons.Default.Add, contentDescription = "add idea button"
-                        )
+                    if (navController.currentBackStackEntryAsState().value?.destination?.route == "MainScreen") {
+                        FloatingActionButton(onClick = { navController.navigate("CreateIdea") }) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "add idea button"
+                            )
+                        }
                     }
                 })
             }
