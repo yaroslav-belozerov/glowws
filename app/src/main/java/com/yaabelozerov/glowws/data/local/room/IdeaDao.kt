@@ -36,6 +36,9 @@ interface IdeaDao {
     @Upsert
     suspend fun upsertPoint(point: Point)
 
+    @Query("DELETE FROM point WHERE pointId = :pointId")
+    suspend fun deletePoint(pointId: Long)
+
     @Query("UPDATE point SET content = :newText WHERE pointId = :pointId")
     suspend fun updatePoint(pointId: Long, newText: String)
 

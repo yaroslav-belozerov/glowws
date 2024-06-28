@@ -74,8 +74,9 @@ class MainActivity : ComponentActivity() {
                                 innerPadding
                             ),
                                 points = ivm.state.collectAsState().value.points,
-                                onAdd = { ivm.addPoint(backStackEntry.arguments!!.getLong("id")) }, onSave = { pointId, newText -> ivm.modifyPoint(pointId, newText) },
-                                onRemove = { })
+                                onAdd = { ivm.addPoint(backStackEntry.arguments!!.getLong("id")) },
+                                onSave = { pointId, newText -> ivm.modifyPoint(pointId, newText) },
+                                onRemove = { pointId -> ivm.removePoint(pointId) })
                         }
                         composable("CreateIdea") {
                             val textFieldState = remember { mutableStateOf("") }

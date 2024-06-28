@@ -46,4 +46,10 @@ class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewMo
             dao.updatePoint(pointId, newText)
         }
     }
+
+    fun removePoint(pointId: Long) {
+        viewModelScope.launch {
+            dao.deletePoint(pointId)
+        }
+    }
 }

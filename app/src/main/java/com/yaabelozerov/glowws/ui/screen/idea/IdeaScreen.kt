@@ -15,6 +15,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -47,7 +48,7 @@ fun AddPointLine(onAdd: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(16.dp, 4.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(
@@ -76,16 +77,22 @@ fun Point(text: String, isMain: Boolean, onSave: (String) -> Unit, onRemove: () 
     ) {
         if (!isBeingModified.value) Text(
             modifier = Modifier.padding(8.dp), text = text
-        ) else Column {
-            TextField(value = currentText.value, onValueChange = { currentText.value = it })
-            Row {
-                Button(onClick = {
+        ) else Column(Modifier.fillMaxWidth()) {
+            TextField(value = currentText.value, onValueChange = { currentText.value = it }, modifier = Modifier.fillMaxWidth())
+            Row(Modifier.fillMaxWidth()) {
+                OutlinedButton(onClick = {
                     isBeingModified.value = false
                     currentText.value = text
                 }) {
                     Text(text = "Cancel")
                 }
-                Button(onClick = {
+                OutlinedButton(onClick = {
+                    onRemove()
+                    isBeingModified.value = false
+                }) {
+                    Text(text = "Delete")
+                }
+                Button(modifier = Modifier.weight(1f), onClick = {
                     onSave(currentText.value)
                     isBeingModified.value = false
                 }) {
