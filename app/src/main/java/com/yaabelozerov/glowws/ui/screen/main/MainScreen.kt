@@ -35,7 +35,7 @@ import com.yaabelozerov.glowws.ui.theme.Typography
 
 @Composable
 fun MainScreen(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     ideas: Map<GroupDomainModel, List<IdeaDomainModel>> = emptyMap(),
     onClick: (Long) -> Unit,
     onRemove: (Long) -> Unit
@@ -47,9 +47,6 @@ fun MainScreen(
             .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item {
-            TitleBar()
-        }
         items(ideas.keys.toList()) { id ->
             if (ideas[id]!!.size == 1) {
                 Idea(
@@ -133,11 +130,11 @@ fun Project(name: String, ideas: List<IdeaDomainModel>, onRemove: (Long) -> Unit
 
 @Preview
 @Composable
-fun TitleBar() {
+fun TitleBar(modifier: Modifier = Modifier) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(0.dp, 16.dp, 0.dp, 0.dp),
+            .padding(0.dp, 0.dp, 0.dp, 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {

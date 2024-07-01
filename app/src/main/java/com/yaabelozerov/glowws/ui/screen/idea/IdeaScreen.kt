@@ -1,9 +1,12 @@
 package com.yaabelozerov.glowws.ui.screen.idea
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -60,6 +63,7 @@ fun IdeaScreen(
                 point.isMain,
                 onSave = { newText, isMain -> onSave(point.id, newText, isMain) },
                 onRemove = { onRemove(point.id) })
+            Spacer(modifier = Modifier.height(8.dp))
             AddPointLine(onAdd = onAdd)
         }
     }
@@ -85,17 +89,17 @@ fun AddPointLine(onAdd: () -> Unit) {
 
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun Point(text: String, isMain: Boolean, onSave: (String, Boolean) -> Unit, onRemove: () -> Unit) {
     val isBeingModified = remember {
-        mutableStateOf(false)
+        mutableStateOf(text.isBlank())
     }
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { isBeingModified.value = !isBeingModified.value },
-        colors = CardDefaults.cardColors(containerColor = if (isMain && !isBeingModified.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer)
-    ) {
+    Card(modifier = Modifier
+        .fillMaxWidth()
+        .clickable { isBeingModified.value = !isBeingModified.value }
+        .animateContentSize(),
+        colors = CardDefaults.cardColors(containerColor = if (isMain && !isBeingModified.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer)) {
         if (!isBeingModified.value) Text(
             modifier = Modifier.padding(8.dp), text = text
         ) else Column(Modifier.fillMaxWidth()) {
@@ -110,7 +114,12 @@ fun Point(text: String, isMain: Boolean, onSave: (String, Boolean) -> Unit, onRe
                 onValueChange = { currentText.value = it },
                 modifier = Modifier.fillMaxWidth()
             )
-            Row(Modifier.fillMaxWidth()) {
+            FlowRow(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 OutlinedButton(onClick = {
                     isBeingModified.value = false
                 }) {
@@ -118,19 +127,19 @@ fun Point(text: String, isMain: Boolean, onSave: (String, Boolean) -> Unit, onRe
                 }
                 OutlinedButton(onClick = {
                     onRemove()
-//                    isBeingModified.value = false
                 }) {
-                    Text(text = "Delete")
+                    Text(text = "Remove")
                 }
+                OutlinedButton(onClick = { currentMainStatus.value = !currentMainStatus.value }) {
+                    Text(text = if (currentMainStatus.value) "Set as non-key" else "Set as key")
+                }
+                Spacer(modifier = Modifier.weight(1f))
                 Button(modifier = Modifier.weight(1f), onClick = {
                     onSave(currentText.value, currentMainStatus.value)
                     isBeingModified.value = false
                 }) {
                     Text(text = "Save")
                 }
-            }
-            OutlinedButton(onClick = { currentMainStatus.value = !currentMainStatus.value }) {
-                Text(text = if (currentMainStatus.value) "Set not main" else "Set main")
             }
         }
     }

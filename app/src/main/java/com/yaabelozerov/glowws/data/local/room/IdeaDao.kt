@@ -50,8 +50,19 @@ interface IdeaDao {
         return insertIdea(Idea(0, groupId, content))
     }
 
+    @Query("SELECT groupParentId FROM idea WHERE ideaId = :ideaId")
+    suspend fun getGroupByIdea(ideaId: Long): Long
+
+    @Query("SELECT * FROM idea WHERE groupParentId = :groupId")
+    suspend fun getAllIdeasFromGroup(groupId: Long): List<Idea>
+
     suspend fun deleteIdeaAndPoints(ideaId: Long) {
+        val groupId = getGroupByIdea(ideaId)
         deleteIdea(ideaId)
         deleteIdeaPoints(ideaId)
+        if (getAllIdeasFromGroup(groupId).isEmpty()) deleteGroup(groupId)
     }
+
+    @Query("DELETE FROM `group` WHERE groupId = :groupId")
+    suspend fun deleteGroup(groupId: Long)
 }

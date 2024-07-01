@@ -1,7 +1,5 @@
 package com.yaabelozerov.glowws.ui.screen.idea
 
-import android.util.Log
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
@@ -21,16 +19,17 @@ import javax.inject.Inject
 
 @HiltViewModel
 class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewModel() {
-    private var _state = MutableStateFlow(emptyList<PointDomainModel>())
-    val state = _state.asStateFlow()
+    private var _points = MutableStateFlow(emptyList<PointDomainModel>())
+    val points = _points.asStateFlow()
 
     fun refreshPoints(ideaId: Long) {
         viewModelScope.launch {
-            dao.getIdeaPoints(ideaId).flowOn(Dispatchers.IO).distinctUntilChanged().collectLatest { points ->
-                _state.update {
-                    points.map { PointDomainModel(it.pointId, it.content, it.isMain) }.also { Log.i("IdeaScreen", it.toString()) }
+            dao.getIdeaPoints(ideaId).flowOn(Dispatchers.IO).distinctUntilChanged()
+                .collectLatest { points ->
+                    _points.update {
+                        points.map { PointDomainModel(it.pointId, it.content, it.isMain) }
+                    }
                 }
-            }
         }
     }
 
