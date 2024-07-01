@@ -30,7 +30,7 @@ class MainScreenViewModel @Inject constructor(
     fun removeIdea(ideaId: Long) {
         viewModelScope.launch {
             try {
-                dao.deleteIdea(ideaId)
+                dao.deleteIdeaAndPoints(ideaId)
                 getIdeas()
             } catch (e: Error) {
                 e.printStackTrace()

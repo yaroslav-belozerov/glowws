@@ -1,6 +1,7 @@
 package com.yaabelozerov.glowws
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -74,73 +75,29 @@ class MainActivity : ComponentActivity() {
                             IdeaScreen(modifier = Modifier.padding(
                                 innerPadding
                             ),
-                                points = ivm.state.collectAsState().value.points,
+                                points = ivm.state.collectAsState().value.also { Log.d("CURRENT PTS", it.toString()) },
+                                onBack = {
+                                    navController.navigate("MainScreen")
+                                },
                                 onAdd = {
-                                    ivm.addPoint(backStackEntry.arguments!!.getLong("id")!!)
-                                    ivm.refreshPoints(backStackEntry.arguments!!.getLong("id")!!)
+                                    ivm.addPoint(backStackEntry.arguments!!.getLong("id"))
                                 },
                                 onSave = { pointId, newText, isMain ->
                                     ivm.modifyPoint(
                                         pointId, newText, isMain
                                     )
-                                    ivm.refreshPoints(backStackEntry.arguments!!.getLong("id")!!)
                                 },
                                 onRemove = { pointId ->
                                     ivm.removePoint(pointId)
-                                    ivm.refreshPoints(backStackEntry.arguments!!.getLong("id")!!)
                                 })
-                        }
-                        composable("CreateIdea") {
-                            val textFieldState = remember { mutableStateOf("") }
-                            Column(
-                                modifier = Modifier
-                                    .padding(innerPadding)
-                                    .padding(16.dp)
-                                    .fillMaxSize()
-                            ) {
-                                TextField(
-                                    value = textFieldState.value,
-                                    onValueChange = { textFieldState.value = it },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Row {
-                                    OutlinedButton(onClick = {
-                                        navController.popBackStack()
-                                    }) {
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(text = "Cancel")
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Button(onClick = {
-                                        mvm.addIdea(textFieldState.value)
-                                        navController.popBackStack()
-                                    }, modifier = Modifier.weight(1f)) {
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(text = "Save")
-                                            Icon(
-                                                imageVector = Icons.Default.Check,
-                                                contentDescription = "save idea button"
-                                            )
-                                        }
-                                    }
-                                }
-                            }
                         }
                     }
                 }, floatingActionButton = {
                     if (navController.currentBackStackEntryAsState().value?.destination?.route == "MainScreen") {
                         FloatingActionButton(onClick = {
                             mvm.addIdea("", callback = { id ->
-                                ivm.refreshPoints(id)
                                 navController.navigate("IdeaScreen/${id}")
+                                ivm.refreshPoints(id)
                             })
                         }) {
                             Icon(

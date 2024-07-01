@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -31,25 +34,34 @@ import com.yaabelozerov.glowws.domain.model.PointDomainModel
 fun IdeaScreen(
     modifier: Modifier,
     points: List<PointDomainModel>,
+    onBack: () -> Unit,
     onAdd: () -> Unit,
     onSave: (Long, String, Boolean) -> Unit,
     onRemove: (Long) -> Unit
 ) {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
             .then(modifier),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        for (point in points) {
-            AddPointLine(onAdd = onAdd)
+        item {
+            Row {
+                Button(onClick = onBack) {
+                    Icon(imageVector = Icons.Default.Close, contentDescription = "back button")
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                AddPointLine(onAdd = onAdd)
+            }
+        }
+        items(points) { point ->
             Point(point.content,
                 point.isMain,
                 onSave = { newText, isMain -> onSave(point.id, newText, isMain) },
                 onRemove = { onRemove(point.id) })
+            AddPointLine(onAdd = onAdd)
         }
-        AddPointLine(onAdd = onAdd)
     }
 }
 
@@ -101,13 +113,12 @@ fun Point(text: String, isMain: Boolean, onSave: (String, Boolean) -> Unit, onRe
             Row(Modifier.fillMaxWidth()) {
                 OutlinedButton(onClick = {
                     isBeingModified.value = false
-                    currentText.value = text
                 }) {
                     Text(text = "Cancel")
                 }
                 OutlinedButton(onClick = {
                     onRemove()
-                    isBeingModified.value = false
+//                    isBeingModified.value = false
                 }) {
                     Text(text = "Delete")
                 }
@@ -132,5 +143,5 @@ fun IdeaScreenPreview() {
         PointDomainModel(0, "test_point1", false),
         PointDomainModel(0, "test_point2", true),
         PointDomainModel(0, "test_point2", false),
-    ), onAdd = {}, onSave = { a, b, c -> }, onRemove = {})
+    ), onBack = {}, onAdd = {}, onSave = { a, b, c -> }, onRemove = {})
 }

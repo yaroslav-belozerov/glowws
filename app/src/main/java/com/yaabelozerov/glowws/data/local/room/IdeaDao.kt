@@ -34,10 +34,13 @@ interface IdeaDao {
     fun getPoint(pointId: Long): Flow<Point>
 
     @Upsert
-    suspend fun upsertPoint(point: Point)
+    suspend fun upsertPoint(point: Point): Long
 
     @Query("DELETE FROM point WHERE pointId = :pointId")
     suspend fun deletePoint(pointId: Long)
+
+    @Query("DELETE FROM point WHERE ideaParentId = :ideaId")
+    suspend fun deleteIdeaPoints(ideaId: Long)
 
     @Query("UPDATE point SET content = :newText WHERE pointId = :pointId")
     suspend fun updatePointContent(pointId: Long, newText: String)
@@ -45,5 +48,10 @@ interface IdeaDao {
     suspend fun createIdeaAndGroup(content: String): Long {
         val groupId = createGroup(Group(0, ""))
         return insertIdea(Idea(0, groupId, content))
+    }
+
+    suspend fun deleteIdeaAndPoints(ideaId: Long) {
+        deleteIdea(ideaId)
+        deleteIdeaPoints(ideaId)
     }
 }
