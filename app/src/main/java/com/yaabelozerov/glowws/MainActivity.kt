@@ -49,9 +49,13 @@ class MainActivity : ComponentActivity() {
                             Column(Modifier.padding(innerPadding)) {
                                 TitleBar()
                                 MainScreen(ideas = mvm.state.collectAsState().value.ideas,
+                                    onSave = { id, text -> mvm.modifyGroupName(id, text) },
                                     onClick = { id ->
                                         navController.navigate("IdeaScreen/${id}")
                                         ivm.refreshPoints(id)
+                                    },
+                                    onAddToGroup = { groupId ->
+                                        mvm.addIdeaToGroup("", groupId)
                                     },
                                     onRemove = { id -> mvm.removeIdea(id) })
                             }
@@ -78,7 +82,7 @@ class MainActivity : ComponentActivity() {
                 }, floatingActionButton = {
                     if (navController.currentBackStackEntryAsState().value?.destination?.route == "MainScreen") {
                         FloatingActionButton(onClick = {
-                            mvm.addIdea("", callback = { id ->
+                            mvm.addNewIdea("", callback = { id ->
                                 navController.navigate("IdeaScreen/${id}")
                                 ivm.refreshPoints(id)
                             })

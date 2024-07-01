@@ -2,6 +2,7 @@ package com.yaabelozerov.glowws.ui.screen.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yaabelozerov.glowws.data.local.room.Idea
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.domain.model.IdeaMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,11 +39,23 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    fun addIdea(idea: String, callback: ((Long) -> Unit)? = null) {
+    fun addNewIdea(content: String, callback: ((Long) -> Unit)? = null) {
         viewModelScope.launch {
-            val id = dao.createIdeaAndGroup(idea)
+            val id = dao.createIdeaAndGroup(content)
             callback?.invoke(id)
             getIdeas()
+        }
+    }
+
+    fun addIdeaToGroup(content: String, groupId: Long) {
+        viewModelScope.launch {
+            dao.insertIdea(Idea(0, groupId, content))
+        }
+    }
+
+    fun modifyGroupName(groupId: Long, newName: String) {
+        viewModelScope.launch {
+            dao.updateGroupName(groupId, newName)
         }
     }
 }

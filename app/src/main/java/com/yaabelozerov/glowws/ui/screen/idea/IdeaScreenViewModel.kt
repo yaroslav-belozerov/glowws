@@ -35,7 +35,7 @@ class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewMo
 
     fun addPoint(ideaId: Long) {
         viewModelScope.launch {
-            dao.upsertPoint(
+            dao.upsertPointUpdateIdea(
                 Point(pointId = 0, ideaParentId = ideaId, content = "", type = 0, isMain = false)
             )
         }
@@ -44,7 +44,7 @@ class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewMo
     fun modifyPoint(pointId: Long, content: String? = null, isMain: Boolean? = null) {
         viewModelScope.launch {
             val point = dao.getPoint(pointId).first()
-            dao.upsertPoint(
+            dao.upsertPointUpdateIdea(
                 point.copy(
                     content = content ?: point.content, isMain = isMain ?: point.isMain
                 )

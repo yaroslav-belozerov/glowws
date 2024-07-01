@@ -12,7 +12,7 @@ class IdeaMapper {
         for ((key, value) in mp) {
             out[GroupDomainModel(key.groupId, key.name)] = value.map {
                 IdeaDomainModel(
-                    it.ideaId, it.content
+                    it.ideaId, it.groupParentId, it.content
                 )
             }
         }

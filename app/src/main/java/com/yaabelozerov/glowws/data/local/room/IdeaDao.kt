@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 @Dao
 interface IdeaDao {
@@ -30,11 +31,27 @@ interface IdeaDao {
     )
     fun getIdeaPoints(ideaId: Long): Flow<List<Point>>
 
+    @Query("UPDATE idea SET content = :content WHERE ideaId = :ideaId")
+    suspend fun modifyIdeaContent(ideaId: Long, content: String)
+
     @Query("SELECT * FROM point WHERE pointId = :pointId")
     fun getPoint(pointId: Long): Flow<Point>
 
     @Upsert
     suspend fun upsertPoint(point: Point): Long
+
+    suspend fun upsertPointUpdateIdea(point: Point): Long {
+        val newPointId = upsertPoint(point)
+        updateIdeaContentFromPoints(point.ideaParentId)
+        return newPointId
+    }
+
+    suspend fun updateIdeaContentFromPoints(ideaId: Long) {
+        val pts = getIdeaPoints(ideaId).first()
+        val content: String =
+            pts.firstOrNull { it.isMain }?.content ?: (pts.firstOrNull()?.content ?: "")
+        modifyIdeaContent(ideaId, content)
+    }
 
     @Query("DELETE FROM point WHERE pointId = :pointId")
     suspend fun deletePoint(pointId: Long)
@@ -65,4 +82,7 @@ interface IdeaDao {
 
     @Query("DELETE FROM `group` WHERE groupId = :groupId")
     suspend fun deleteGroup(groupId: Long)
+
+    @Query("UPDATE `group` SET name = :newName WHERE groupId = :groupId")
+    suspend fun updateGroupName(groupId: Long, newName: String)
 }

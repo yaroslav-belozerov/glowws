@@ -15,14 +15,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -37,7 +42,9 @@ import com.yaabelozerov.glowws.ui.theme.Typography
 fun MainScreen(
     modifier: Modifier = Modifier,
     ideas: Map<GroupDomainModel, List<IdeaDomainModel>> = emptyMap(),
+    onSave: (Long, String) -> Unit,
     onClick: (Long) -> Unit,
+    onAddToGroup: (Long) -> Unit,
     onRemove: (Long) -> Unit
 ) {
     LazyColumn(
@@ -47,22 +54,27 @@ fun MainScreen(
             .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(ideas.keys.toList()) { id ->
-            if (ideas[id]!!.size == 1) {
+        items(ideas.keys.toList()) { proj ->
+            if (ideas[proj]!!.size == 1) {
                 Idea(
-                    ideas[id]!!.first().content,
-                    { onClick(ideas[id]!!.first().id) },
-                    { onRemove(ideas[id]!!.first().id) },
+                    ideas[proj]!!.first().content,
+                    { onClick(ideas[proj]!!.first().id) },
+                    { onAddToGroup(ideas[proj]!!.first().groupId) },
+                    { onRemove(ideas[proj]!!.first().id) },
                 )
             } else {
-                Project(name = id.name, ideas = ideas[id]!!, onRemove = { id -> onRemove(id) })
+                Project(name = proj.name,
+                    ideas = ideas[proj]!!,
+                    onSave = { newName -> onSave(proj.id, newName) },
+                    onClickIdea = { id -> onClick(id) },
+                    onRemove = { id -> onRemove(id) })
             }
         }
     }
 }
 
 @Composable
-fun Idea(previewText: String, onClick: () -> Unit, onRemove: () -> Unit) {
+fun Idea(previewText: String, onClick: () -> Unit, onAddToGroup: () -> Unit, onRemove: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
@@ -76,6 +88,12 @@ fun Idea(previewText: String, onClick: () -> Unit, onRemove: () -> Unit) {
             style = Typography.bodyLarge,
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
+        Spacer(modifier = Modifier.width(16.dp))
+        Icon(imageVector = Icons.Default.Add,
+            contentDescription = "add to group icon",
+            modifier = Modifier
+                .clickable { onAddToGroup() }
+                .size(24.dp))
         Spacer(modifier = Modifier.width(16.dp))
         Icon(imageVector = Icons.Default.Delete,
             contentDescription = "delete idea icon",
@@ -101,14 +119,23 @@ fun NestedIdea(previewText: String, onClick: () -> Unit, onRemove: () -> Unit) {
                 contentDescription = "delete idea icon",
                 modifier = Modifier
                     .clickable { onRemove() }
-                    .size(24.dp))
+                    .size(16.dp))
             Spacer(modifier = Modifier.width(16.dp))
         }
     }
 }
 
 @Composable
-fun Project(name: String, ideas: List<IdeaDomainModel>, onRemove: (Long) -> Unit) {
+fun Project(
+    name: String,
+    ideas: List<IdeaDomainModel>,
+    onSave: (String) -> Unit,
+    onClickIdea: (Long) -> Unit,
+    onRemove: (Long) -> Unit
+) {
+    val isBeingModified = remember {
+        mutableStateOf(name.isBlank())
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -117,12 +144,31 @@ fun Project(name: String, ideas: List<IdeaDomainModel>, onRemove: (Long) -> Unit
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = name, fontSize = 24.sp, fontWeight = FontWeight.SemiBold
-        )
+        if (!isBeingModified.value) {
+            Text(text = name,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.clickable { isBeingModified.value = true }
+            )
+        } else {
+            val txt = remember {
+                mutableStateOf(name)
+            }
+            TextField(value = txt.value, onValueChange = {
+                txt.value = it
+            })
+            Button(onClick = {
+                onSave(txt.value)
+                isBeingModified.value = false
+            }) {
+                Text(text = "Save")
+            }
+        }
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             ideas.forEach {
-                NestedIdea(previewText = it.content, onClick = {}, onRemove = { onRemove(it.id) })
+                NestedIdea(previewText = it.content,
+                    onClick = { onClickIdea(it.id) },
+                    onRemove = { onRemove(it.id) })
             }
         }
     }
@@ -166,17 +212,17 @@ fun TitleBar(modifier: Modifier = Modifier) {
 @Preview
 @Composable
 fun MainScreenPreview() {
-    MainScreen(modifier = Modifier, ideas = emptyMap(), {}, {})
+    MainScreen(modifier = Modifier, ideas = emptyMap(), { a, b -> }, {}, {}, {})
 }
 
 @Preview
 @Composable
 fun IdeaPreview() {
-    Idea(previewText = "Idea preview", {}, {})
+    Idea(previewText = "Idea preview", {}, {}, {})
 }
 
 @Preview
 @Composable
 fun ProjectPreview() {
-    Project("Project!", listOf(IdeaDomainModel(0, "Project idea preview!")), {})
+    Project("Project!", listOf(IdeaDomainModel(0, 0, "Project idea preview!")), {}, {}, {})
 }
