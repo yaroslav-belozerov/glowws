@@ -38,6 +38,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -80,6 +81,7 @@ fun MainScreen(
                         val id = ideas[proj]!!.first().id
                         if (selectedIdeas.value.contains(id)) {
                             selectedIdeas.value -= id
+                            if (selectedIdeas.value.isEmpty()) inSelectionMode.value = false
                         } else {
                             selectedIdeas.value += id
                         }
@@ -93,12 +95,14 @@ fun MainScreen(
                     ideas = ideas[proj]!!,
                     onSave = { newName -> onSaveProject(proj.id, newName) },
                     onRemove = { onRemoveProject(proj.id) },
+                    onAddToGroup = { onAddIdeaToGroup(proj.id) },
                     onClickIdea = { id -> onClickIdea(id) },
                     onRemoveIdea = { id -> onRemoveIdea(id) },
                     onSelectIdea = { id ->
                         inSelectionMode.value = true
                         if (selectedIdeas.value.contains(id)) {
                             selectedIdeas.value -= id
+                            if (selectedIdeas.value.isEmpty()) inSelectionMode.value = false
                         } else {
                             selectedIdeas.value += id
                         }
@@ -110,10 +114,6 @@ fun MainScreen(
         }
     }
 }
-
-data class MainScreenSelection(
-    val isSelectionMode: Boolean, val selectedIdeaIds: MutableList<Long>
-)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -133,7 +133,7 @@ fun Idea(
             .fillMaxWidth()
             .then(
                 if (isSelected) Modifier.border(
-                    2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium
+                    2.dp, MaterialTheme.colorScheme.primary
                 ) else Modifier
             )
             .background(MaterialTheme.colorScheme.primaryContainer)
@@ -189,7 +189,7 @@ fun NestedIdea(
                 if (isSelected) Modifier.border(
                     2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium
                 ) else Modifier
-            )
+            ).clip(MaterialTheme.shapes.medium)
             .combinedClickable(onClick = if (!inSelectionMode) {
                 onClick
             } else {
@@ -222,6 +222,7 @@ fun Project(
     ideas: List<IdeaDomainModel>,
     onSave: (String) -> Unit,
     onRemove: () -> Unit,
+    onAddToGroup: () -> Unit,
     onClickIdea: (Long) -> Unit,
     onRemoveIdea: (Long) -> Unit,
     onSelectIdea: (Long) -> Unit,
@@ -279,12 +280,21 @@ fun Project(
     }
     if (isDialogOpen.value) {
         MainScreenDialog(title = name, entries = listOf(
-            DialogEntry(
-                Icons.Default.Delete, "Remove Project", onRemove, needsConfirmation = true
-            ), DialogEntry(Icons.Default.Edit, "Edit Project Name", {
+            DialogEntry(Icons.Default.Menu, "Select", {
+                ideas.forEach { onSelectIdea(it.id) }
+                isDialogOpen.value = false
+            }),
+            DialogEntry(Icons.Default.AddCircle, "Add to Project", {
+                onAddToGroup()
+                isDialogOpen.value = false
+            }),
+            DialogEntry(Icons.Default.Edit, "Edit Project Name", {
                 isBeingModified.value = true
                 isDialogOpen.value = false
-            })
+            }),
+            DialogEntry(
+                Icons.Default.Delete, "Remove Project", onRemove, needsConfirmation = true
+            ),
         ), onDismiss = { isDialogOpen.value = false })
     }
 }
