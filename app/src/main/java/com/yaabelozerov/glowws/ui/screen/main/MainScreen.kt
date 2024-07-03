@@ -158,7 +158,6 @@ fun Idea(
         MainScreenDialog(title = previewText, entries = listOf(
             DialogEntry(Icons.Default.Menu, "Select", {
                 onSelect()
-                isDialogOpen.value = false
             }), DialogEntry(
                 Icons.Default.AddCircle, "Add to Project", onAddToGroup
             ), DialogEntry(
@@ -189,7 +188,8 @@ fun NestedIdea(
                 if (isSelected) Modifier.border(
                     2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium
                 ) else Modifier
-            ).clip(MaterialTheme.shapes.medium)
+            )
+            .clip(MaterialTheme.shapes.medium)
             .combinedClickable(onClick = if (!inSelectionMode) {
                 onClick
             } else {
@@ -207,7 +207,6 @@ fun NestedIdea(
         MainScreenDialog(title = previewText, entries = listOf(
             DialogEntry(Icons.Default.Menu, "Select", {
                 onSelect()
-                isDialogOpen.value = false
             }), DialogEntry(
                 Icons.Default.Delete, "Remove Idea", onRemove, needsConfirmation = true
             )
@@ -282,15 +281,12 @@ fun Project(
         MainScreenDialog(title = name, entries = listOf(
             DialogEntry(Icons.Default.Menu, "Select", {
                 ideas.forEach { onSelectIdea(it.id) }
-                isDialogOpen.value = false
             }),
             DialogEntry(Icons.Default.AddCircle, "Add to Project", {
                 onAddToGroup()
-                isDialogOpen.value = false
             }),
             DialogEntry(Icons.Default.Edit, "Edit Project Name", {
                 isBeingModified.value = true
-                isDialogOpen.value = false
             }),
             DialogEntry(
                 Icons.Default.Delete, "Remove Project", onRemove, needsConfirmation = true
@@ -350,7 +346,10 @@ fun MainScreenDialog(title: String, entries: List<DialogEntry>, onDismiss: () ->
             entries.forEachIndexed { ind, it ->
                 if (!it.needsConfirmation) {
                     DialogButton(
-                        icon = it.icon, text = it.name, onClick = it.onClick, isActive = false
+                        icon = it.icon, text = it.name, onClick = {
+                            it.onClick()
+                            onDismiss()
+                        }, isActive = false
                     )
                 } else {
                     DialogButton(icon = if (confirm.value[ind]) {
@@ -362,7 +361,10 @@ fun MainScreenDialog(title: String, entries: List<DialogEntry>, onDismiss: () ->
                     } else {
                         it.name
                     }, onClick = if (confirm.value[ind]) {
-                        it.onClick
+                        {
+                            it.onClick()
+                            onDismiss()
+                        }
                     } else {
                         { confirm.value = List(entries.size) { it == ind } }
                     }, isActive = confirm.value[ind])
