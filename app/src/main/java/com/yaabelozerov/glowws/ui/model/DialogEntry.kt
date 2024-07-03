@@ -5,5 +5,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 data class DialogEntry(
     val icon: ImageVector,
     val name: String,
-    val onClick: () -> Unit
+    val onClick: () -> Unit,
+    val needsConfirmation: Boolean = false
 )

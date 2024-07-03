@@ -17,23 +17,27 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,9 +53,9 @@ fun MainScreen(
     ideas: Map<GroupDomainModel, List<IdeaDomainModel>> = emptyMap(),
     onSaveProject: (Long, String) -> Unit,
     onRemoveProject: (Long) -> Unit,
-    onClickidea: (Long) -> Unit,
+    onClickIdea: (Long) -> Unit,
     onAddIdeaToGroup: (Long) -> Unit,
-    onRemoveIdea: (Long) -> Unit
+    onRemoveIdea: (Long) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -63,18 +67,16 @@ fun MainScreen(
         items(ideas.keys.toList()) { proj ->
             if (ideas[proj]!!.size == 1) {
                 Idea(ideas[proj]!!.first().content,
-                    { onClickidea(ideas[proj]!!.first().id) },
+                    { onClickIdea(ideas[proj]!!.first().id) },
                     { onAddIdeaToGroup(ideas[proj]!!.first().groupId) },
                     { onRemoveIdea(ideas[proj]!!.first().id) })
             } else {
-                Project(
-                    name = proj.name,
+                Project(name = proj.name,
                     ideas = ideas[proj]!!,
                     onSave = { newName -> onSaveProject(proj.id, newName) },
                     onRemove = { onRemoveProject(proj.id) },
-                    onClickIdea = { id -> onClickidea(id) },
-                    onRemoveIdea = { id -> onRemoveIdea(id) }
-                )
+                    onClickIdea = { id -> onClickIdea(id) },
+                    onRemoveIdea = { id -> onRemoveIdea(id) })
             }
         }
     }
@@ -103,35 +105,16 @@ fun Idea(
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
         Spacer(modifier = Modifier.width(16.dp))
-        Icon(imageVector = Icons.Default.Add,
-            contentDescription = "add to group icon",
-            modifier = Modifier
-                .clickable { onAddToGroup() }
-                .size(24.dp))
-        Spacer(modifier = Modifier.width(16.dp))
-        Icon(imageVector = Icons.Default.Delete,
-            contentDescription = "delete idea icon",
-            modifier = Modifier
-                .clickable { onRemove() }
-                .size(24.dp))
-        Spacer(modifier = Modifier.width(16.dp))
     }
 
     if (isDialogDisplayed.value) {
-        Dialog(onDismissRequest = { isDialogDisplayed.value = false }) {
-            val entries = listOf(DialogEntry(
-                Icons.Default.AddCircle, "Add to Project"
-            ) { onAddToGroup() }, DialogEntry(
-                Icons.Default.Delete, "Remove"
-            ) { onRemove() })
-            LazyColumn {
-                items(entries) {
-                    Button(onClick = it.onClick) {
-                        Text(text = it.name)
-                    }
-                }
-            }
-        }
+        MainScreenDialog(title = previewText, entries = listOf(
+            DialogEntry(
+                Icons.Default.AddCircle, "Add to Project", onAddToGroup
+            ), DialogEntry(
+                Icons.Default.Delete, "Remove", onRemove, needsConfirmation = true
+            )
+        ), onDismiss = { isDialogDisplayed.value = false })
     }
 }
 
@@ -152,28 +135,15 @@ fun NestedIdea(
             Text(
                 text = previewText, modifier = Modifier.padding(8.dp), style = Typography.bodyLarge
             )
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(imageVector = Icons.Default.Delete,
-                contentDescription = "delete idea icon",
-                modifier = Modifier
-                    .clickable { onRemove() }
-                    .size(16.dp))
             Spacer(modifier = Modifier.width(16.dp))
         }
     }
     if (isDialogDisplayed.value) {
-        Dialog(onDismissRequest = { isDialogDisplayed.value = false }) {
-            val entries = listOf(
-                DialogEntry(Icons.Default.Delete, "Remove") { onRemove() }
+        MainScreenDialog(title = previewText, entries = listOf(
+            DialogEntry(
+                Icons.Default.Delete, "Remove Idea", onRemove, needsConfirmation = true
             )
-            LazyColumn {
-                items(entries) {
-                    Button(onClick = it.onClick) {
-                        Text(text = it.name)
-                    }
-                }
-            }
-        }
+        ), onDismiss = { isDialogDisplayed.value = false })
     }
 }
 
@@ -203,21 +173,23 @@ fun Project(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         if (!isBeingModified.value) {
-            Text(text = name,
+            Text(
+                text = name,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clickable { isBeingModified.value = true })
+                textAlign = TextAlign.Center
+            )
         } else {
             val txt = remember {
                 mutableStateOf(name)
             }
-            TextField(value = txt.value, onValueChange = {
+            OutlinedTextField(value = txt.value, onValueChange = {
                 txt.value = it
             })
             Button(onClick = {
                 onSave(txt.value)
                 isBeingModified.value = false
-            }) {
+            }, modifier = Modifier.fillMaxWidth()) {
                 Text(text = "Save")
             }
         }
@@ -230,18 +202,14 @@ fun Project(
         }
     }
     if (isDialogOpen.value) {
-        Dialog(onDismissRequest = { isDialogOpen.value = false }) {
-            val entries = listOf(
-                DialogEntry(Icons.Default.Delete, "Remove project", { onRemove() })
-            )
-            LazyColumn {
-                items(entries) {
-                    Button(onClick = it.onClick) {
-                        Text(text = it.name)
-                    }
-                }
-            }
-        }
+        MainScreenDialog(title = name, entries = listOf(
+            DialogEntry(
+                Icons.Default.Delete, "Remove Project", onRemove, needsConfirmation = true
+            ), DialogEntry(Icons.Default.Edit, "Edit Project Name", {
+                isBeingModified.value = true
+                isDialogOpen.value = false
+            })
+        ), onDismiss = { isDialogOpen.value = false })
     }
 }
 
@@ -280,6 +248,75 @@ fun TitleBar(modifier: Modifier = Modifier) {
     }
 }
 
+@Composable
+fun MainScreenDialog(title: String, entries: List<DialogEntry>, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        val confirm = remember {
+            mutableStateOf(List(entries.size) { false })
+        }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = title, fontSize = 32.sp
+            )
+            entries.forEachIndexed { ind, it ->
+                if (!it.needsConfirmation) {
+                    DialogButton(
+                        icon = it.icon, text = it.name, onClick = it.onClick, isActive = false
+                    )
+                } else {
+                    DialogButton(icon = if (confirm.value[ind]) {
+                        Icons.Default.CheckCircle
+                    } else {
+                        it.icon
+                    }, text = if (confirm.value[ind]) {
+                        "Are you sure?"
+                    } else {
+                        it.name
+                    }, onClick = if (confirm.value[ind]) {
+                        it.onClick
+                    } else {
+                        { confirm.value = List(entries.size) { it == ind } }
+                    }, isActive = confirm.value[ind])
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DialogButton(icon: ImageVector, text: String, onClick: () -> Unit, isActive: Boolean) {
+    if (isActive) Button(onClick = onClick, content = {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(4.dp)
+        ) {
+            Text(
+                text = text, fontSize = 16.sp
+            )
+            Icon(
+                imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp)
+            )
+        }
+    }) else OutlinedButton(onClick = onClick, content = {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(4.dp)
+        ) {
+            Text(
+                text = text, fontSize = 16.sp
+            )
+            Icon(
+                imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp)
+            )
+        }
+    })
+}
+
 @Preview
 @Composable
 fun MainScreenPreview() {
@@ -295,7 +332,8 @@ fun IdeaPreview() {
 @Preview
 @Composable
 fun ProjectPreview() {
-    Project("Project!",
+    Project(
+        "Project!",
         listOf(IdeaDomainModel(0, 0, "Project idea preview!")),
         {},
         {},
