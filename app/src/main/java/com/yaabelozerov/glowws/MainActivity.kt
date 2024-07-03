@@ -49,15 +49,16 @@ class MainActivity : ComponentActivity() {
                             Column(Modifier.padding(innerPadding)) {
                                 TitleBar()
                                 MainScreen(ideas = mvm.state.collectAsState().value.ideas,
-                                    onSave = { id, text -> mvm.modifyGroupName(id, text) },
-                                    onClick = { id ->
+                                    onSaveProject = { id, text -> mvm.modifyGroupName(id, text) },
+                                    onRemoveProject = { id -> mvm.removeGroup(id) },
+                                    onClickidea = { id ->
                                         navController.navigate("IdeaScreen/${id}")
                                         ivm.refreshPoints(id)
                                     },
-                                    onAddToGroup = { groupId ->
+                                    onAddIdeaToGroup = { groupId ->
                                         mvm.addIdeaToGroup("", groupId)
                                     },
-                                    onRemove = { id -> mvm.removeIdea(id) })
+                                    onRemoveIdea = { id -> mvm.removeIdea(id) })
                             }
                         }
                         composable(

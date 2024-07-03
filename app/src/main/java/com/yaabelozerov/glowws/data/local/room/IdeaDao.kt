@@ -77,12 +77,20 @@ interface IdeaDao {
         val groupId = getGroupByIdea(ideaId)
         deleteIdea(ideaId)
         deleteIdeaPoints(ideaId)
-        if (getAllIdeasFromGroup(groupId).isEmpty()) deleteGroup(groupId)
+        if (getAllIdeasFromGroup(groupId).isEmpty()) deleteGroupOnly(groupId)
     }
 
     @Query("DELETE FROM `group` WHERE groupId = :groupId")
-    suspend fun deleteGroup(groupId: Long)
+    suspend fun deleteGroupOnly(groupId: Long)
+
+    suspend fun deleteGroup(groupId: Long) {
+        deleteGroupOnly(groupId)
+        deleteGroupIdeas(groupId)
+    }
 
     @Query("UPDATE `group` SET name = :newName WHERE groupId = :groupId")
     suspend fun updateGroupName(groupId: Long, newName: String)
+
+    @Query("DELETE FROM idea WHERE groupParentId = :groupId")
+    suspend fun deleteGroupIdeas(groupId: Long)
 }

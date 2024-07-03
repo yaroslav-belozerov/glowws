@@ -58,4 +58,10 @@ class MainScreenViewModel @Inject constructor(
             dao.updateGroupName(groupId, newName)
         }
     }
+
+    fun removeGroup(groupId: Long) {
+        viewModelScope.launch {
+            dao.deleteGroup(groupId)
+        }
+    }
 }
