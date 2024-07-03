@@ -5,16 +5,22 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -41,6 +47,11 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
+            val inSelectionMode = remember {
+                mutableStateOf(false)
+            }
+            val selectedIdeas = remember { mutableStateOf(emptyList<Long>()) }
+
 
             GlowwsTheme {
                 Scaffold(modifier = Modifier.fillMaxSize(), content = { innerPadding ->
@@ -48,7 +59,8 @@ class MainActivity : ComponentActivity() {
                         composable("MainScreen") {
                             Column(Modifier.padding(innerPadding)) {
                                 TitleBar()
-                                MainScreen(ideas = mvm.state.collectAsState().value.ideas,
+                                MainScreen(
+                                    ideas = mvm.state.collectAsState().value.ideas,
                                     onSaveProject = { id, text -> mvm.modifyGroupName(id, text) },
                                     onRemoveProject = { id -> mvm.removeGroup(id) },
                                     onClickIdea = { id ->
@@ -58,7 +70,9 @@ class MainActivity : ComponentActivity() {
                                     onAddIdeaToGroup = { groupId ->
                                         mvm.addIdeaToGroup("", groupId)
                                     },
-                                    onRemoveIdea = { id -> mvm.removeIdea(id) }
+                                    onRemoveIdea = { id -> mvm.removeIdea(id) },
+                                    inSelectionMode = inSelectionMode,
+                                    selectedIdeas = selectedIdeas
                                 )
                             }
                         }
@@ -82,17 +96,30 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }, floatingActionButton = {
-                    if (navController.currentBackStackEntryAsState().value?.destination?.route == "MainScreen") {
-                        FloatingActionButton(onClick = {
-                            mvm.addNewIdea("", callback = { id ->
-                                navController.navigate("IdeaScreen/${id}")
-                                ivm.refreshPoints(id)
-                            })
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "add idea button"
-                            )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (inSelectionMode.value) {
+                            FloatingActionButton(onClick = {
+                                inSelectionMode.value = false
+                                selectedIdeas.value = emptyList()
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "deselect button"
+                                )
+                            }
+                        }
+                        if (navController.currentBackStackEntryAsState().value?.destination?.route == "MainScreen") {
+                            FloatingActionButton(onClick = {
+                                mvm.addNewIdea("", callback = { id ->
+                                    navController.navigate("IdeaScreen/${id}")
+                                    ivm.refreshPoints(id)
+                                })
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "add idea button"
+                                )
+                            }
                         }
                     }
                 })

@@ -3,6 +3,7 @@ package com.yaabelozerov.glowws.ui.screen.main
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -31,6 +33,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -56,6 +59,8 @@ fun MainScreen(
     onClickIdea: (Long) -> Unit,
     onAddIdeaToGroup: (Long) -> Unit,
     onRemoveIdea: (Long) -> Unit,
+    inSelectionMode: MutableState<Boolean>,
+    selectedIdeas: MutableState<List<Long>>
 ) {
     LazyColumn(
         modifier = Modifier
@@ -69,32 +74,74 @@ fun MainScreen(
                 Idea(ideas[proj]!!.first().content,
                     { onClickIdea(ideas[proj]!!.first().id) },
                     { onAddIdeaToGroup(ideas[proj]!!.first().groupId) },
-                    { onRemoveIdea(ideas[proj]!!.first().id) })
+                    { onRemoveIdea(ideas[proj]!!.first().id) },
+                    {
+                        inSelectionMode.value = true
+                        val id = ideas[proj]!!.first().id
+                        if (selectedIdeas.value.contains(id)) {
+                            selectedIdeas.value -= id
+                        } else {
+                            selectedIdeas.value += id
+                        }
+                    },
+                    inSelectionMode.value,
+                    selectedIdeas.value.contains(ideas[proj]!!.first().id)
+                )
             } else {
-                Project(name = proj.name,
+                Project(
+                    name = proj.name,
                     ideas = ideas[proj]!!,
                     onSave = { newName -> onSaveProject(proj.id, newName) },
                     onRemove = { onRemoveProject(proj.id) },
                     onClickIdea = { id -> onClickIdea(id) },
-                    onRemoveIdea = { id -> onRemoveIdea(id) })
+                    onRemoveIdea = { id -> onRemoveIdea(id) },
+                    onSelectIdea = { id ->
+                        inSelectionMode.value = true
+                        if (selectedIdeas.value.contains(id)) {
+                            selectedIdeas.value -= id
+                        } else {
+                            selectedIdeas.value += id
+                        }
+                    },
+                    inSelectionMode.value,
+                    selectedIdeas.value
+                )
             }
         }
     }
 }
 
+data class MainScreenSelection(
+    val isSelectionMode: Boolean, val selectedIdeaIds: MutableList<Long>
+)
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Idea(
-    previewText: String, onClick: () -> Unit, onAddToGroup: () -> Unit, onRemove: () -> Unit
+    previewText: String,
+    onClick: () -> Unit,
+    onAddToGroup: () -> Unit,
+    onRemove: () -> Unit,
+    onSelect: () -> Unit,
+    inSelectionMode: Boolean,
+    isSelected: Boolean
 ) {
-    val isDialogDisplayed = remember { mutableStateOf(false) }
+    val isDialogOpen = remember { mutableStateOf(false) }
 
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
+        verticalAlignment = Alignment.CenterVertically, modifier = Modifier
             .fillMaxWidth()
+            .then(
+                if (isSelected) Modifier.border(
+                    2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium
+                ) else Modifier
+            )
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .combinedClickable(onClick = onClick, onLongClick = { isDialogDisplayed.value = true })
+            .combinedClickable(onClick = if (!inSelectionMode) {
+                onClick
+            } else {
+                onSelect
+            }, onLongClick = { if (!inSelectionMode) isDialogOpen.value = true })
     ) {
         Text(
             text = previewText,
@@ -107,29 +154,47 @@ fun Idea(
         Spacer(modifier = Modifier.width(16.dp))
     }
 
-    if (isDialogDisplayed.value) {
+    if (isDialogOpen.value) {
         MainScreenDialog(title = previewText, entries = listOf(
-            DialogEntry(
+            DialogEntry(Icons.Default.Menu, "Select", {
+                onSelect()
+                isDialogOpen.value = false
+            }), DialogEntry(
                 Icons.Default.AddCircle, "Add to Project", onAddToGroup
             ), DialogEntry(
-                Icons.Default.Delete, "Remove", onRemove, needsConfirmation = true
+                Icons.Default.Delete, "Remove Idea", onRemove, needsConfirmation = true
             )
-        ), onDismiss = { isDialogDisplayed.value = false })
+        ), onDismiss = { isDialogOpen.value = false })
     }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NestedIdea(
-    previewText: String, onClick: () -> Unit, onRemove: () -> Unit
+    previewText: String,
+    onClick: () -> Unit,
+    onRemove: () -> Unit,
+    onSelect: () -> Unit,
+    inSelectionMode: Boolean,
+    isSelected: Boolean
 ) {
-    val isDialogDisplayed = remember { mutableStateOf(false) }
+    val isDialogOpen = remember { mutableStateOf(false) }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
-        modifier = Modifier
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.background
+        ), modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable(onClick = onClick, onLongClick = { isDialogDisplayed.value = true })
+            .then(
+                if (isSelected) Modifier.border(
+                    2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium
+                ) else Modifier
+            )
+            .combinedClickable(onClick = if (!inSelectionMode) {
+                onClick
+            } else {
+                onSelect
+            }, onLongClick = { if (!inSelectionMode) isDialogOpen.value = true })
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -138,12 +203,15 @@ fun NestedIdea(
             Spacer(modifier = Modifier.width(16.dp))
         }
     }
-    if (isDialogDisplayed.value) {
+    if (isDialogOpen.value) {
         MainScreenDialog(title = previewText, entries = listOf(
-            DialogEntry(
+            DialogEntry(Icons.Default.Menu, "Select", {
+                onSelect()
+                isDialogOpen.value = false
+            }), DialogEntry(
                 Icons.Default.Delete, "Remove Idea", onRemove, needsConfirmation = true
             )
-        ), onDismiss = { isDialogDisplayed.value = false })
+        ), onDismiss = { isDialogOpen.value = false })
     }
 }
 
@@ -155,7 +223,10 @@ fun Project(
     onSave: (String) -> Unit,
     onRemove: () -> Unit,
     onClickIdea: (Long) -> Unit,
-    onRemoveIdea: (Long) -> Unit
+    onRemoveIdea: (Long) -> Unit,
+    onSelectIdea: (Long) -> Unit,
+    inSelection: Boolean,
+    currentSelection: List<Long>
 ) {
     val isBeingModified = remember {
         mutableStateOf(name.isBlank())
@@ -167,7 +238,8 @@ fun Project(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .combinedClickable(onClick = {}, onLongClick = { isDialogOpen.value = true })
+            .combinedClickable(onClick = { if (inSelection) ideas.forEach { onSelectIdea(it.id) } },
+                onLongClick = { if (!inSelection) isDialogOpen.value = true })
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -197,7 +269,11 @@ fun Project(
             ideas.forEach {
                 NestedIdea(previewText = it.content,
                     onClick = { onClickIdea(it.id) },
-                    onRemove = { onRemoveIdea(it.id) })
+                    onRemove = { onRemoveIdea(it.id) },
+                    onSelect = { onSelectIdea(it.id) },
+                    inSelectionMode = inSelection,
+                    isSelected = currentSelection.contains(it.id)
+                )
             }
         }
     }
@@ -315,29 +391,4 @@ fun DialogButton(icon: ImageVector, text: String, onClick: () -> Unit, isActive:
             )
         }
     })
-}
-
-@Preview
-@Composable
-fun MainScreenPreview() {
-    MainScreen(modifier = Modifier, ideas = emptyMap(), { a, b -> }, {}, {}, {}, {})
-}
-
-@Preview
-@Composable
-fun IdeaPreview() {
-    Idea(previewText = "Idea preview", {}, {}, {})
-}
-
-@Preview
-@Composable
-fun ProjectPreview() {
-    Project(
-        "Project!",
-        listOf(IdeaDomainModel(0, 0, "Project idea preview!")),
-        {},
-        {},
-        {},
-        {},
-    )
 }
