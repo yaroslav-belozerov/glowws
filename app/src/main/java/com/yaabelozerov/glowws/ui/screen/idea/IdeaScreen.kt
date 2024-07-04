@@ -108,7 +108,9 @@ fun Point(text: String, isMain: Boolean, onSave: (String, Boolean) -> Unit, onRe
         .animateContentSize(),
         colors = CardDefaults.cardColors(containerColor = if (isMain && !isBeingModified.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer)) {
         if (!isBeingModified.value) Text(
-            modifier = Modifier.padding(8.dp), text = text
+            modifier = Modifier.padding(8.dp),
+            text = text.ifBlank { "Empty" },
+            color = MaterialTheme.colorScheme.primary.copy(alpha = if (text.isBlank()) 0.3f else 1f)
         ) else Column(Modifier.fillMaxWidth()) {
             val currentText = remember {
                 mutableStateOf(text)

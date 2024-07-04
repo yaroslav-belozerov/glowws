@@ -144,12 +144,12 @@ fun Idea(
             }, onLongClick = { if (!inSelectionMode) isDialogOpen.value = true })
     ) {
         Text(
-            text = previewText,
+            text = previewText.ifBlank { "Empty" },
             Modifier
                 .padding(16.dp)
                 .weight(1f),
             style = Typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
+            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = if (previewText.isBlank()) 0.3f else 1f)
         )
         Spacer(modifier = Modifier.width(16.dp))
     }
@@ -198,7 +198,11 @@ fun NestedIdea(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = previewText, modifier = Modifier.padding(8.dp), style = Typography.bodyLarge
+                text = previewText.ifBlank { "Empty" },
+                modifier = Modifier.padding(8.dp),
+                style = Typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (previewText.isBlank()) 0.3f else 1f)
+                )
             )
             Spacer(modifier = Modifier.width(16.dp))
         }
@@ -229,7 +233,9 @@ fun Project(
     currentSelection: List<Long>
 ) {
     val isBeingModified = remember {
-        mutableStateOf(name.isBlank())
+        mutableStateOf(
+            false
+        )
     }
     val isDialogOpen = remember {
         mutableStateOf(false)
@@ -246,10 +252,11 @@ fun Project(
     ) {
         if (!isBeingModified.value) {
             Text(
-                text = name,
+                text = name.ifBlank { "Unnamed Project" },
                 fontSize = 24.sp,
                 fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = if (name.isBlank()) 0.3f else 1f)
             )
         } else {
             val txt = remember {
