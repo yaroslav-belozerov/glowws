@@ -12,24 +12,32 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.yaabelozerov.glowws.ui.model.DialogEntry
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreen
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.main.MainScreen
+import com.yaabelozerov.glowws.ui.screen.main.MainScreenDialog
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
 import com.yaabelozerov.glowws.ui.screen.main.MainScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.main.TitleBar
@@ -68,7 +76,10 @@ class MainActivity : ComponentActivity() {
                                         ivm.refreshPoints(id)
                                     },
                                     onAddIdeaToGroup = { groupId ->
-                                        mvm.addIdeaToGroup("", groupId)
+                                        mvm.addIdeaToGroup("", groupId, callback = { id ->
+                                            navController.navigate("IdeaScreen/${id}")
+                                            ivm.refreshPoints(id)
+                                        })
                                     },
                                     onRemoveIdea = { id -> mvm.removeIdea(id) },
                                     inSelectionMode = inSelectionMode,
@@ -96,8 +107,32 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }, floatingActionButton = {
+                    val isConfirmationOpen = remember {
+                        mutableStateOf(false)
+                    }
+                    if (isConfirmationOpen.value) {
+                        MainScreenDialog(title = "Remove all selected?", entries = listOf(
+                            DialogEntry(
+                                Icons.Default.CheckCircle, "Confirm", {
+                                    selectedIdeas.value.forEach { mvm.removeIdea(it) }
+                                    inSelectionMode.value = false
+                                }, needsConfirmation = false
+                            ), DialogEntry(
+                                null,
+                                "Cancel",
+                                onClick = { isConfirmationOpen.value = false },
+                                needsConfirmation = false
+                            )
+                        ), onDismiss = { isConfirmationOpen.value = false })
+                    }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (inSelectionMode.value) {
+                            FloatingActionButton(onClick = { isConfirmationOpen.value = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "delete selected button"
+                                )
+                            }
                             FloatingActionButton(onClick = {
                                 inSelectionMode.value = false
                                 selectedIdeas.value = emptyList()
@@ -108,7 +143,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                        if (navController.currentBackStackEntryAsState().value?.destination?.route == "MainScreen") {
+                        if (!inSelectionMode.value && navController.currentBackStackEntryAsState().value?.destination?.route == "MainScreen") {
                             FloatingActionButton(onClick = {
                                 mvm.addNewIdea("", callback = { id ->
                                     navController.navigate("IdeaScreen/${id}")

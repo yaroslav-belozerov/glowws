@@ -375,7 +375,7 @@ fun MainScreenDialog(title: String, entries: List<DialogEntry>, onDismiss: () ->
 }
 
 @Composable
-fun DialogButton(icon: ImageVector, text: String, onClick: () -> Unit, isActive: Boolean) {
+fun DialogButton(icon: ImageVector?, text: String, onClick: () -> Unit, isActive: Boolean) {
     if (isActive) Button(onClick = onClick, content = {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -385,9 +385,11 @@ fun DialogButton(icon: ImageVector, text: String, onClick: () -> Unit, isActive:
             Text(
                 text = text, fontSize = 16.sp
             )
-            Icon(
-                imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp)
-            )
+            if (icon != null) {
+                Icon(
+                    imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }) else OutlinedButton(onClick = onClick, content = {
         Row(
@@ -398,9 +400,11 @@ fun DialogButton(icon: ImageVector, text: String, onClick: () -> Unit, isActive:
             Text(
                 text = text, fontSize = 16.sp
             )
-            Icon(
-                imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp)
-            )
+            if (icon != null) {
+                Icon(
+                    imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp)
+                )
+            }
         }
     })
 }

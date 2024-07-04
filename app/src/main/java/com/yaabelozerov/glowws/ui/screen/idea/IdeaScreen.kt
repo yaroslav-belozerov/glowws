@@ -2,6 +2,8 @@ package com.yaabelozerov.glowws.ui.screen.idea
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +16,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -28,6 +32,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,6 +54,7 @@ fun IdeaScreen(
             .then(modifier),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+
         item {
             Row {
                 Button(onClick = onBack) {
@@ -58,6 +64,7 @@ fun IdeaScreen(
                 AddPointLine(onAdd = onAdd)
             }
         }
+
         items(points) { point ->
             Point(point.content,
                 point.isMain,
@@ -93,7 +100,7 @@ fun AddPointLine(onAdd: () -> Unit) {
 @Composable
 fun Point(text: String, isMain: Boolean, onSave: (String, Boolean) -> Unit, onRemove: () -> Unit) {
     val isBeingModified = remember {
-        mutableStateOf(text.isBlank())
+        mutableStateOf(false)
     }
     Card(modifier = Modifier
         .fillMaxWidth()

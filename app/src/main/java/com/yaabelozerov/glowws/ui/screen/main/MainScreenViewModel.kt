@@ -47,9 +47,10 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    fun addIdeaToGroup(content: String, groupId: Long) {
+    fun addIdeaToGroup(content: String, groupId: Long, callback: ((Long) -> Unit)? = null) {
         viewModelScope.launch {
-            dao.insertIdea(Idea(0, groupId, content))
+            val id = dao.insertIdea(Idea(0, groupId, content))
+            callback?.invoke(id)
         }
     }
 
