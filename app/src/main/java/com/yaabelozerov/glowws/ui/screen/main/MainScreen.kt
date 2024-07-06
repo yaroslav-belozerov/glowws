@@ -42,12 +42,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.domain.model.GroupDomainModel
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
+import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.ui.model.DialogEntry
 import com.yaabelozerov.glowws.ui.theme.Typography
 
@@ -61,7 +62,8 @@ fun MainScreen(
     onAddIdeaToGroup: (Long) -> Unit,
     onRemoveIdea: (Long) -> Unit,
     inSelectionMode: MutableState<Boolean>,
-    selectedIdeas: MutableState<List<Long>>
+    selectedIdeas: MutableState<List<Long>>,
+    settings: List<SettingDomainModel>
 ) {
     LazyColumn(
         modifier = Modifier
@@ -108,7 +110,8 @@ fun MainScreen(
                         }
                     },
                     inSelectionMode.value,
-                    selectedIdeas.value
+                    selectedIdeas.value,
+                    displayPlaceholder = settings.findLast { it.key == SettingsKeys.SHOW_PROJECT_EMPTY_NAME }?.value.toString() == "true"
                 )
             }
         }
@@ -230,7 +233,8 @@ fun Project(
     onRemoveIdea: (Long) -> Unit,
     onSelectIdea: (Long) -> Unit,
     inSelection: Boolean,
-    currentSelection: List<Long>
+    currentSelection: List<Long>,
+    displayPlaceholder: Boolean
 ) {
     val isBeingModified = remember {
         mutableStateOf(
@@ -251,13 +255,15 @@ fun Project(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         if (!isBeingModified.value) {
-            Text(
-                text = name.ifBlank { "Unnamed Project" },
-                fontSize = 24.sp,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = if (name.isBlank()) 0.3f else 1f)
-            )
+            if (name.isBlank() && displayPlaceholder) {
+                Text(
+                    text = name.ifBlank { "Unnamed Project" },
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = if (name.isBlank()) 0.3f else 1f)
+                )
+            }
         } else {
             val txt = remember {
                 mutableStateOf(name)
@@ -302,9 +308,8 @@ fun Project(
     }
 }
 
-@Preview
 @Composable
-fun TitleBar(modifier: Modifier = Modifier) {
+fun TitleBar(modifier: Modifier = Modifier, onSettings: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -328,9 +333,7 @@ fun TitleBar(modifier: Modifier = Modifier) {
             contentDescription = "settings button",
             modifier = Modifier
                 .clickable {
-                    Log.i(
-                        "MainScreen", "Settings button clicked"
-                    )
+                    onSettings()
                 }
                 .size(32.dp),
             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))

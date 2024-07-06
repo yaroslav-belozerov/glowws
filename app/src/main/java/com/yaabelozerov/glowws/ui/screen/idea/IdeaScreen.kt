@@ -110,7 +110,9 @@ fun Point(text: String, isMain: Boolean, onSave: (String, Boolean) -> Unit, onRe
         if (!isBeingModified.value) Text(
             modifier = Modifier.padding(8.dp),
             text = text.ifBlank { "Empty" },
-            color = MaterialTheme.colorScheme.primary.copy(alpha = if (text.isBlank()) 0.3f else 1f)
+            color = (if (isMain) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary).copy(
+                alpha = if (text.isBlank()) 0.3f else 1f
+            )
         ) else Column(Modifier.fillMaxWidth()) {
             val currentText = remember {
                 mutableStateOf(text)

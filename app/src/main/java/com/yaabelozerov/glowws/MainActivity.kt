@@ -15,24 +15,21 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.yaabelozerov.glowws.data.local.datastore.SettingsDefaults
 import com.yaabelozerov.glowws.ui.model.DialogEntry
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreen
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
@@ -41,6 +38,8 @@ import com.yaabelozerov.glowws.ui.screen.main.MainScreenDialog
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
 import com.yaabelozerov.glowws.ui.screen.main.MainScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.main.TitleBar
+import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreen
+import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreenViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -51,6 +50,8 @@ class MainActivity : ComponentActivity() {
 
         val mvm: MainScreenViewModel by viewModels()
         val ivm: IdeaScreenViewModel by viewModels()
+        val svm: SettingsScreenViewModel by viewModels()
+        svm.getSettings()
         mvm.getIdeas()
 
         setContent {
@@ -66,7 +67,7 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = "MainScreen") {
                         composable("MainScreen") {
                             Column(Modifier.padding(innerPadding)) {
-                                TitleBar()
+                                TitleBar(onSettings = { navController.navigate("SettingsScreen") })
                                 MainScreen(
                                     ideas = mvm.state.collectAsState().value.ideas,
                                     onSaveProject = { id, text -> mvm.modifyGroupName(id, text) },
@@ -83,7 +84,7 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onRemoveIdea = { id -> mvm.removeIdea(id) },
                                     inSelectionMode = inSelectionMode,
-                                    selectedIdeas = selectedIdeas
+                                    selectedIdeas = selectedIdeas, settings = svm.state.collectAsState().value.map { it.value }.flatten()
                                 )
                             }
                         }
@@ -104,6 +105,14 @@ class MainActivity : ComponentActivity() {
                             }, onRemove = { pointId ->
                                 ivm.removePoint(pointId)
                             })
+                        }
+                        composable(
+                            "SettingsScreen"
+                        ) {
+                            SettingsScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                svm.state.collectAsState().value, onModify = { key, value -> svm.modifySetting(key, value) }
+                            )
                         }
                     }
                 }, floatingActionButton = {

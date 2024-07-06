@@ -79,5 +79,8 @@ dependencies {
 
     implementation("com.google.dagger:hilt-android:2.51.1")
     ksp("com.google.dagger:hilt-compiler:2.51.1")
-
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation(kotlin("reflect"))
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
+    ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")
 }
