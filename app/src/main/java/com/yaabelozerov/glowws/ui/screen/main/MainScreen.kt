@@ -255,13 +255,21 @@ fun Project(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         if (!isBeingModified.value) {
-            if (name.isBlank() && displayPlaceholder) {
+            if (name.isNotBlank()) {
                 Text(
                     text = name.ifBlank { "Unnamed Project" },
                     fontSize = 24.sp,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = if (name.isBlank()) 0.3f else 1f)
+                )
+            } else if (displayPlaceholder) {
+                Text(
+                    text = "Unnamed Project",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
                 )
             }
         } else {
