@@ -1,6 +1,7 @@
 package com.yaabelozerov.glowws.ui.screen.settings
 
 import android.util.Log
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.squareup.moshi.Moshi
@@ -8,7 +9,7 @@ import com.yaabelozerov.glowws.data.local.datastore.SettingsDefaults
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
 import com.yaabelozerov.glowws.di.AppModule
-import com.yaabelozerov.glowws.domain.model.SettingDomainMapper
+import com.yaabelozerov.glowws.domain.mapper.SettingDomainMapper
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,7 @@ import javax.inject.Inject
 class SettingsScreenViewModel @Inject constructor(
     private val dataStoreManager: AppModule.DataStoreManager, private val moshi: Moshi
 ) : ViewModel() {
-    private val _state: MutableStateFlow<Map<String, List<SettingDomainModel>>> =
+    private val _state: MutableStateFlow<Map<Pair<String, ImageVector>, List<SettingDomainModel>>> =
         MutableStateFlow(emptyMap())
     val state = _state.asStateFlow()
     val mapper = SettingDomainMapper()

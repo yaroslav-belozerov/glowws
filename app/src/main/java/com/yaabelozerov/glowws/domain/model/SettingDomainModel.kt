@@ -3,7 +3,7 @@ package com.yaabelozerov.glowws.domain.model
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 
 enum class SettingType(val type: String) {
-    BOOLEAN("boolean"), DOUBLE("DOUBLE")
+    BOOLEAN("boolean"), STRING("string"), DOUBLE("double")
 }
 
 abstract class SettingDomainModel {

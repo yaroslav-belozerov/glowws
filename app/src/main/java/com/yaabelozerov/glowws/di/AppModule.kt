@@ -6,10 +6,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.addAdapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.yaabelozerov.glowws.data.local.room.IdeaDatabase
-import com.yaabelozerov.glowws.domain.model.IdeaMapper
+import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

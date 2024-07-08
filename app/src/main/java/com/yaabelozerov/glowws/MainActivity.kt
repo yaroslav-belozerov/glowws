@@ -68,8 +68,7 @@ class MainActivity : ComponentActivity() {
                         composable("MainScreen") {
                             Column(Modifier.padding(innerPadding)) {
                                 TitleBar(onSettings = { navController.navigate("SettingsScreen") })
-                                MainScreen(
-                                    ideas = mvm.state.collectAsState().value.ideas,
+                                MainScreen(ideas = mvm.state.collectAsState().value.ideas,
                                     onSaveProject = { id, text -> mvm.modifyGroupName(id, text) },
                                     onRemoveProject = { id -> mvm.removeGroup(id) },
                                     onClickIdea = { id ->
@@ -84,8 +83,9 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onRemoveIdea = { id -> mvm.removeIdea(id) },
                                     inSelectionMode = inSelectionMode,
-                                    selectedIdeas = selectedIdeas, settings = svm.state.collectAsState().value.map { it.value }.flatten()
-                                )
+                                    selectedIdeas = selectedIdeas,
+                                    settings = svm.state.collectAsState().value.map { it.value }
+                                        .flatten())
                             }
                         }
                         composable(
@@ -111,7 +111,8 @@ class MainActivity : ComponentActivity() {
                         ) {
                             SettingsScreen(
                                 modifier = Modifier.padding(innerPadding),
-                                svm.state.collectAsState().value, onModify = { key, value -> svm.modifySetting(key, value) }
+                                svm.state.collectAsState().value,
+                                onModify = { key, value -> svm.modifySetting(key, value) }
                             )
                         }
                     }

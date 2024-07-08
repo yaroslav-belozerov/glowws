@@ -1,7 +1,9 @@
-package com.yaabelozerov.glowws.domain.model
+package com.yaabelozerov.glowws.domain.mapper
 
 import com.yaabelozerov.glowws.data.local.room.Group
 import com.yaabelozerov.glowws.data.local.room.Idea
+import com.yaabelozerov.glowws.domain.model.GroupDomainModel
+import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 
 class IdeaMapper {
     fun toDomainModel(
