@@ -20,30 +20,34 @@ class MainScreenViewModel @Inject constructor(
     private var _state = MutableStateFlow(MainScreenState())
     val state = _state.asStateFlow()
 
-    fun getIdeas() {
+    init {
+        viewModelScope.launch { getMainScreenIdeas() }
+    }
+
+    fun getMainScreenIdeas() {
         viewModelScope.launch {
-            dao.getGroupsWithIdeas().map { mapper.toDomainModel(it) }.collect { ideas ->
+            dao.getGroupsWithIdeasNotArchived().map { mapper.toDomainModel(it) }.collect { ideas ->
                 _state.update { it.copy(ideas = ideas) }
             }
         }
     }
 
-    fun removeIdea(ideaId: Long) {
+    fun archiveIdea(ideaId: Long) {
         viewModelScope.launch {
             try {
-                dao.deleteIdeaAndPoints(ideaId)
-                getIdeas()
+                dao.archiveStrayIdea(ideaId)
+                getMainScreenIdeas()
             } catch (e: Error) {
                 e.printStackTrace()
             }
         }
     }
 
-    fun addNewIdea(content: String, callback: ((Long) -> Unit)? = null) {
+    fun addNewIdeaAndProject(content: String, callback: ((Long) -> Unit)? = null) {
         viewModelScope.launch {
             val id = dao.createIdeaAndGroup(content)
             callback?.invoke(id)
-            getIdeas()
+            getMainScreenIdeas()
         }
     }
 
@@ -60,9 +64,9 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    fun removeGroup(groupId: Long) {
+    fun archiveGroup(groupId: Long) {
         viewModelScope.launch {
-            dao.deleteGroup(groupId)
+            dao.archiveGroup(groupId)
         }
     }
 }

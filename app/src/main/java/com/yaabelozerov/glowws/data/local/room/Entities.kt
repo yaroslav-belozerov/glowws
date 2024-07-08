@@ -13,7 +13,8 @@ data class Idea(
 @Entity
 data class Group(
     @PrimaryKey(autoGenerate = true) val groupId: Long,
-    val name: String
+    val name: String,
+    val isArchived: Boolean
 )
 
 @Entity

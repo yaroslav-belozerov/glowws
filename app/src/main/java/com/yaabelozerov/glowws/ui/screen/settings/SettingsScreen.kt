@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,6 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
@@ -41,11 +44,14 @@ fun SettingsScreen(
     settings: Map<Pair<String, ImageVector>, List<SettingDomainModel>>,
     onModify: (SettingsKeys, String) -> Unit
 ) {
-    LazyColumn(modifier = modifier.padding(16.dp)) {
+    LazyColumn(modifier = modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        item {
+            Text(text = "Settings", fontSize = 32.sp, fontWeight = FontWeight.Bold, modifier = Modifier.fillParentMaxWidth(), textAlign = TextAlign.Center)
+        }
         items(settings.keys.toList()) { key ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(imageVector = key.second, contentDescription = "${key.first} icon")
-                Text(text = key.first, fontSize = 32.sp)
+                Text(text = key.first, fontSize = 24.sp)
             }
             Column {
                 settings[key]!!.forEach { entry ->
@@ -60,7 +66,7 @@ fun SettingsScreen(
                                     Switch(checked = checked.value, onCheckedChange = {
                                         checked.value = !checked.value
                                         onModify(entry.key, checked.value.toString())
-                                    })
+                                    }, modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp))
                                 }
 
                                 is Double -> {
@@ -86,8 +92,9 @@ fun SettingsScreen(
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Icon(imageVector = Icons.Default.Info, contentDescription = "feedback icon")
-                    Text(text = "Send feedback", fontSize = 32.sp)
+                    Text(text = "Send feedback", fontSize = 24.sp)
                 }
+                Spacer(modifier = Modifier.height(8.dp))
                 val ctx = LocalContext.current
                 val intentRu = remember {
                     Intent(Intent.ACTION_VIEW, Uri.parse("https://forms.gle/RmvAob9n7Pi8UcGt8"))

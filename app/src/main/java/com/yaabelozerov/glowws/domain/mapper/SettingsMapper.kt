@@ -12,14 +12,14 @@ import com.yaabelozerov.glowws.domain.model.DoubleSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.domain.model.StringSettingDomainModel
 
-class SettingDomainMapper {
+class SettingsMapper {
     fun toDomainModel(settings: SettingsList): Map<Pair<String, ImageVector>, List<SettingDomainModel>> {
         val mp: MutableMap<Pair<String, ImageVector>, List<SettingDomainModel>> = mutableMapOf()
         settings.list?.forEach {
             it.category?.let { category ->
                 val cat = when (category) {
-                    SettingsCategories.DISPLAY -> "Display Settings"
-                    SettingsCategories.USER -> "User Settings"
+                    SettingsCategories.DISPLAY -> "Display"
+                    SettingsCategories.USER -> "User"
                 }
                 val icon = when (category) {
                     SettingsCategories.DISPLAY -> Icons.Default.Star

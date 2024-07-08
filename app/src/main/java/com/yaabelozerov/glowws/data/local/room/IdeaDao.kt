@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.first
 @Dao
 interface IdeaDao {
     @Query("SELECT * from `idea`")
-    fun getAll(): Flow<List<Idea>>
+    fun getAllIdeas(): Flow<List<Idea>>
 
     @Insert
     suspend fun createGroup(group: Group): Long
@@ -24,7 +24,17 @@ interface IdeaDao {
     @Query(
         "SELECT * FROM `group` JOIN idea ON groupId = groupParentId"
     )
-    fun getGroupsWithIdeas(): Flow<Map<Group, List<Idea>>>
+    fun getGroupsWithIdeasAll(): Flow<Map<Group, List<Idea>>>
+
+    @Query(
+        "SELECT * FROM `group` JOIN idea ON groupId = groupParentId WHERE isArchived = 0"
+    )
+    fun getGroupsWithIdeasNotArchived(): Flow<Map<Group, List<Idea>>>
+
+    @Query(
+        "SELECT * FROM idea WHERE EXISTS (SELECT * FROM `group` WHERE groupId = groupParentId AND isArchived = 1)"
+    )
+    fun getArchivedIdeas(): Flow<List<Idea>>
 
     @Query(
         "SELECT * FROM point WHERE ideaParentId = :ideaId"
@@ -33,6 +43,9 @@ interface IdeaDao {
 
     @Query("UPDATE idea SET content = :content WHERE ideaId = :ideaId")
     suspend fun modifyIdeaContent(ideaId: Long, content: String)
+
+    @Query("UPDATE idea SET groupParentId = :groupId WHERE ideaId = :ideaId")
+    suspend fun modifyIdeaGroup(ideaId: Long, groupId: Long)
 
     @Query("SELECT * FROM point WHERE pointId = :pointId")
     fun getPoint(pointId: Long): Flow<Point>
@@ -63,7 +76,7 @@ interface IdeaDao {
     suspend fun updatePointContent(pointId: Long, newText: String)
 
     suspend fun createIdeaAndGroup(content: String): Long {
-        val groupId = createGroup(Group(0, ""))
+        val groupId = createGroup(Group(0, "", isArchived = false))
         return insertIdea(Idea(0, groupId, content))
     }
 
@@ -87,6 +100,21 @@ interface IdeaDao {
         deleteGroupOnly(groupId)
         deleteGroupIdeas(groupId)
     }
+
+    @Query("DELETE FROM `group` WHERE NOT EXISTS (SELECT 1 FROM idea WHERE groupParentId = groupId)")
+    suspend fun cleanProjects()
+
+    @Query("UPDATE `group` SET isArchived = 1 WHERE groupId = :groupId")
+    suspend fun archiveGroup(groupId: Long)
+
+    suspend fun archiveStrayIdea(ideaId: Long) {
+        val groupId = createGroup(Group(0, "", isArchived = true))
+        modifyIdeaGroup(ideaId, groupId)
+        cleanProjects()
+    }
+
+    @Query("UPDATE `group` SET isArchived = 0 WHERE EXISTS (SELECT * FROM idea WHERE groupParentId = groupId AND ideaId = :ideaId) AND isArchived = 1")
+    suspend fun unarchiveIdea(ideaId: Long)
 
     @Query("UPDATE `group` SET name = :newName WHERE groupId = :groupId")
     suspend fun updateGroupName(groupId: Long, newName: String)

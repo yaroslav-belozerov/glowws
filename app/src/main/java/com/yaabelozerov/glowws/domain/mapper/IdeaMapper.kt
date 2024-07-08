@@ -20,4 +20,10 @@ class IdeaMapper {
         }
         return out
     }
+
+    fun toDomainModelFlat(
+        lst: List<Idea>
+    ): List<IdeaDomainModel> {
+        return lst.map { IdeaDomainModel(it.ideaId, it.groupParentId, it.content) }
+    }
 }

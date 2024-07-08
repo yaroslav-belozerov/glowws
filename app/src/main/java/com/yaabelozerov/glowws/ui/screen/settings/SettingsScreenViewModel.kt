@@ -9,7 +9,7 @@ import com.yaabelozerov.glowws.data.local.datastore.SettingsDefaults
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
 import com.yaabelozerov.glowws.di.AppModule
-import com.yaabelozerov.glowws.domain.mapper.SettingDomainMapper
+import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +26,11 @@ class SettingsScreenViewModel @Inject constructor(
     private val _state: MutableStateFlow<Map<Pair<String, ImageVector>, List<SettingDomainModel>>> =
         MutableStateFlow(emptyMap())
     val state = _state.asStateFlow()
-    val mapper = SettingDomainMapper()
+    val mapper = SettingsMapper()
+
+    init {
+        viewModelScope.launch { getSettings() }
+    }
 
     fun getSettings(
         defaultDisplay: SettingsList = SettingsDefaults.DISPLAY_SETTINGS,

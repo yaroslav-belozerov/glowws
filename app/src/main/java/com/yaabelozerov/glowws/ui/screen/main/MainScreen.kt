@@ -1,6 +1,5 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -57,10 +56,10 @@ fun MainScreen(
     modifier: Modifier = Modifier,
     ideas: Map<GroupDomainModel, List<IdeaDomainModel>> = emptyMap(),
     onSaveProject: (Long, String) -> Unit,
-    onRemoveProject: (Long) -> Unit,
+    onArchiveProject: (Long) -> Unit,
     onClickIdea: (Long) -> Unit,
     onAddIdeaToGroup: (Long) -> Unit,
-    onRemoveIdea: (Long) -> Unit,
+    onArchiveIdea: (Long) -> Unit,
     inSelectionMode: MutableState<Boolean>,
     selectedIdeas: MutableState<List<Long>>,
     settings: List<SettingDomainModel>
@@ -77,7 +76,7 @@ fun MainScreen(
                 Idea(ideas[proj]!!.first().content,
                     { onClickIdea(ideas[proj]!!.first().id) },
                     { onAddIdeaToGroup(ideas[proj]!!.first().groupId) },
-                    { onRemoveIdea(ideas[proj]!!.first().id) },
+                    { onArchiveIdea(ideas[proj]!!.first().id) },
                     {
                         inSelectionMode.value = true
                         val id = ideas[proj]!!.first().id
@@ -93,13 +92,13 @@ fun MainScreen(
                 )
             } else {
                 Project(
-                    name = proj.name,
+                    name = proj.content,
                     ideas = ideas[proj]!!,
                     onSave = { newName -> onSaveProject(proj.id, newName) },
-                    onRemove = { onRemoveProject(proj.id) },
+                    onArchive = { onArchiveProject(proj.id) },
                     onAddToGroup = { onAddIdeaToGroup(proj.id) },
                     onClickIdea = { id -> onClickIdea(id) },
-                    onRemoveIdea = { id -> onRemoveIdea(id) },
+                    onArchiveIdea = { id -> onArchiveIdea(id) },
                     onSelectIdea = { id ->
                         inSelectionMode.value = true
                         if (selectedIdeas.value.contains(id)) {
@@ -124,7 +123,7 @@ fun Idea(
     previewText: String,
     onClick: () -> Unit,
     onAddToGroup: () -> Unit,
-    onRemove: () -> Unit,
+    onArchive: () -> Unit,
     onSelect: () -> Unit,
     inSelectionMode: Boolean,
     isSelected: Boolean
@@ -158,13 +157,13 @@ fun Idea(
     }
 
     if (isDialogOpen.value) {
-        MainScreenDialog(title = previewText, entries = listOf(
+        ScreenSelectedDialog(title = previewText, entries = listOf(
             DialogEntry(Icons.Default.Menu, "Select", {
                 onSelect()
             }), DialogEntry(
                 Icons.Default.AddCircle, "Add to Project", onAddToGroup
             ), DialogEntry(
-                Icons.Default.Delete, "Remove Idea", onRemove, needsConfirmation = true
+                Icons.Default.Delete, "Archive Idea", onArchive, needsConfirmation = true
             )
         ), onDismiss = { isDialogOpen.value = false })
     }
@@ -175,7 +174,7 @@ fun Idea(
 fun NestedIdea(
     previewText: String,
     onClick: () -> Unit,
-    onRemove: () -> Unit,
+    onArchive: () -> Unit,
     onSelect: () -> Unit,
     inSelectionMode: Boolean,
     isSelected: Boolean
@@ -211,11 +210,11 @@ fun NestedIdea(
         }
     }
     if (isDialogOpen.value) {
-        MainScreenDialog(title = previewText, entries = listOf(
+        ScreenSelectedDialog(title = previewText, entries = listOf(
             DialogEntry(Icons.Default.Menu, "Select", {
                 onSelect()
             }), DialogEntry(
-                Icons.Default.Delete, "Remove Idea", onRemove, needsConfirmation = true
+                Icons.Default.Delete, "Archive Idea", onArchive, needsConfirmation = true
             )
         ), onDismiss = { isDialogOpen.value = false })
     }
@@ -227,10 +226,10 @@ fun Project(
     name: String,
     ideas: List<IdeaDomainModel>,
     onSave: (String) -> Unit,
-    onRemove: () -> Unit,
+    onArchive: () -> Unit,
     onAddToGroup: () -> Unit,
     onClickIdea: (Long) -> Unit,
-    onRemoveIdea: (Long) -> Unit,
+    onArchiveIdea: (Long) -> Unit,
     onSelectIdea: (Long) -> Unit,
     inSelection: Boolean,
     currentSelection: List<Long>,
@@ -290,7 +289,7 @@ fun Project(
             ideas.forEach {
                 NestedIdea(previewText = it.content,
                     onClick = { onClickIdea(it.id) },
-                    onRemove = { onRemoveIdea(it.id) },
+                    onArchive = { onArchiveIdea(it.id) },
                     onSelect = { onSelectIdea(it.id) },
                     inSelectionMode = inSelection,
                     isSelected = currentSelection.contains(it.id)
@@ -299,7 +298,7 @@ fun Project(
         }
     }
     if (isDialogOpen.value) {
-        MainScreenDialog(title = name, entries = listOf(
+        ScreenSelectedDialog(title = name, entries = listOf(
             DialogEntry(Icons.Default.Menu, "Select", {
                 ideas.forEach { onSelectIdea(it.id) }
             }),
@@ -310,14 +309,14 @@ fun Project(
                 isBeingModified.value = true
             }),
             DialogEntry(
-                Icons.Default.Delete, "Remove Project", onRemove, needsConfirmation = true
+                Icons.Default.Delete, "Archive Project", onArchive, needsConfirmation = true
             ),
         ), onDismiss = { isDialogOpen.value = false })
     }
 }
 
 @Composable
-fun TitleBar(modifier: Modifier = Modifier, onSettings: () -> Unit) {
+fun TitleBar(modifier: Modifier = Modifier, onSettings: () -> Unit, onArchive: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -328,7 +327,7 @@ fun TitleBar(modifier: Modifier = Modifier, onSettings: () -> Unit) {
         Icon(imageVector = Icons.Default.Delete,
             contentDescription = "archive button",
             modifier = Modifier
-                .clickable { Log.i("MainScreen", "Archive button clicked") }
+                .clickable { onArchive() }
                 .size(32.dp),
             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
         Text(
@@ -349,7 +348,7 @@ fun TitleBar(modifier: Modifier = Modifier, onSettings: () -> Unit) {
 }
 
 @Composable
-fun MainScreenDialog(title: String, entries: List<DialogEntry>, onDismiss: () -> Unit) {
+fun ScreenSelectedDialog(title: String, entries: List<DialogEntry>, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         val confirm = remember {
             mutableStateOf(List(entries.size) { false })

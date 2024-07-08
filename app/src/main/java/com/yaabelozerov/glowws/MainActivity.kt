@@ -29,12 +29,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.yaabelozerov.glowws.data.local.datastore.SettingsDefaults
 import com.yaabelozerov.glowws.ui.model.DialogEntry
+import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreen
+import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreen
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.main.MainScreen
-import com.yaabelozerov.glowws.ui.screen.main.MainScreenDialog
+import com.yaabelozerov.glowws.ui.screen.main.ScreenSelectedDialog
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
 import com.yaabelozerov.glowws.ui.screen.main.MainScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.main.TitleBar
@@ -51,15 +52,19 @@ class MainActivity : ComponentActivity() {
         val mvm: MainScreenViewModel by viewModels()
         val ivm: IdeaScreenViewModel by viewModels()
         val svm: SettingsScreenViewModel by viewModels()
-        svm.getSettings()
-        mvm.getIdeas()
+        val avm: ArchiveScreenViewModel by viewModels()
 
         setContent {
             val navController = rememberNavController()
-            val inSelectionMode = remember {
+            val inSelectionModeMain = remember {
                 mutableStateOf(false)
             }
-            val selectedIdeas = remember { mutableStateOf(emptyList<Long>()) }
+            val selectedIdeasMain = remember { mutableStateOf(emptyList<Long>()) }
+
+            val inSelectionModeArchive = remember {
+                mutableStateOf(false)
+            }
+            val selectedIdeasArchive = remember { mutableStateOf(emptyList<Long>()) }
 
 
             GlowwsTheme {
@@ -67,10 +72,11 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = "MainScreen") {
                         composable("MainScreen") {
                             Column(Modifier.padding(innerPadding)) {
-                                TitleBar(onSettings = { navController.navigate("SettingsScreen") })
+                                TitleBar(onSettings = { navController.navigate("SettingsScreen") },
+                                    onArchive = { navController.navigate("ArchiveScreen") })
                                 MainScreen(ideas = mvm.state.collectAsState().value.ideas,
                                     onSaveProject = { id, text -> mvm.modifyGroupName(id, text) },
-                                    onRemoveProject = { id -> mvm.removeGroup(id) },
+                                    onArchiveProject = { id -> mvm.archiveGroup(id) },
                                     onClickIdea = { id ->
                                         navController.navigate("IdeaScreen/${id}")
                                         ivm.refreshPoints(id)
@@ -81,9 +87,9 @@ class MainActivity : ComponentActivity() {
                                             ivm.refreshPoints(id)
                                         })
                                     },
-                                    onRemoveIdea = { id -> mvm.removeIdea(id) },
-                                    inSelectionMode = inSelectionMode,
-                                    selectedIdeas = selectedIdeas,
+                                    onArchiveIdea = { id -> mvm.archiveIdea(id) },
+                                    inSelectionMode = inSelectionModeMain,
+                                    selectedIdeas = selectedIdeasMain,
                                     settings = svm.state.collectAsState().value.map { it.value }
                                         .flatten())
                             }
@@ -95,7 +101,7 @@ class MainActivity : ComponentActivity() {
                             IdeaScreen(modifier = Modifier.padding(
                                 innerPadding
                             ), points = ivm.points.collectAsState().value, onBack = {
-                                navController.navigate("MainScreen")
+                                navController.navigateUp()
                             }, onAdd = {
                                 ivm.addPoint(backStackEntry.arguments!!.getLong("id"))
                             }, onSave = { pointId, newText, isMain ->
@@ -109,61 +115,130 @@ class MainActivity : ComponentActivity() {
                         composable(
                             "SettingsScreen"
                         ) {
-                            SettingsScreen(
-                                modifier = Modifier.padding(innerPadding),
+                            SettingsScreen(modifier = Modifier.padding(innerPadding),
                                 svm.state.collectAsState().value,
-                                onModify = { key, value -> svm.modifySetting(key, value) }
+                                onModify = { key, value -> svm.modifySetting(key, value) })
+                        }
+                        composable(
+                            "ArchiveScreen"
+                        ) {
+                            ArchiveScreen(
+                                modifier = Modifier.padding(innerPadding),
+                                ideas = avm.state.collectAsState().value,
+                                onClick = { id ->
+                                    navController.navigate("IdeaScreen/${id}")
+                                    ivm.refreshPoints(id)
+                                },
+                                onRemove = { id -> avm.removeIdea(id) },
+                                onUnarchive = { id -> avm.unarchiveIdea(id) },
+                                inSelectionMode = inSelectionModeArchive,
+                                selectedIdeas = selectedIdeasArchive,
                             )
                         }
                     }
                 }, floatingActionButton = {
-                    val isConfirmationOpen = remember {
-                        mutableStateOf(false)
-                    }
-                    if (isConfirmationOpen.value) {
-                        MainScreenDialog(title = "Remove all selected?", entries = listOf(
-                            DialogEntry(
-                                Icons.Default.CheckCircle, "Confirm", {
-                                    selectedIdeas.value.forEach { mvm.removeIdea(it) }
-                                    inSelectionMode.value = false
-                                }, needsConfirmation = false
-                            ), DialogEntry(
-                                null,
-                                "Cancel",
-                                onClick = { isConfirmationOpen.value = false },
-                                needsConfirmation = false
-                            )
-                        ), onDismiss = { isConfirmationOpen.value = false })
-                    }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (inSelectionMode.value) {
-                            FloatingActionButton(onClick = { isConfirmationOpen.value = true }) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "delete selected button"
-                                )
+                        when (navController.currentBackStackEntryAsState().value?.destination?.route) {
+                            "MainScreen" -> {
+                                val isConfirmationOpen = remember {
+                                    mutableStateOf(false)
+                                }
+                                if (isConfirmationOpen.value) {
+                                    ScreenSelectedDialog(title = "Archive all selected?",
+                                        entries = listOf(
+                                            DialogEntry(
+                                                Icons.Default.CheckCircle, "Confirm", {
+                                                    selectedIdeasMain.value.forEach {
+                                                        mvm.archiveIdea(
+                                                            it
+                                                        )
+                                                    }
+                                                    inSelectionModeMain.value = false
+                                                }, needsConfirmation = false
+                                            ), DialogEntry(
+                                                null,
+                                                "Cancel",
+                                                onClick = { isConfirmationOpen.value = false },
+                                                needsConfirmation = false
+                                            )
+                                        ),
+                                        onDismiss = { isConfirmationOpen.value = false })
+                                }
+                                if (inSelectionModeMain.value) {
+                                    FloatingActionButton(onClick = {
+                                        isConfirmationOpen.value = true
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "archive selected button"
+                                        )
+                                    }
+                                    FloatingActionButton(onClick = {
+                                        inSelectionModeMain.value = false
+                                        selectedIdeasMain.value = emptyList()
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "deselect button"
+                                        )
+                                    }
+                                } else FloatingActionButton(onClick = {
+                                    mvm.addNewIdeaAndProject("", callback = { id ->
+                                        navController.navigate("IdeaScreen/${id}")
+                                        ivm.refreshPoints(id)
+                                    })
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "add idea button"
+                                    )
+                                }
                             }
-                            FloatingActionButton(onClick = {
-                                inSelectionMode.value = false
-                                selectedIdeas.value = emptyList()
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "deselect button"
-                                )
-                            }
-                        }
-                        if (!inSelectionMode.value && navController.currentBackStackEntryAsState().value?.destination?.route == "MainScreen") {
-                            FloatingActionButton(onClick = {
-                                mvm.addNewIdea("", callback = { id ->
-                                    navController.navigate("IdeaScreen/${id}")
-                                    ivm.refreshPoints(id)
-                                })
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "add idea button"
-                                )
+
+                            "ArchiveScreen" -> {
+                                val isConfirmationOpen = remember {
+                                    mutableStateOf(false)
+                                }
+                                if (isConfirmationOpen.value) {
+                                    ScreenSelectedDialog(title = "Remove all selected?",
+                                        entries = listOf(
+                                            DialogEntry(
+                                                Icons.Default.CheckCircle, "Confirm", {
+                                                    selectedIdeasArchive.value.forEach {
+                                                        avm.removeIdea(
+                                                            it
+                                                        )
+                                                    }
+                                                    inSelectionModeArchive.value = false
+                                                }, needsConfirmation = false
+                                            ), DialogEntry(
+                                                null,
+                                                "Cancel",
+                                                onClick = { isConfirmationOpen.value = false },
+                                                needsConfirmation = false
+                                            )
+                                        ),
+                                        onDismiss = { isConfirmationOpen.value = false })
+                                }
+                                if (inSelectionModeArchive.value) {
+                                    FloatingActionButton(onClick = {
+                                        isConfirmationOpen.value = true
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "delete selected button"
+                                        )
+                                    }
+                                    FloatingActionButton(onClick = {
+                                        inSelectionModeArchive.value = false
+                                        selectedIdeasArchive.value = emptyList()
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "deselect button"
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
