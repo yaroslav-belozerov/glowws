@@ -22,6 +22,7 @@ data class Point(
     @PrimaryKey(autoGenerate = true) val pointId: Long,
     val ideaParentId: Long,
     var content: String,
+    val index: Long,
     var type: Int,
     var isMain: Boolean,
 )

@@ -37,7 +37,7 @@ interface IdeaDao {
     fun getArchivedIdeas(): Flow<List<Idea>>
 
     @Query(
-        "SELECT * FROM point WHERE ideaParentId = :ideaId"
+        "SELECT * FROM point WHERE ideaParentId = :ideaId ORDER BY `index` ASC"
     )
     fun getIdeaPoints(ideaId: Long): Flow<List<Point>>
 
@@ -53,11 +53,27 @@ interface IdeaDao {
     @Upsert
     suspend fun upsertPoint(point: Point): Long
 
+    @Insert
+    suspend fun insertPoint(point: Point): Long
+
     suspend fun upsertPointUpdateIdea(point: Point): Long {
         val newPointId = upsertPoint(point)
         updateIdeaContentFromPoints(point.ideaParentId)
         return newPointId
     }
+
+    suspend fun insertPointUpdateIdeaAtIndex(point: Point): Long {
+        movePointsIndexesUp(point.ideaParentId, point.index)
+        val newPointId = insertPoint(point)
+        updateIdeaContentFromPoints(point.ideaParentId)
+        return newPointId
+    }
+
+    @Query("UPDATE point SET `index` = `index` + 1 WHERE ideaParentId = :ideaId AND `index` >= :threshold")
+    suspend fun movePointsIndexesUp(ideaId: Long, threshold: Long)
+
+    @Query("UPDATE point SET `index` = `index` - 1 WHERE ideaParentId = :ideaId AND `index` > :threshold")
+    suspend fun movePointsIndexesDown(ideaId: Long, threshold: Long)
 
     suspend fun updateIdeaContentFromPoints(ideaId: Long) {
         val pts = getIdeaPoints(ideaId).first()
@@ -68,6 +84,12 @@ interface IdeaDao {
 
     @Query("DELETE FROM point WHERE pointId = :pointId")
     suspend fun deletePoint(pointId: Long)
+
+    suspend fun deletePointAndIndex(pointId: Long) {
+        val point = getPoint(pointId).first()
+        deletePoint(pointId)
+        movePointsIndexesDown(point.ideaParentId, point.index)
+    }
 
     @Query("DELETE FROM point WHERE ideaParentId = :ideaId")
     suspend fun deleteIdeaPoints(ideaId: Long)

@@ -33,10 +33,17 @@ class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewMo
         }
     }
 
-    fun addPoint(ideaId: Long) {
+    fun addPointAtIndex(ideaId: Long, index: Long) {
         viewModelScope.launch {
-            dao.upsertPointUpdateIdea(
-                Point(pointId = 0, ideaParentId = ideaId, content = "", type = 0, isMain = false)
+            dao.insertPointUpdateIdeaAtIndex(
+                Point(
+                    pointId = 0,
+                    ideaParentId = ideaId,
+                    content = "",
+                    index = index,
+                    type = 0,
+                    isMain = false
+                )
             )
         }
     }
@@ -55,7 +62,7 @@ class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewMo
     fun removePoint(pointId: Long) {
         viewModelScope.launch {
             val ideaId = dao.getPoint(pointId).first().ideaParentId
-            dao.deletePoint(pointId)
+            dao.deletePointAndIndex(pointId)
             dao.updateIdeaContentFromPoints(ideaId)
         }
     }

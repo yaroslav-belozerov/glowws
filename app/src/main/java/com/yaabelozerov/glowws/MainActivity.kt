@@ -102,8 +102,8 @@ class MainActivity : ComponentActivity() {
                                 innerPadding
                             ), points = ivm.points.collectAsState().value, onBack = {
                                 navController.navigateUp()
-                            }, onAdd = {
-                                ivm.addPoint(backStackEntry.arguments!!.getLong("id"))
+                            }, onAdd = { ind ->
+                                ivm.addPointAtIndex(backStackEntry.arguments!!.getLong("id"), ind)
                             }, onSave = { pointId, newText, isMain ->
                                 ivm.modifyPoint(
                                     pointId, newText, isMain
