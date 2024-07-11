@@ -18,6 +18,12 @@ interface IdeaDao {
     @Insert
     suspend fun insertIdea(idea: Idea): Long
 
+    suspend fun addIdea(idea: Idea): Long {
+        val ideaId = insertIdea(idea)
+        updateGroupTimestamp(getGroupByIdea(ideaId), System.currentTimeMillis())
+        return ideaId
+    }
+
     @Query("DELETE FROM `idea` WHERE ideaId = :ideaId")
     suspend fun deleteIdea(ideaId: Long)
 
@@ -42,7 +48,14 @@ interface IdeaDao {
     fun getIdeaPoints(ideaId: Long): Flow<List<Point>>
 
     @Query("UPDATE idea SET content = :content WHERE ideaId = :ideaId")
-    suspend fun modifyIdeaContent(ideaId: Long, content: String)
+    suspend fun setIdeaContent(ideaId: Long, content: String)
+
+    suspend fun modifyIdeaContent(ideaId: Long, content: String) {
+        setIdeaContent(ideaId, content)
+        val m = System.currentTimeMillis()
+        updateIdeaTimestamp(ideaId, m)
+        updateGroupTimestamp(getGroupByIdea(ideaId), m)
+    }
 
     @Query("UPDATE idea SET groupParentId = :groupId WHERE ideaId = :ideaId")
     suspend fun modifyIdeaGroup(ideaId: Long, groupId: Long)
@@ -94,12 +107,27 @@ interface IdeaDao {
     @Query("DELETE FROM point WHERE ideaParentId = :ideaId")
     suspend fun deleteIdeaPoints(ideaId: Long)
 
+    @Query("SELECT ideaId FROM idea WHERE EXISTS (SELECT * FROM point WHERE pointId = :pointId AND ideaParentId = ideaId)")
+    suspend fun getIdeaIdFromPointId(pointId: Long): Long
+
     @Query("UPDATE point SET content = :newText WHERE pointId = :pointId")
-    suspend fun updatePointContent(pointId: Long, newText: String)
+    suspend fun setPointContent(pointId: Long, newText: String)
+
+    suspend fun updatePointContent(pointId: Long, newText: String) {
+        setPointContent(pointId, newText)
+        updateIdeaTimestamp(getIdeaIdFromPointId(pointId), System.currentTimeMillis())
+    }
+
+    @Query("UPDATE idea SET timestampModified = :timestamp WHERE ideaId = :ideaId")
+    suspend fun updateIdeaTimestamp(ideaId: Long, timestamp: Long)
+
+    @Query("UPDATE `group` SET timestampModified = :timestamp WHERE groupId = :groupId")
+    suspend fun updateGroupTimestamp(groupId: Long, timestamp: Long)
 
     suspend fun createIdeaAndGroup(content: String): Long {
-        val groupId = createGroup(Group(0, "", isArchived = false))
-        return insertIdea(Idea(0, groupId, content))
+        val m = System.currentTimeMillis()
+        val groupId = createGroup(Group(0, m, m, "", isArchived = false))
+        return insertIdea(Idea(0, groupId, m, m, content))
     }
 
     @Query("SELECT groupParentId FROM idea WHERE ideaId = :ideaId")
@@ -113,6 +141,7 @@ interface IdeaDao {
         deleteIdea(ideaId)
         deleteIdeaPoints(ideaId)
         if (getAllIdeasFromGroup(groupId).isEmpty()) deleteGroupOnly(groupId)
+        else updateGroupTimestamp(groupId, System.currentTimeMillis())
     }
 
     @Query("DELETE FROM `group` WHERE groupId = :groupId")
@@ -127,10 +156,18 @@ interface IdeaDao {
     suspend fun cleanProjects()
 
     @Query("UPDATE `group` SET isArchived = 1 WHERE groupId = :groupId")
-    suspend fun archiveGroup(groupId: Long)
+    suspend fun setArchiveGroup(groupId: Long)
+
+    suspend fun archiveGroup(groupId: Long) {
+        getAllIdeasFromGroup(groupId).forEach {
+            archiveStrayIdea(it.ideaId)
+        }
+    }
 
     suspend fun archiveStrayIdea(ideaId: Long) {
-        val groupId = createGroup(Group(0, "", isArchived = true))
+        val m = System.currentTimeMillis()
+        val groupId = createGroup(Group(0, m, m, "", isArchived = true))
+        updateGroupTimestamp(getGroupByIdea(ideaId), m)
         modifyIdeaGroup(ideaId, groupId)
         cleanProjects()
     }
@@ -139,7 +176,12 @@ interface IdeaDao {
     suspend fun unarchiveIdea(ideaId: Long)
 
     @Query("UPDATE `group` SET name = :newName WHERE groupId = :groupId")
-    suspend fun updateGroupName(groupId: Long, newName: String)
+    suspend fun setGroupName(groupId: Long, newName: String)
+
+    suspend fun updateGroupName(groupId: Long, newName: String) {
+        setGroupName(groupId, newName)
+        updateGroupTimestamp(groupId, System.currentTimeMillis())
+    }
 
     @Query("DELETE FROM idea WHERE groupParentId = :groupId")
     suspend fun deleteGroupIdeas(groupId: Long)

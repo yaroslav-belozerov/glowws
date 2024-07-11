@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -29,6 +30,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.yaabelozerov.glowws.ui.model.ArchiveConfirmType
 import com.yaabelozerov.glowws.ui.model.DialogEntry
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreen
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenViewModel
@@ -154,6 +156,7 @@ class MainActivity : ComponentActivity() {
                                                         )
                                                     }
                                                     inSelectionModeMain.value = false
+                                                    selectedIdeasMain.value = emptyList()
                                                 }, needsConfirmation = false
                                             ), DialogEntry(
                                                 null,
@@ -199,17 +202,22 @@ class MainActivity : ComponentActivity() {
                                 val isConfirmationOpen = remember {
                                     mutableStateOf(false)
                                 }
+                                val confirmationType = remember {
+                                    mutableStateOf(ArchiveConfirmType.UNARCHIVE)
+                                }
                                 if (isConfirmationOpen.value) {
-                                    ScreenSelectedDialog(title = "Remove all selected?",
+                                    ScreenSelectedDialog(title = "Are you sure?",
                                         entries = listOf(
                                             DialogEntry(
                                                 Icons.Default.CheckCircle, "Confirm", {
                                                     selectedIdeasArchive.value.forEach {
-                                                        avm.removeIdea(
-                                                            it
-                                                        )
+                                                        when (confirmationType.value) {
+                                                            ArchiveConfirmType.DELETE -> avm.removeIdea(it)
+                                                            ArchiveConfirmType.UNARCHIVE -> avm.unarchiveIdea(it)
+                                                        }
                                                     }
                                                     inSelectionModeArchive.value = false
+                                                    selectedIdeasArchive.value = emptyList()
                                                 }, needsConfirmation = false
                                             ), DialogEntry(
                                                 null,
@@ -223,6 +231,16 @@ class MainActivity : ComponentActivity() {
                                 if (inSelectionModeArchive.value) {
                                     FloatingActionButton(onClick = {
                                         isConfirmationOpen.value = true
+                                        confirmationType.value = ArchiveConfirmType.UNARCHIVE
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Refresh,
+                                            contentDescription = "restore selected button"
+                                        )
+                                    }
+                                    FloatingActionButton(onClick = {
+                                        isConfirmationOpen.value = true
+                                        confirmationType.value = ArchiveConfirmType.DELETE
                                     }) {
                                         Icon(
                                             imageVector = Icons.Default.Delete,

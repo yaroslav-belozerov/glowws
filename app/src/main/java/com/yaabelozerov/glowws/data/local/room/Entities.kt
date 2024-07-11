@@ -7,12 +7,16 @@ import androidx.room.PrimaryKey
 data class Idea(
     @PrimaryKey(autoGenerate = true) val ideaId: Long,
     val groupParentId: Long,
+    val timestampCreated: Long,
+    val timestampModified: Long,
     val content: String
 )
 
 @Entity
 data class Group(
     @PrimaryKey(autoGenerate = true) val groupId: Long,
+    val timestampCreated: Long,
+    val timestampModified: Long,
     val name: String,
     val isArchived: Boolean
 )

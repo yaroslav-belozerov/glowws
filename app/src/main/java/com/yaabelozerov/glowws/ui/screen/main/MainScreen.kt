@@ -73,7 +73,9 @@ fun MainScreen(
     ) {
         items(ideas.keys.toList()) { proj ->
             if (ideas[proj]!!.size == 1) {
-                Idea(ideas[proj]!!.first().content,
+                Idea(
+                    ideas[proj]!!.first().content,
+                    ideas[proj]!!.first().modified,
                     { onClickIdea(ideas[proj]!!.first().id) },
                     { onAddIdeaToGroup(ideas[proj]!!.first().groupId) },
                     { onArchiveIdea(ideas[proj]!!.first().id) },
@@ -93,6 +95,7 @@ fun MainScreen(
             } else {
                 Project(
                     name = proj.content,
+                    modified = proj.modified,
                     ideas = ideas[proj]!!,
                     onSave = { newName -> onSaveProject(proj.id, newName) },
                     onArchive = { onArchiveProject(proj.id) },
@@ -121,6 +124,7 @@ fun MainScreen(
 @Composable
 fun Idea(
     previewText: String,
+    modified: String,
     onClick: () -> Unit,
     onAddToGroup: () -> Unit,
     onArchive: () -> Unit,
@@ -157,7 +161,7 @@ fun Idea(
     }
 
     if (isDialogOpen.value) {
-        ScreenSelectedDialog(title = previewText, entries = listOf(
+        ScreenSelectedDialog(title = previewText, info = listOf(modified), entries = listOf(
             DialogEntry(Icons.Default.Menu, "Select", {
                 onSelect()
             }), DialogEntry(
@@ -173,6 +177,7 @@ fun Idea(
 @Composable
 fun NestedIdea(
     previewText: String,
+    modified: String,
     onClick: () -> Unit,
     onArchive: () -> Unit,
     onSelect: () -> Unit,
@@ -210,7 +215,7 @@ fun NestedIdea(
         }
     }
     if (isDialogOpen.value) {
-        ScreenSelectedDialog(title = previewText, entries = listOf(
+        ScreenSelectedDialog(title = previewText, info = listOf(modified), entries = listOf(
             DialogEntry(Icons.Default.Menu, "Select", {
                 onSelect()
             }), DialogEntry(
@@ -224,6 +229,7 @@ fun NestedIdea(
 @Composable
 fun Project(
     name: String,
+    modified: String,
     ideas: List<IdeaDomainModel>,
     onSave: (String) -> Unit,
     onArchive: () -> Unit,
@@ -287,7 +293,9 @@ fun Project(
         }
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             ideas.forEach {
-                NestedIdea(previewText = it.content,
+                NestedIdea(
+                    previewText = it.content,
+                    modified = it.modified,
                     onClick = { onClickIdea(it.id) },
                     onArchive = { onArchiveIdea(it.id) },
                     onSelect = { onSelectIdea(it.id) },
@@ -298,7 +306,7 @@ fun Project(
         }
     }
     if (isDialogOpen.value) {
-        ScreenSelectedDialog(title = name, entries = listOf(
+        ScreenSelectedDialog(title = name, info = listOf(modified), entries = listOf(
             DialogEntry(Icons.Default.Menu, "Select", {
                 ideas.forEach { onSelectIdea(it.id) }
             }),
@@ -348,7 +356,12 @@ fun TitleBar(modifier: Modifier = Modifier, onSettings: () -> Unit, onArchive: (
 }
 
 @Composable
-fun ScreenSelectedDialog(title: String, entries: List<DialogEntry>, onDismiss: () -> Unit) {
+fun ScreenSelectedDialog(
+    title: String,
+    info: List<String> = emptyList(),
+    entries: List<DialogEntry>,
+    onDismiss: () -> Unit
+) {
     Dialog(onDismissRequest = onDismiss) {
         val confirm = remember {
             mutableStateOf(List(entries.size) { false })
@@ -358,8 +371,9 @@ fun ScreenSelectedDialog(title: String, entries: List<DialogEntry>, onDismiss: (
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = title, fontSize = 32.sp
+                text = title, fontSize = 32.sp, textAlign = TextAlign.Center
             )
+            info.forEach { Text(text = it) }
             entries.forEachIndexed { ind, it ->
                 if (!it.needsConfirmation) {
                     DialogButton(
