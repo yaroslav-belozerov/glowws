@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
@@ -35,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.domain.model.ChoiceSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 
@@ -44,12 +47,23 @@ fun SettingsScreen(
     settings: Map<Pair<String, ImageVector>, List<SettingDomainModel>>,
     onModify: (SettingsKeys, String) -> Unit
 ) {
-    LazyColumn(modifier = modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    LazyColumn(
+        modifier = modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         item {
-            Text(text = "Settings", fontSize = 32.sp, fontWeight = FontWeight.Bold, modifier = Modifier.fillParentMaxWidth(), textAlign = TextAlign.Center)
+            Text(
+                text = "Settings",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillParentMaxWidth(),
+                textAlign = TextAlign.Center
+            )
         }
         items(settings.keys.toList()) { key ->
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 Icon(imageVector = key.second, contentDescription = "${key.first} icon")
                 Text(text = key.first, fontSize = 24.sp)
             }
@@ -77,9 +91,24 @@ fun SettingsScreen(
                                 }
 
                                 is String -> {
-                                    Text(text = entry.value.toString())
-                                    Button(onClick = { /*TODO*/ }) {
-                                        Text(text = "Edit")
+                                    if (entry is ChoiceSettingDomainModel) {
+                                        val expanded = remember {
+                                            mutableStateOf(false)
+                                        }
+                                        DropdownMenu(expanded = expanded.value,
+                                            onDismissRequest = { expanded.value = false }) {
+                                            entry.choices.forEach {
+                                                Text(text = it, modifier = Modifier.clickable {
+                                                    onModify(
+                                                        entry.key, it
+                                                    )
+                                                    expanded.value = false
+                                                })
+                                            }
+                                        }
+                                        if (!expanded.value) { Text(text = entry.value, modifier = Modifier.clickable { expanded.value = true }) }
+                                    } else {
+                                        Text(text = entry.value.toString())
                                     }
                                 }
                             }
@@ -90,7 +119,10 @@ fun SettingsScreen(
         }
         item {
             Column(modifier = Modifier.fillMaxWidth()) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Icon(imageVector = Icons.Default.Info, contentDescription = "feedback icon")
                     Text(text = "Send feedback", fontSize = 24.sp)
                 }
@@ -102,7 +134,10 @@ fun SettingsScreen(
                 val intentEn = remember {
                     Intent(Intent.ACTION_VIEW, Uri.parse("https://forms.gle/R3TwjtoDqUS9PseTA"))
                 }
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     OutlinedButton(onClick = { ctx.startActivity(intentRu) }, Modifier.weight(1f)) {
                         Text(text = "RU \uD83C\uDDF7\uD83C\uDDFA")
                     }

@@ -9,6 +9,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.yaabelozerov.glowws.data.local.room.IdeaDatabase
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
+import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,7 +39,16 @@ object AppModule {
 
     @Singleton
     @Provides
+    fun provideSettingsMapper() = SettingsMapper()
+
+    @Singleton
+    @Provides
     fun provideMoshi(): Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+
+    @Singleton
+    @Provides
+    fun provideSettingsManager(dataStoreManager: DataStoreManager, moshi: Moshi) =
+        SettingsManager(dataStoreManager, moshi)
 
     private val Context.dataStore by preferencesDataStore("settings")
 
@@ -46,19 +56,9 @@ object AppModule {
     class DataStoreManager @Inject constructor(@ApplicationContext appContext: Context) {
         private val settingsDataStore = appContext.dataStore
 
-        private val displayKey = stringPreferencesKey("display_settings")
-        private val userKey = stringPreferencesKey("user_settings")
-
-        fun getDisplay(): Flow<String> = settingsDataStore.data.map { it[displayKey] ?: "" }
-
-        suspend fun setDisplay(settings: String) = settingsDataStore.edit {
-            it[displayKey] = settings
-        }
-
-        fun getUser(): Flow<String> = settingsDataStore.data.map { it[userKey] ?: "" }
-
-        suspend fun setUser(settings: String) = settingsDataStore.edit {
-            it[userKey] = settings
-        }
+        private val settingsKey = stringPreferencesKey("settings")
+        fun getSettings(): Flow<String> = settingsDataStore.data.map { it[settingsKey] ?: "" }
+        suspend fun setSettings(settings: String) =
+            settingsDataStore.edit { it[settingsKey] = settings }
     }
 }

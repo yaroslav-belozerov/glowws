@@ -54,7 +54,7 @@ import com.yaabelozerov.glowws.ui.theme.Typography
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
-    ideas: Map<GroupDomainModel, List<IdeaDomainModel>> = emptyMap(),
+    ideas: List<GroupDomainModel> = emptyList(),
     onSaveProject: (Long, String) -> Unit,
     onArchiveProject: (Long) -> Unit,
     onClickIdea: (Long) -> Unit,
@@ -71,17 +71,17 @@ fun MainScreen(
             .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(ideas.keys.toList()) { proj ->
-            if (ideas[proj]!!.size == 1) {
+        items(ideas) { proj ->
+            if (proj.entries.size == 1) {
                 Idea(
-                    ideas[proj]!!.first().content,
-                    ideas[proj]!!.first().modified,
-                    { onClickIdea(ideas[proj]!!.first().id) },
-                    { onAddIdeaToGroup(ideas[proj]!!.first().groupId) },
-                    { onArchiveIdea(ideas[proj]!!.first().id) },
+                    proj.entries.first().content,
+                    proj.entries.first().modified,
+                    { onClickIdea(proj.entries.first().id) },
+                    { onAddIdeaToGroup(proj.entries.first().groupId) },
+                    { onArchiveIdea(proj.entries.first().id) },
                     {
                         inSelectionMode.value = true
-                        val id = ideas[proj]!!.first().id
+                        val id = proj.entries.first().id
                         if (selectedIdeas.value.contains(id)) {
                             selectedIdeas.value -= id
                             if (selectedIdeas.value.isEmpty()) inSelectionMode.value = false
@@ -90,13 +90,13 @@ fun MainScreen(
                         }
                     },
                     inSelectionMode.value,
-                    selectedIdeas.value.contains(ideas[proj]!!.first().id)
+                    selectedIdeas.value.contains(proj.entries.first().id)
                 )
             } else {
                 Project(
                     name = proj.content,
                     modified = proj.modified,
-                    ideas = ideas[proj]!!,
+                    ideas = proj.entries,
                     onSave = { newName -> onSaveProject(proj.id, newName) },
                     onArchive = { onArchiveProject(proj.id) },
                     onAddToGroup = { onAddIdeaToGroup(proj.id) },

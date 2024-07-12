@@ -1,6 +1,7 @@
 package com.yaabelozerov.glowws.domain.model
 
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.data.local.datastore.model.SettingsModel
 
 enum class SettingType(val type: String) {
     BOOLEAN("boolean"), STRING("string"), DOUBLE("double")
@@ -31,3 +32,10 @@ data class DoubleSettingDomainModel(
     val max: Double,
     override val value: Double
 ) : SettingDomainModel()
+
+data class ChoiceSettingDomainModel(
+    override val key: SettingsKeys,
+    override val name: String,
+    val choices: List<String>,
+    override val value: String,
+): SettingDomainModel()

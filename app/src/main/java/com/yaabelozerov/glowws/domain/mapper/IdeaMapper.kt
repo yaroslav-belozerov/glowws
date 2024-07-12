@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.domain.mapper
 
+import android.util.Log
 import com.yaabelozerov.glowws.data.local.room.Group
 import com.yaabelozerov.glowws.data.local.room.Idea
 import com.yaabelozerov.glowws.domain.model.GroupDomainModel
@@ -7,30 +8,37 @@ import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.Calendar
+import java.util.Comparator
 import java.util.Date
 import java.util.Locale
+import java.util.SortedMap
 
 class IdeaMapper {
     fun toDomainModel(
-        mp: Map<Group, List<Idea>>
-    ): Map<GroupDomainModel, List<IdeaDomainModel>> {
-        val out: MutableMap<GroupDomainModel, List<IdeaDomainModel>> = mutableMapOf()
+        mp: Map<Group, List<Idea>>, comparator: Comparator<Group>
+    ): List<GroupDomainModel> {
+        val out: MutableList<GroupDomainModel> = mutableListOf()
         val pattern = "yyyy-MM-dd HH:mm:ss"
 
-        for ((key, value) in mp) {
+        for ((key, value) in mp.toSortedMap(comparator)) {
             val cal = Calendar.getInstance()
+            cal.timeInMillis = key.timestampCreated
+            val created = cal.time
             cal.timeInMillis = key.timestampModified
-            out[GroupDomainModel(
-                key.groupId, SimpleDateFormat(pattern, Locale.ROOT).format(cal.time), key.name
-            )] = value.map {
-                cal.timeInMillis = it.timestampModified
-                IdeaDomainModel(
-                    it.ideaId,
-                    SimpleDateFormat(pattern, Locale.ROOT).format(cal.time),
-                    it.groupParentId,
-                    it.content
-                )
-            }
+            val modified = cal.time
+            out.add(GroupDomainModel(key.groupId,
+                SimpleDateFormat(pattern, Locale.ROOT).format(created),
+                SimpleDateFormat(pattern, Locale.ROOT).format(modified),
+                key.name,
+                value.map {
+                    cal.timeInMillis = it.timestampModified
+                    IdeaDomainModel(
+                        it.ideaId,
+                        SimpleDateFormat(pattern, Locale.ROOT).format(cal.time),
+                        it.groupParentId,
+                        it.content
+                    )
+                }))
         }
         return out
     }

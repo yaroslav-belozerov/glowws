@@ -9,7 +9,7 @@ enum class SettingsCategories {
 }
 
 enum class SettingsTypes {
-    BOOLEAN, DOUBLE, STRING
+    BOOLEAN, DOUBLE, STRING, CHOICE
 }
 
 @JsonClass(generateAdapter = true)

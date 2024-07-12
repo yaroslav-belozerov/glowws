@@ -105,7 +105,9 @@ class MainActivity : ComponentActivity() {
                             ), points = ivm.points.collectAsState().value, onBack = {
                                 navController.navigateUp()
                             }, onAdd = { ind ->
-                                ivm.addPointAtIndex(backStackEntry.arguments!!.getLong("id"), ind)
+                                ivm.addPointAtIndex(
+                                    backStackEntry.arguments!!.getLong("id"), ind
+                                )
                             }, onSave = { pointId, newText, isMain ->
                                 ivm.modifyPoint(
                                     pointId, newText, isMain
@@ -119,7 +121,9 @@ class MainActivity : ComponentActivity() {
                         ) {
                             SettingsScreen(modifier = Modifier.padding(innerPadding),
                                 svm.state.collectAsState().value,
-                                onModify = { key, value -> svm.modifySetting(key, value) })
+                                onModify = { key, value ->
+                                    svm.modifySetting(key, value) { mvm.setSortFilter() }
+                                })
                         }
                         composable(
                             "ArchiveScreen"
@@ -206,27 +210,30 @@ class MainActivity : ComponentActivity() {
                                     mutableStateOf(ArchiveConfirmType.UNARCHIVE)
                                 }
                                 if (isConfirmationOpen.value) {
-                                    ScreenSelectedDialog(title = "Are you sure?",
-                                        entries = listOf(
-                                            DialogEntry(
-                                                Icons.Default.CheckCircle, "Confirm", {
-                                                    selectedIdeasArchive.value.forEach {
-                                                        when (confirmationType.value) {
-                                                            ArchiveConfirmType.DELETE -> avm.removeIdea(it)
-                                                            ArchiveConfirmType.UNARCHIVE -> avm.unarchiveIdea(it)
-                                                        }
+                                    ScreenSelectedDialog(title = "Are you sure?", entries = listOf(
+                                        DialogEntry(
+                                            Icons.Default.CheckCircle, "Confirm", {
+                                                selectedIdeasArchive.value.forEach {
+                                                    when (confirmationType.value) {
+                                                        ArchiveConfirmType.DELETE -> avm.removeIdea(
+                                                            it
+                                                        )
+
+                                                        ArchiveConfirmType.UNARCHIVE -> avm.unarchiveIdea(
+                                                            it
+                                                        )
                                                     }
-                                                    inSelectionModeArchive.value = false
-                                                    selectedIdeasArchive.value = emptyList()
-                                                }, needsConfirmation = false
-                                            ), DialogEntry(
-                                                null,
-                                                "Cancel",
-                                                onClick = { isConfirmationOpen.value = false },
-                                                needsConfirmation = false
-                                            )
-                                        ),
-                                        onDismiss = { isConfirmationOpen.value = false })
+                                                }
+                                                inSelectionModeArchive.value = false
+                                                selectedIdeasArchive.value = emptyList()
+                                            }, needsConfirmation = false
+                                        ), DialogEntry(
+                                            null,
+                                            "Cancel",
+                                            onClick = { isConfirmationOpen.value = false },
+                                            needsConfirmation = false
+                                        )
+                                    ), onDismiss = { isConfirmationOpen.value = false })
                                 }
                                 if (inSelectionModeArchive.value) {
                                     FloatingActionButton(onClick = {

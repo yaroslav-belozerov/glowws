@@ -4,6 +4,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Upsert
+import com.yaabelozerov.glowws.ui.model.FilterModel
+import com.yaabelozerov.glowws.ui.model.SortModel
+import com.yaabelozerov.glowws.ui.model.SortType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 
@@ -90,8 +93,11 @@ interface IdeaDao {
 
     suspend fun updateIdeaContentFromPoints(ideaId: Long) {
         val pts = getIdeaPoints(ideaId).first()
+        val parent = getGroupByIdea(ideaId)
+        val siblings = getAllIdeasFromGroup(parent)
         val content: String =
             pts.firstOrNull { it.isMain }?.content ?: (pts.firstOrNull()?.content ?: "")
+        if (siblings.size == 1) { updateGroupName(parent, content) }
         modifyIdeaContent(ideaId, content)
     }
 
@@ -126,7 +132,7 @@ interface IdeaDao {
 
     suspend fun createIdeaAndGroup(content: String): Long {
         val m = System.currentTimeMillis()
-        val groupId = createGroup(Group(0, m, m, "", isArchived = false))
+        val groupId = createGroup(Group(0, m, m, content, isArchived = false))
         return insertIdea(Idea(0, groupId, m, m, content))
     }
 
@@ -140,7 +146,8 @@ interface IdeaDao {
         val groupId = getGroupByIdea(ideaId)
         deleteIdea(ideaId)
         deleteIdeaPoints(ideaId)
-        if (getAllIdeasFromGroup(groupId).isEmpty()) deleteGroupOnly(groupId)
+        val all = getAllIdeasFromGroup(groupId)
+        if (all.isEmpty()) deleteGroupOnly(groupId)
         else updateGroupTimestamp(groupId, System.currentTimeMillis())
     }
 
@@ -166,8 +173,11 @@ interface IdeaDao {
 
     suspend fun archiveStrayIdea(ideaId: Long) {
         val m = System.currentTimeMillis()
+        val parent = getGroupByIdea(ideaId)
+        val siblings = getAllIdeasFromGroup(parent)
+        if (siblings.size == 2) { setGroupName(parent, siblings.first().content) }
         val groupId = createGroup(Group(0, m, m, "", isArchived = true))
-        updateGroupTimestamp(getGroupByIdea(ideaId), m)
+        updateGroupTimestamp(parent, m)
         modifyIdeaGroup(ideaId, groupId)
         cleanProjects()
     }
