@@ -15,6 +15,9 @@ interface IdeaDao {
     @Query("SELECT * from `idea`")
     fun getAllIdeas(): Flow<List<Idea>>
 
+    @Query("SELECT * FROM idea WHERE ideaId = :ideaId")
+    fun getIdea(ideaId: Long): Idea
+
     @Insert
     suspend fun createGroup(group: Group): Long
 
@@ -183,7 +186,14 @@ interface IdeaDao {
     }
 
     @Query("UPDATE `group` SET isArchived = 0 WHERE EXISTS (SELECT * FROM idea WHERE groupParentId = groupId AND ideaId = :ideaId) AND isArchived = 1")
-    suspend fun unarchiveIdea(ideaId: Long)
+    suspend fun setNotArchivedIdea(ideaId: Long)
+
+    suspend fun unarchiveIdea(ideaId: Long) {
+        setNotArchivedIdea(ideaId)
+        val parent = getGroupByIdea(ideaId)
+        val content = getIdea(ideaId).content
+        updateGroupName(parent, content)
+    }
 
     @Query("UPDATE `group` SET name = :newName WHERE groupId = :groupId")
     suspend fun setGroupName(groupId: Long, newName: String)

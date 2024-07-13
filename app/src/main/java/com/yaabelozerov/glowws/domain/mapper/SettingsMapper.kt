@@ -11,6 +11,7 @@ import com.yaabelozerov.glowws.data.local.datastore.model.SettingsTypes
 import com.yaabelozerov.glowws.domain.model.BooleanSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.ChoiceSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.DoubleSettingDomainModel
+import com.yaabelozerov.glowws.domain.model.MultipleChoiceSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.domain.model.StringSettingDomainModel
 import com.yaabelozerov.glowws.ui.model.FilterFlag
@@ -49,6 +50,11 @@ class SettingsMapper {
                         it.key!!, it.key.name, it.choices!!, it.value!!
                     )
 
+                    SettingsTypes.MULTIPLE_CHOICE -> MultipleChoiceSettingDomainModel(it.key!!,
+                        it.key.name!!,
+                        it.choices!!,
+                        it.value!!.split(",").map { it == "true" })
+
                     null -> StringSettingDomainModel(
                         it.key!!, it.key.name, "Unknown setting type"
                     )
@@ -76,10 +82,10 @@ class SettingsMapper {
     }
 
     fun getFilter(settings: SettingsList): FilterModel {
-        val split = settings.list?.findLast { it.key == SettingsKeys.FILTER }?.value?.split(",")
+        val split = settings.list?.findLast { it.key == SettingsKeys.FILTER }?.value?.split(",")!!
         val mp = mutableMapOf<FilterFlag, Boolean>()
-        FilterFlag.entries.forEach {
-            mp[it] = split?.contains(it.name) ?: false
+        FilterFlag.entries.forEachIndexed { index, filterFlag ->
+            mp[filterFlag] = split[index] == "true"
         }
         return FilterModel(mp)
     }

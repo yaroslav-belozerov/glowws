@@ -18,7 +18,7 @@ class SettingsDefaults {
             SettingsTypes.CHOICE,
             SortType.TIMESTAMP_MODIFIED.name,
             choices = SortType.entries.map { it.toString() }), SettingsModel(
-            SettingsKeys.FILTER, SettingsCategories.USER, SettingsTypes.STRING, "", choices = FilterFlag.entries.map { it.toString() }
+            SettingsKeys.FILTER, SettingsCategories.USER, SettingsTypes.MULTIPLE_CHOICE, "", choices = FilterFlag.entries.map { it.toString() }
         ), SettingsModel(
             SettingsKeys.SHOW_PROJECT_EMPTY_NAME,
             SettingsCategories.DISPLAY,

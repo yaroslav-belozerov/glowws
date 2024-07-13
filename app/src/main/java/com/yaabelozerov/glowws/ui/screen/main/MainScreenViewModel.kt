@@ -3,7 +3,6 @@ package com.yaabelozerov.glowws.ui.screen.main
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.room.Group
 import com.yaabelozerov.glowws.data.local.room.Idea
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
@@ -16,9 +15,6 @@ import com.yaabelozerov.glowws.ui.model.SortType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,54 +30,61 @@ class MainScreenViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            setSortFilter()
-            getMainScreenIdeas()
-        }
+        fetchSortFilter()
     }
 
-    fun setSortFilter() {
-        viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    sort = settingsMapper.getSorting(
-                        settingsManager.fetchSettings()
-                    ), filter = settingsMapper.getFilter(settingsManager.fetchSettings())
-                )
-            }
-            getMainScreenIdeas()
-        }
+    fun fetchSortFilter() {
+        fetchSort()
+        fetchFilter()
+        fetchMainScreen()
     }
 
-    fun getMainScreenIdeas() {
+    fun fetchSort() = viewModelScope.launch {
+        _state.update {
+            it.copy(
+                sort = settingsMapper.getSorting(settingsManager.fetchSettings())
+            )
+        }
+        fetchMainScreen()
+    }
+
+    fun fetchFilter() = viewModelScope.launch {
+        _state.update {
+            it.copy(
+                filter = settingsMapper.getFilter(settingsManager.fetchSettings())
+            )
+        }
+        fetchMainScreen()
+    }
+
+    fun fetchMainScreen() {
         viewModelScope.launch {
             dao.getGroupsWithIdeasNotArchived().collect { items ->
-                val comparator = when (_state.value.sort.type) {
-                    SortType.ALPHABETICAL -> compareBy<Group> { it.name }.thenBy { it.groupId }
-                        .apply { if (_state.value.sort.order == SortOrder.DESCENDING) reversed() }
-
-                    SortType.TIMESTAMP_CREATED -> compareBy<Group> { it.timestampCreated }.thenBy { it.groupId }
-                        .apply { if (_state.value.sort.order == SortOrder.DESCENDING) reversed() }
-
-                    SortType.TIMESTAMP_MODIFIED -> compareBy<Group> { it.timestampModified }.thenBy { it.groupId }
-                        .apply { if (_state.value.sort.order == SortOrder.DESCENDING) reversed() }
-                }
                 val new = ideaMapper.toDomainModel(
-                    items.filter { (if (_state.value.filter.flags[FilterFlag.IN_GROUP] == true) it.value.size > 1 else true) },
-                    comparator
+                    items, _state.value.filter, _state.value.sort
                 )
                 _state.update {
-                    _state.value.copy(ideas = new)
+                    it.copy(ideas = new)
                 }
             }
         }
     }
+
+    fun setFilterFlag(flag: FilterFlag, value: Boolean) =
+        _state.update { it.copy(filter = it.filter.copy(flags = it.filter.flags + (flag to value))) }
+            .also { fetchMainScreen() }
+
+    fun setSortType(type: SortType) =
+        _state.update { it.copy(sort = it.sort.copy(type = type)) }.also { fetchMainScreen() }
+
+    fun setSortOrder(order: SortOrder) =
+        _state.update { it.copy(sort = it.sort.copy(order = order)) }.also { fetchMainScreen() }
 
     fun archiveIdea(ideaId: Long) {
         viewModelScope.launch {
             try {
                 dao.archiveStrayIdea(ideaId)
-                getMainScreenIdeas()
+                fetchMainScreen()
             } catch (e: Error) {
                 e.printStackTrace()
             }
@@ -92,7 +95,7 @@ class MainScreenViewModel @Inject constructor(
         viewModelScope.launch {
             val id = dao.createIdeaAndGroup(content)
             callback?.invoke(id)
-            getMainScreenIdeas()
+            fetchMainScreen()
         }
     }
 

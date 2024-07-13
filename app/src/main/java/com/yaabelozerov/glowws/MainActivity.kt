@@ -5,25 +5,44 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -32,6 +51,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.yaabelozerov.glowws.ui.model.ArchiveConfirmType
 import com.yaabelozerov.glowws.ui.model.DialogEntry
+import com.yaabelozerov.glowws.ui.model.SortOrder
+import com.yaabelozerov.glowws.ui.model.SortType
+import com.yaabelozerov.glowws.ui.model.reversed
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreen
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreen
@@ -47,6 +69,7 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -67,6 +90,11 @@ class MainActivity : ComponentActivity() {
                 mutableStateOf(false)
             }
             val selectedIdeasArchive = remember { mutableStateOf(emptyList<Long>()) }
+
+            val isSortFilterOpen = remember {
+                mutableStateOf(false)
+            }
+            val sortFilterState = rememberModalBottomSheetState()
 
 
             GlowwsTheme {
@@ -122,7 +150,7 @@ class MainActivity : ComponentActivity() {
                             SettingsScreen(modifier = Modifier.padding(innerPadding),
                                 svm.state.collectAsState().value,
                                 onModify = { key, value ->
-                                    svm.modifySetting(key, value) { mvm.setSortFilter() }
+                                    svm.modifySetting(key, value) { mvm.fetchSortFilter() }
                                 })
                         }
                         composable(
@@ -140,6 +168,78 @@ class MainActivity : ComponentActivity() {
                                 inSelectionMode = inSelectionModeArchive,
                                 selectedIdeas = selectedIdeasArchive,
                             )
+                        }
+                    }
+                    if (isSortFilterOpen.value) ModalBottomSheet(onDismissRequest = {
+                        isSortFilterOpen.value = false
+                    }) {
+                        Column(
+                            Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Filtering",
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.weight(1f))
+                                Text(
+                                    text = "Reset",
+                                    fontSize = 24.sp,
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                    modifier = Modifier.clickable { mvm.fetchFilter() },
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            FlowRow {
+                                mvm.state.collectAsState().value.filter.flags.forEach {
+                                    OutlinedButton(onClick = {
+                                        mvm.setFilterFlag(
+                                            it.key, !it.value
+                                        )
+                                    }) {
+                                        if (it.value) Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "filter applied icon"
+                                        )
+                                        Text(text = it.key.name)
+                                    }
+                                }
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Sorting", fontSize = 24.sp, fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                IconButton(onClick = { mvm.setSortOrder(mvm.state.value.sort.order.reversed()) }) {
+                                    Icon(
+                                        imageVector = if (mvm.state.collectAsState().value.sort.order == SortOrder.ASCENDING) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                        contentDescription = null
+                                    )
+                                }
+                                Spacer(modifier = Modifier.weight(1f))
+                                Text(
+                                    text = "Reset",
+                                    fontSize = 24.sp,
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                    modifier = Modifier.clickable { mvm.fetchSort() },
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            FlowRow {
+                                SortType.entries.forEach {
+                                    OutlinedButton(onClick = {
+                                        mvm.setSortType(it)
+                                    }) {
+                                        if (it == mvm.state.collectAsState().value.sort.type) Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "sort applied icon"
+                                        )
+                                        Text(text = it.name)
+                                    }
+                                }
+                            }
                         }
                     }
                 }, floatingActionButton = {
@@ -189,16 +289,26 @@ class MainActivity : ComponentActivity() {
                                             contentDescription = "deselect button"
                                         )
                                     }
-                                } else FloatingActionButton(onClick = {
-                                    mvm.addNewIdeaAndProject("", callback = { id ->
-                                        navController.navigate("IdeaScreen/${id}")
-                                        ivm.refreshPoints(id)
-                                    })
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Add,
-                                        contentDescription = "add idea button"
-                                    )
+                                } else {
+                                    FloatingActionButton(onClick = {
+                                        mvm.addNewIdeaAndProject("", callback = { id ->
+                                            navController.navigate("IdeaScreen/${id}")
+                                            ivm.refreshPoints(id)
+                                        })
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = "add idea button"
+                                        )
+                                    }
+                                    FloatingActionButton(onClick = {
+                                        isSortFilterOpen.value = true
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.MoreVert,
+                                            contentDescription = "sort filter button"
+                                        )
+                                    }
                                 }
                             }
 

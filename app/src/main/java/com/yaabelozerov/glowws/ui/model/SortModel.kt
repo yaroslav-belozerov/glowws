@@ -4,6 +4,14 @@ enum class SortOrder {
     ASCENDING, DESCENDING
 }
 
+fun SortOrder.reversed(): SortOrder {
+    if (this == SortOrder.ASCENDING) {
+        return SortOrder.DESCENDING
+    } else {
+        return SortOrder.ASCENDING
+    }
+}
+
 enum class SortType {
     ALPHABETICAL, TIMESTAMP_CREATED, TIMESTAMP_MODIFIED
 }

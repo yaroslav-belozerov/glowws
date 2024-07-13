@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -37,8 +38,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.domain.model.BooleanSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.ChoiceSettingDomainModel
+import com.yaabelozerov.glowws.domain.model.DoubleSettingDomainModel
+import com.yaabelozerov.glowws.domain.model.MultipleChoiceSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
+import com.yaabelozerov.glowws.domain.model.StringSettingDomainModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 
 @Composable
@@ -73,8 +78,8 @@ fun SettingsScreen(
                         Text(text = entry.name)
                         Spacer(modifier = Modifier.weight(1f))
                         Column {
-                            when (entry.value) {
-                                is Boolean -> {
+                            when (entry) {
+                                is BooleanSettingDomainModel -> {
                                     val checked =
                                         remember { mutableStateOf(entry.value.toString() == "true") }
                                     Switch(checked = checked.value, onCheckedChange = {
@@ -83,32 +88,65 @@ fun SettingsScreen(
                                     }, modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp))
                                 }
 
-                                is Double -> {
+                                is StringSettingDomainModel -> {
+                                    Text(text = entry.value)
+                                    Button(onClick = { /*TODO*/ }) {
+                                        Text(text = "Edit")
+                                    }
+                                }
+
+                                is DoubleSettingDomainModel -> {
                                     Text(text = entry.value.toString())
                                     Button(onClick = { /*TODO*/ }) {
                                         Text(text = "Edit")
                                     }
                                 }
 
-                                is String -> {
-                                    if (entry is ChoiceSettingDomainModel) {
-                                        val expanded = remember {
-                                            mutableStateOf(false)
+                                is ChoiceSettingDomainModel -> {
+                                    val expanded = remember {
+                                        mutableStateOf(false)
+                                    }
+                                    DropdownMenu(expanded = expanded.value,
+                                        onDismissRequest = { expanded.value = false }) {
+                                        entry.choices.forEach {
+                                            Text(text = it, modifier = Modifier.clickable {
+                                                onModify(
+                                                    entry.key, it
+                                                )
+                                                expanded.value = false
+                                            })
                                         }
-                                        DropdownMenu(expanded = expanded.value,
-                                            onDismissRequest = { expanded.value = false }) {
-                                            entry.choices.forEach {
-                                                Text(text = it, modifier = Modifier.clickable {
-                                                    onModify(
-                                                        entry.key, it
-                                                    )
-                                                    expanded.value = false
+                                    }
+                                    if (!expanded.value) {
+                                        Text(text = entry.value,
+                                            modifier = Modifier.clickable { expanded.value = true })
+                                    }
+                                }
+
+                                is MultipleChoiceSettingDomainModel -> {
+                                    val expanded = remember {
+                                        mutableStateOf(false)
+                                    }
+                                    DropdownMenu(expanded = expanded.value,
+                                        onDismissRequest = { expanded.value = false }) {
+                                        entry.choices.forEachIndexed { index, elem ->
+                                            Row {
+                                                if (entry.value[index]) Icon(
+                                                    imageVector = Icons.Default.Check,
+                                                    contentDescription = null
+                                                )
+                                                Text(text = elem, modifier = Modifier.clickable {
+                                                    onModify(entry.key,
+                                                        entry.value.mapIndexed { i, it -> if (i == index) !it else it }
+                                                            .joinToString(","))
                                                 })
                                             }
                                         }
-                                        if (!expanded.value) { Text(text = entry.value, modifier = Modifier.clickable { expanded.value = true }) }
-                                    } else {
-                                        Text(text = entry.value.toString())
+                                    }
+                                    if (!expanded.value) {
+                                        Text(text = if (entry.value.all { !it }) "None" else entry.choices.filterIndexed { index, s -> entry.value[index] }
+                                            .joinToString(", "),
+                                            modifier = Modifier.clickable { expanded.value = true })
                                     }
                                 }
                             }
