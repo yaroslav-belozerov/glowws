@@ -30,9 +30,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -66,10 +68,9 @@ fun IdeaScreen(
 
         item {
             Row {
-                Button(onClick = onBack) {
-                    Icon(imageVector = Icons.Default.Close, contentDescription = "back button")
+                IconButton(onClick = onBack) {
+                    Icon(imageVector = Icons.Default.Close, contentDescription = "back button", tint = MaterialTheme.colorScheme.primary)
                 }
-                Spacer(modifier = Modifier.width(16.dp))
                 AddPointLine(onAdd = { onAdd(0) })
             }
         }
@@ -101,10 +102,8 @@ fun AddPointLine(onAdd: () -> Unit) {
                 .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
         )
-        FilledIconButton(
-            onClick = onAdd, colors = IconButtonDefaults.iconButtonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
-            )
+        IconButton(
+            onClick = onAdd
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
@@ -128,12 +127,12 @@ fun Point(modifier: Modifier = Modifier, text: String, isMain: Boolean, onSave: 
             .clickable { isBeingModified.value = !isBeingModified.value }
             .animateContentSize()
             .then(modifier),
-            colors = CardDefaults.cardColors(containerColor = if (main && !isBeingModified.value) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer)) {
+            colors = CardDefaults.cardColors(containerColor = if (main && !isBeingModified.value) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer)) {
             if (!isBeingModified.value) Crossfade(targetState = text) {
                 Text(
                     modifier = Modifier.padding(8.dp),
                     text = it.ifBlank { "Empty" },
-                    color = (if (main) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary).copy(
+                    color = (if (main) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface).copy(
                         alpha = if (it.isBlank()) 0.3f else 1f
                     )
                 )

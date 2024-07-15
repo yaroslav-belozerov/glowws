@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.ui.model.DialogEntry
+import com.yaabelozerov.glowws.ui.model.Selection
 import com.yaabelozerov.glowws.ui.screen.main.ScreenSelectedDialog
 import com.yaabelozerov.glowws.ui.theme.Typography
 
@@ -40,8 +41,8 @@ fun ArchiveScreen(
     onClick: (Long) -> Unit,
     onRemove: (Long) -> Unit,
     onUnarchive: (Long) -> Unit,
-    inSelectionMode: MutableState<Boolean>,
-    selectedIdeas: MutableState<List<Long>>,
+    onSelect: (Long) -> Unit,
+    selection: Selection<Long>
 ) {
     LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
@@ -53,16 +54,10 @@ fun ArchiveScreen(
                 onRemove = { onRemove(it.id) },
                 onUnarchive = { onUnarchive(it.id) },
                 onSelect = {
-                    inSelectionMode.value = true
-                    if (selectedIdeas.value.contains(it.id)) {
-                        selectedIdeas.value -= it.id
-                        if (selectedIdeas.value.isEmpty()) inSelectionMode.value = false
-                    } else {
-                        selectedIdeas.value += it.id
-                    }
+                    onSelect(it.id)
                 },
-                inSelectionMode = inSelectionMode.value,
-                isSelected = selectedIdeas.value.contains(it.id)
+                inSelectionMode = selection.inSelectionMode,
+                isSelected = selection.entries.contains(it.id)
             )
         }
     }

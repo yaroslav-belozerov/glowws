@@ -72,6 +72,7 @@ fun SettingsScreen(
                 Icon(imageVector = key.second, contentDescription = "${key.first} icon")
                 Text(text = key.first, fontSize = 24.sp)
             }
+            Spacer(modifier = Modifier.height(8.dp))
             Column {
                 settings[key]!!.forEach { entry ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -109,12 +110,14 @@ fun SettingsScreen(
                                     DropdownMenu(expanded = expanded.value,
                                         onDismissRequest = { expanded.value = false }) {
                                         entry.choices.forEach {
-                                            Text(text = it, modifier = Modifier.clickable {
-                                                onModify(
-                                                    entry.key, it
-                                                )
-                                                expanded.value = false
-                                            })
+                                            Text(text = it, modifier = Modifier
+                                                .clickable {
+                                                    onModify(
+                                                        entry.key, it
+                                                    )
+                                                    expanded.value = false
+                                                }
+                                                .padding(16.dp, 8.dp))
                                         }
                                     }
                                     if (!expanded.value) {
@@ -130,16 +133,24 @@ fun SettingsScreen(
                                     DropdownMenu(expanded = expanded.value,
                                         onDismissRequest = { expanded.value = false }) {
                                         entry.choices.forEachIndexed { index, elem ->
-                                            Row {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
                                                 if (entry.value[index]) Icon(
+                                                    modifier = Modifier.clickable {
+                                                        onModify(entry.key,
+                                                            entry.value.mapIndexed { i, it -> if (i == index) !it else it }
+                                                                .joinToString(","))
+                                                    }.padding(16.dp, 0.dp, 0.dp, 0.dp),
                                                     imageVector = Icons.Default.Check,
                                                     contentDescription = null
                                                 )
-                                                Text(text = elem, modifier = Modifier.clickable {
-                                                    onModify(entry.key,
-                                                        entry.value.mapIndexed { i, it -> if (i == index) !it else it }
-                                                            .joinToString(","))
-                                                })
+                                                Text(text = elem, modifier = Modifier
+                                                    .clickable {
+                                                        onModify(entry.key,
+                                                            entry.value
+                                                                .mapIndexed { i, it -> if (i == index) !it else it }
+                                                                .joinToString(","))
+                                                    }
+                                                    .padding(16.dp, 8.dp))
                                             }
                                         }
                                     }
@@ -154,6 +165,7 @@ fun SettingsScreen(
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
         }
         item {
             Column(modifier = Modifier.fillMaxWidth()) {

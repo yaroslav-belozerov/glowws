@@ -27,12 +27,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -49,7 +50,11 @@ import com.yaabelozerov.glowws.domain.model.GroupDomainModel
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.ui.model.DialogEntry
+import com.yaabelozerov.glowws.ui.model.Selection
 import com.yaabelozerov.glowws.ui.theme.Typography
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 
 @Composable
 fun MainScreen(
@@ -60,8 +65,9 @@ fun MainScreen(
     onClickIdea: (Long) -> Unit,
     onAddIdeaToGroup: (Long) -> Unit,
     onArchiveIdea: (Long) -> Unit,
-    inSelectionMode: MutableState<Boolean>,
-    selectedIdeas: MutableState<List<Long>>,
+    onSelect: (Long) -> Unit,
+    inSelectionMode: Boolean,
+    selection: List<Long>,
     settings: List<SettingDomainModel>
 ) {
     LazyColumn(
@@ -73,24 +79,15 @@ fun MainScreen(
     ) {
         items(ideas) { proj ->
             if (proj.entries.size == 1) {
-                Idea(
-                    proj.entries.first().content,
-                    proj.entries.first().modified,
-                    { onClickIdea(proj.entries.first().id) },
-                    { onAddIdeaToGroup(proj.entries.first().groupId) },
-                    { onArchiveIdea(proj.entries.first().id) },
-                    {
-                        inSelectionMode.value = true
-                        val id = proj.entries.first().id
-                        if (selectedIdeas.value.contains(id)) {
-                            selectedIdeas.value -= id
-                            if (selectedIdeas.value.isEmpty()) inSelectionMode.value = false
-                        } else {
-                            selectedIdeas.value += id
-                        }
-                    },
-                    inSelectionMode.value,
-                    selectedIdeas.value.contains(proj.entries.first().id)
+                val idea = proj.entries.first()
+                Idea(idea.content,
+                    idea.modified,
+                    { onClickIdea(idea.id) },
+                    { onAddIdeaToGroup(idea.groupId) },
+                    { onArchiveIdea(idea.id) },
+                    { onSelect(idea.id) },
+                    inSelectionMode,
+                    selection.contains(idea.id)
                 )
             } else {
                 Project(
@@ -103,16 +100,10 @@ fun MainScreen(
                     onClickIdea = { id -> onClickIdea(id) },
                     onArchiveIdea = { id -> onArchiveIdea(id) },
                     onSelectIdea = { id ->
-                        inSelectionMode.value = true
-                        if (selectedIdeas.value.contains(id)) {
-                            selectedIdeas.value -= id
-                            if (selectedIdeas.value.isEmpty()) inSelectionMode.value = false
-                        } else {
-                            selectedIdeas.value += id
-                        }
+                        onSelect(id)
                     },
-                    inSelectionMode.value,
-                    selectedIdeas.value,
+                    inSelectionMode,
+                    selection,
                     displayPlaceholder = settings.findLast { it.key == SettingsKeys.SHOW_PROJECT_EMPTY_NAME }?.value.toString() == "true"
                 )
             }
@@ -142,7 +133,7 @@ fun Idea(
                     2.dp, MaterialTheme.colorScheme.primary
                 ) else Modifier
             )
-            .background(MaterialTheme.colorScheme.primaryContainer)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .combinedClickable(onClick = if (!inSelectionMode) {
                 onClick
             } else {
@@ -155,7 +146,7 @@ fun Idea(
                 .padding(16.dp)
                 .weight(1f),
             style = Typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = if (previewText.isBlank()) 0.3f else 1f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (previewText.isBlank()) 0.3f else 1f)
         )
         Spacer(modifier = Modifier.width(16.dp))
     }
@@ -252,7 +243,7 @@ fun Project(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primaryContainer)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .combinedClickable(onClick = { if (inSelection) ideas.forEach { onSelectIdea(it.id) } },
                 onLongClick = { if (!inSelection) isDialogOpen.value = true })
             .padding(16.dp),
@@ -332,26 +323,24 @@ fun TitleBar(modifier: Modifier = Modifier, onSettings: () -> Unit, onArchive: (
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        Icon(imageVector = Icons.Default.Delete,
-            contentDescription = "archive button",
-            modifier = Modifier
-                .clickable { onArchive() }
-                .size(32.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+        IconButton(onClick = { onArchive() }) {
+            Icon(modifier = Modifier.size(32.dp),
+                imageVector = Icons.Default.Delete,
+                contentDescription = "archive button",
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+        }
         Text(
             text = "Glowws",
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
-        Icon(imageVector = Icons.Default.Settings,
-            contentDescription = "settings button",
-            modifier = Modifier
-                .clickable {
-                    onSettings()
-                }
-                .size(32.dp),
-            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+        IconButton(onClick = { onSettings() }) {
+            Icon(modifier = Modifier.size(32.dp),
+                imageVector = Icons.Default.Settings,
+                contentDescription = "settings button",
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+        }
     }
 }
 

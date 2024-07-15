@@ -5,10 +5,10 @@ enum class SortOrder {
 }
 
 fun SortOrder.reversed(): SortOrder {
-    if (this == SortOrder.ASCENDING) {
-        return SortOrder.DESCENDING
+    return if (this == SortOrder.ASCENDING) {
+        SortOrder.DESCENDING
     } else {
-        return SortOrder.ASCENDING
+        SortOrder.ASCENDING
     }
 }
 
