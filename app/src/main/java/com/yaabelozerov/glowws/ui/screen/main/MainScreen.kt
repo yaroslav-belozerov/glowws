@@ -3,7 +3,6 @@ package com.yaabelozerov.glowws.ui.screen.main
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,28 +32,25 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.domain.model.GroupDomainModel
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.ui.model.DialogEntry
-import com.yaabelozerov.glowws.ui.model.Selection
 import com.yaabelozerov.glowws.ui.theme.Typography
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
 
 @Composable
 fun MainScreen(
@@ -141,7 +137,7 @@ fun Idea(
             }, onLongClick = { if (!inSelectionMode) isDialogOpen.value = true })
     ) {
         Text(
-            text = previewText.ifBlank { "Empty" },
+            text = previewText.ifBlank { stringResource(id = R.string.placeholder_unset) },
             Modifier
                 .padding(16.dp)
                 .weight(1f),
@@ -153,12 +149,17 @@ fun Idea(
 
     if (isDialogOpen.value) {
         ScreenSelectedDialog(title = previewText, info = listOf(modified), entries = listOf(
-            DialogEntry(Icons.Default.Menu, "Select", {
+            DialogEntry(Icons.Default.Menu, stringResource(id = R.string.label_select), {
                 onSelect()
             }), DialogEntry(
-                Icons.Default.AddCircle, "Add to Project", onAddToGroup
+                Icons.Default.AddCircle,
+                stringResource(id = R.string.m_add_to_project),
+                onAddToGroup
             ), DialogEntry(
-                Icons.Default.Delete, "Archive Idea", onArchive, needsConfirmation = true
+                Icons.Default.Delete,
+                stringResource(id = R.string.m_archive_idea),
+                onArchive,
+                needsConfirmation = true
             )
         ), onDismiss = { isDialogOpen.value = false })
     }
@@ -196,7 +197,7 @@ fun NestedIdea(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = previewText.ifBlank { "Empty" },
+                text = previewText.ifBlank { stringResource(id = R.string.placeholder_unset) },
                 modifier = Modifier.padding(8.dp),
                 style = Typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (previewText.isBlank()) 0.3f else 1f)
@@ -207,10 +208,13 @@ fun NestedIdea(
     }
     if (isDialogOpen.value) {
         ScreenSelectedDialog(title = previewText, info = listOf(modified), entries = listOf(
-            DialogEntry(Icons.Default.Menu, "Select", {
+            DialogEntry(Icons.Default.Menu, stringResource(id = R.string.label_select), {
                 onSelect()
             }), DialogEntry(
-                Icons.Default.Delete, "Archive Idea", onArchive, needsConfirmation = true
+                Icons.Default.Delete,
+                stringResource(id = R.string.m_archive_idea),
+                onArchive,
+                needsConfirmation = true
             )
         ), onDismiss = { isDialogOpen.value = false })
     }
@@ -253,7 +257,7 @@ fun Project(
         if (!isBeingModified.value) {
             if (name.isNotBlank()) {
                 Text(
-                    text = name.ifBlank { "Unnamed Project" },
+                    text = name,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
@@ -261,7 +265,7 @@ fun Project(
                 )
             } else if (displayPlaceholder) {
                 Text(
-                    text = "Unnamed Project",
+                    text = stringResource(id = R.string.placeholder_unset),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
@@ -279,7 +283,7 @@ fun Project(
                 onSave(txt.value)
                 isBeingModified.value = false
             }, modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Save")
+                Text(text = stringResource(id = R.string.label_save))
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -298,17 +302,20 @@ fun Project(
     }
     if (isDialogOpen.value) {
         ScreenSelectedDialog(title = name, info = listOf(modified), entries = listOf(
-            DialogEntry(Icons.Default.Menu, "Select", {
+            DialogEntry(Icons.Default.Menu, stringResource(id = R.string.label_select), {
                 ideas.forEach { onSelectIdea(it.id) }
             }),
-            DialogEntry(Icons.Default.AddCircle, "Add to Project", {
+            DialogEntry(Icons.Default.AddCircle, stringResource(id = R.string.m_add_to_project), {
                 onAddToGroup()
             }),
-            DialogEntry(Icons.Default.Edit, "Edit Project Name", {
+            DialogEntry(Icons.Default.Edit, stringResource(id = R.string.m_edit_name), {
                 isBeingModified.value = true
             }),
             DialogEntry(
-                Icons.Default.Delete, "Archive Project", onArchive, needsConfirmation = true
+                Icons.Default.Delete,
+                stringResource(id = R.string.m_archive_project),
+                onArchive,
+                needsConfirmation = true
             ),
         ), onDismiss = { isDialogOpen.value = false })
     }
@@ -324,22 +331,26 @@ fun TitleBar(modifier: Modifier = Modifier, onSettings: () -> Unit, onArchive: (
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         IconButton(onClick = { onArchive() }) {
-            Icon(modifier = Modifier.size(32.dp),
+            Icon(
+                modifier = Modifier.size(32.dp),
                 imageVector = Icons.Default.Delete,
                 contentDescription = "archive button",
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+            )
         }
         Text(
-            text = "Glowws",
+            text = stringResource(id = R.string.app_name),
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
         IconButton(onClick = { onSettings() }) {
-            Icon(modifier = Modifier.size(32.dp),
+            Icon(
+                modifier = Modifier.size(32.dp),
                 imageVector = Icons.Default.Settings,
                 contentDescription = "settings button",
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+            )
         }
     }
 }
@@ -377,7 +388,7 @@ fun ScreenSelectedDialog(
                     } else {
                         it.icon
                     }, text = if (confirm.value[ind]) {
-                        "Are you sure?"
+                        stringResource(id = R.string.label_are_you_sure)
                     } else {
                         it.name
                     }, onClick = if (confirm.value[ind]) {

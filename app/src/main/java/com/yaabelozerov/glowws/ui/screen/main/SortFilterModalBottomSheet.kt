@@ -28,16 +28,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.ui.model.FilterFlag
 import com.yaabelozerov.glowws.ui.model.SortModel
 import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
 import com.yaabelozerov.glowws.ui.model.reversed
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SortFilterModalBottomSheet(mvm: MainScreenViewModel) {
     if (mvm.sortFilterOpen.collectAsState().value) ModalBottomSheet(onDismissRequest = { mvm.toggleSortFilterModal() }) {
@@ -65,16 +67,17 @@ fun FilterColumn(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = "Filtering", fontSize = 24.sp, fontWeight = FontWeight.Bold
+                text = stringResource(id = R.string.m_filter), fontSize = 24.sp, fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "Reset",
+                text = stringResource(id = R.string.m_reset_sortfilter),
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                 modifier = Modifier.clickable { resetFilter() },
                 fontWeight = FontWeight.Bold
             )
+            Spacer(modifier = Modifier.width(4.dp))
         }
         FlowRow {
             flags.forEach {
@@ -88,7 +91,7 @@ fun FilterColumn(
                         contentDescription = "filter applied icon",
                         modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
                     )
-                    Text(text = it.key.name)
+                    Text(text = stringResource(id = it.key.resId))
                 } else OutlinedButton(onClick = {
                     setFilterFlag(
                         it.key, !it.value
@@ -99,7 +102,7 @@ fun FilterColumn(
                         contentDescription = "filter applied icon",
                         modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
                     )
-                    Text(text = it.key.name)
+                    Text(text = stringResource(id = it.key.resId))
                 }
             }
         }
@@ -116,7 +119,7 @@ fun SortColumn(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "Sorting",
+            Text(text = stringResource(id = R.string.m_sort),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.clickable { reverseOrder() })
@@ -130,12 +133,13 @@ fun SortColumn(
             }
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                text = "Reset",
+                text = stringResource(id = R.string.m_reset_sortfilter),
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                 modifier = Modifier.clickable { resetSort() },
                 fontWeight = FontWeight.Bold
             )
+            Spacer(modifier = Modifier.width(4.dp))
         }
         FlowRow {
             SortType.entries.forEach {
@@ -147,11 +151,11 @@ fun SortColumn(
                         contentDescription = "filter applied icon",
                         modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
                     )
-                    Text(text = it.name)
+                    Text(text = stringResource(it.resId))
                 } else OutlinedButton(onClick = {
                     setSortType(it)
                 }) {
-                    Text(text = it.name)
+                    Text(text = stringResource(it.resId))
                 }
             }
         }

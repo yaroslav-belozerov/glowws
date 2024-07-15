@@ -24,10 +24,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.ui.model.DialogEntry
 import com.yaabelozerov.glowws.ui.model.Selection
@@ -46,7 +48,9 @@ fun ArchiveScreen(
 ) {
     LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
-            Text(text = "Archive", fontSize = 32.sp, modifier = Modifier.padding(16.dp, 8.dp).fillParentMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(text = stringResource(id = R.string.a_screen_name), fontSize = 32.sp, modifier = Modifier
+                .padding(16.dp, 8.dp)
+                .fillParentMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         }
         items(ideas) {
             ArchiveIdea(previewText = it.content,
@@ -89,7 +93,7 @@ fun ArchiveIdea(
                 onLongClick = { if (!inSelectionMode) isDialogOpen.value = true })
     ) {
         Text(
-            text = previewText.ifBlank { "Empty" },
+            text = previewText.ifBlank { stringResource(id = R.string.placeholder_unset) },
             Modifier
                 .padding(16.dp)
                 .weight(1f),
@@ -101,12 +105,12 @@ fun ArchiveIdea(
 
     if (isDialogOpen.value) {
         ScreenSelectedDialog(title = previewText, entries = listOf(
-            DialogEntry(Icons.Default.Menu, "Select", {
+            DialogEntry(Icons.Default.Menu, stringResource(id = R.string.label_select), {
                 onSelect()
             }), DialogEntry(
-                Icons.Default.Refresh, "Unarchive", onUnarchive
+                Icons.Default.Refresh, stringResource(id = R.string.a_unarchive), onUnarchive
             ), DialogEntry(
-                Icons.Default.Delete, "Remove Idea", onRemove, needsConfirmation = true
+                Icons.Default.Delete, stringResource(id = R.string.a_remove_idea), onRemove, needsConfirmation = true
             )
         ), onDismiss = { isDialogOpen.value = false })
     }

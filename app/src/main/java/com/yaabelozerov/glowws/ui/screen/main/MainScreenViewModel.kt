@@ -44,7 +44,6 @@ class MainScreenViewModel @Inject constructor(
     fun fetchSortFilter() {
         fetchSort()
         fetchFilter()
-        fetchMainScreen()
     }
 
     fun fetchSort() = viewModelScope.launch {
@@ -87,7 +86,10 @@ class MainScreenViewModel @Inject constructor(
     fun setSortType(type: SortType) =
         _state.update { it.copy(sort = it.sort.copy(type = type)) }.also { fetchMainScreen() }
 
-    fun reverseSortOrder() = _state.update { it.copy(sort = it.sort.copy(order = it.sort.order.reversed())) }.also { fetchMainScreen() }
+    fun setSortOrder(order: SortOrder) =
+        _state.update { it.copy(sort = it.sort.copy(order = order)) }.also { fetchMainScreen() }
+
+    fun reverseSortOrder() = setSortOrder(_state.value.sort.order.reversed())
 
     fun archiveIdea(ideaId: Long) {
         viewModelScope.launch {
@@ -134,5 +136,5 @@ class MainScreenViewModel @Inject constructor(
     }
 
     fun deselectAll() = _selection.update { Selection() }
-    fun onSelect(ideaId: Long) = _selection.update { it.select(ideaId) }.also { Log.i("selection", _selection.value.toString()) }
+    fun onSelect(ideaId: Long) = _selection.update { it.select(ideaId) }
 }

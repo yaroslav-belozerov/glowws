@@ -1,9 +1,11 @@
 package com.yaabelozerov.glowws.domain.mapper
 
+import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.util.fastJoinToString
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsCategories
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
@@ -19,44 +21,47 @@ import com.yaabelozerov.glowws.ui.model.FilterModel
 import com.yaabelozerov.glowws.ui.model.SortModel
 import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
+import com.yaabelozerov.glowws.util.valueOfOrNull
 
 class SettingsMapper {
-    fun toDomainModel(settings: SettingsList): Map<Pair<String, ImageVector>, List<SettingDomainModel>> {
-        val mp: MutableMap<Pair<String, ImageVector>, List<SettingDomainModel>> = mutableMapOf()
+    fun toDomainModel(settings: SettingsList): Map<Pair<Int, ImageVector>, List<SettingDomainModel>> {
+        val mp: MutableMap<Pair<Int, ImageVector>, List<SettingDomainModel>> = mutableMapOf()
         settings.list!!.forEach {
             it.category?.let { category ->
-                val cat = when (category) {
-                    SettingsCategories.DISPLAY -> "Display"
-                    SettingsCategories.USER -> "User"
-                }
-                val icon = when (category) {
-                    SettingsCategories.DISPLAY -> Icons.Default.Star
-                    SettingsCategories.USER -> Icons.Default.Person
-                }
+                val cat = category.resId
+                val icon = category.icon
+                val nameRes = it.key?.resId ?: -1
                 val dm = when (it.type) {
                     SettingsTypes.BOOLEAN -> BooleanSettingDomainModel(
-                        it.key!!, it.key.name, it.value == "true"
+                        it.key!!, nameRes, it.value == "true"
                     )
 
                     SettingsTypes.DOUBLE -> DoubleSettingDomainModel(
-                        it.key!!, it.key.name, it.min!!, it.max!!, it.value!!.toDouble()
+                        it.key!!, nameRes, it.min!!, it.max!!, it.value!!.toDouble()
                     )
 
                     SettingsTypes.STRING -> StringSettingDomainModel(
-                        it.key!!, it.key.name, it.value!!
+                        it.key!!, nameRes, it.value!!
                     )
 
-                    SettingsTypes.CHOICE -> ChoiceSettingDomainModel(
-                        it.key!!, it.key.name, it.choices!!, it.value!!
-                    )
+                    SettingsTypes.CHOICE -> {
+                        ChoiceSettingDomainModel(
+                            key = it.key!!,
+                            nameRes = nameRes,
+                            choices = it.choices!!,
+                            localChoicesIds = it.choices!!.map { getLocalChoice(it) },
+                            value = it.value!!
+                        )
+                    }
 
-                    SettingsTypes.MULTIPLE_CHOICE -> MultipleChoiceSettingDomainModel(it.key!!,
-                        it.key.name!!,
-                        it.choices!!,
-                        it.value!!.split(",").map { it == "true" })
+                    SettingsTypes.MULTIPLE_CHOICE -> MultipleChoiceSettingDomainModel(key = it.key!!,
+                        nameRes = nameRes,
+                        choices = it.choices!!,
+                        localChoicesIds = it.choices!!.map { getLocalChoice(it) },
+                        value = it.value!!.split(",").map { it == "true" })
 
                     null -> StringSettingDomainModel(
-                        it.key!!, it.key.name, "Unknown setting type"
+                        it.key!!, nameRes, ""
                     )
                 }
                 mp[Pair(cat, icon)] = mp[Pair(cat, icon)]?.plus(dm) ?: listOf(dm)
@@ -66,17 +71,15 @@ class SettingsMapper {
     }
 
     fun getSorting(settings: SettingsList): SortModel {
-        val split = settings.list?.findLast { it.key == SettingsKeys.SORT }?.value?.split(",")
-        val order = when (split?.first()) {
-            SortOrder.ASCENDING.name -> SortOrder.ASCENDING
-            SortOrder.DESCENDING.name -> SortOrder.DESCENDING
-            else -> SortOrder.ASCENDING
+        val order = try {
+            SortOrder.valueOf(settings.list?.findLast { it.key == SettingsKeys.SORT_ORDER }?.value!!)
+        } catch (e: Exception) {
+            SortOrder.ASCENDING
         }
-        val type = when (split?.last()) {
-            SortType.ALPHABETICAL.name -> SortType.ALPHABETICAL
-            SortType.TIMESTAMP_CREATED.name -> SortType.TIMESTAMP_CREATED
-            SortType.TIMESTAMP_MODIFIED.name -> SortType.TIMESTAMP_MODIFIED
-            else -> SortType.ALPHABETICAL
+        val type = try {
+            SortType.valueOf(settings.list?.findLast { it.key == SettingsKeys.SORT_TYPE }?.value!!)
+        } catch (e: Exception) {
+            SortType.TIMESTAMP_MODIFIED
         }
         return SortModel(order, type)
     }
@@ -88,5 +91,17 @@ class SettingsMapper {
             mp[filterFlag] = split[index] == "true"
         }
         return FilterModel(mp)
+    }
+
+    fun getLocalChoice(s: String): Int? = try {
+        when (s) {
+            in SortOrder.entries.fastJoinToString() -> SortOrder.valueOf(s).resId
+            in SortType.entries.fastJoinToString() -> SortType.valueOf(s).resId
+            in FilterFlag.entries.fastJoinToString() -> FilterFlag.valueOf(s).resId
+            else -> null
+        }
+    } catch (e: Exception) {
+        Log.i("SettingsMapper", "Locale not found for key: $s")
+        null
     }
 }

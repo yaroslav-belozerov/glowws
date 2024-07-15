@@ -1,3 +1,38 @@
 <resources>
-    <string name="app_name">Glowws</string>
+    <string name="app_name" translatable="false">Glowws</string>
+    <string name="s_cat_user">User</string>
+    <string name="s_cat_display">Display</string>
+    <string name="s_cat_feedback">Send feedback</string>
+    <string name="s_user_default_sort_type">Default Sorting</string>
+    <string name="s_user_default_filter">Default Filtering</string>
+    <string name="s_user_default_sort_alpha">Alphabetical</string>
+    <string name="s_user_default_sort_creation">Creation Date</string>
+    <string name="s_user_default_sort_modification">Last Modified</string>
+    <string name="s_display_group_placeholder">Project name placeholders</string>
+    <string name="s_screen_name">Settings</string>
+    <string name="placeholder_unset">None</string>
+    <string name="label_edit">Edit</string>
+    <string name="label_are_you_sure">Are you sure?</string>
+    <string name="label_confirm">Confirm</string>
+    <string name="label_cancel">Cancel</string>
+    <string name="label_save">Save</string>
+    <string name="label_remove">Remove</string>
+    <string name="dialog_archive_all">Archive all selected?</string>
+    <string name="a_screen_name">Archive</string>
+    <string name="label_select">Select</string>
+    <string name="a_unarchive">Unarchive</string>
+    <string name="a_remove_idea">Remove Idea</string>
+    <string name="m_archive_idea">Archive Idea</string>
+    <string name="m_add_to_project">Add to Project</string>
+    <string name="m_edit_name">Edit Project Name</string>
+    <string name="m_archive_project">Archive Project</string>
+    <string name="i_set_key">Set as Key</string>
+    <string name="i_unset_key">Set as Non-key</string>
+    <string name="m_reset_sortfilter">Reset</string>
+    <string name="m_sort">Sorting</string>
+    <string name="m_filter">Filter</string>
+    <string name="s_default_filter_ingroup">In Group</string>
+    <string name="s_default_sort_asc">Ascending</string>
+    <string name="s_default_sort_desc">Descending</string>
+    <string name="s_user_default_sort_order">Sort Order</string>
 </resources>

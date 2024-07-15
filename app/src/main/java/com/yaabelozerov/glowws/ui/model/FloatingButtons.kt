@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.res.stringResource
+import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.main.MainScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.main.ScreenSelectedDialog
@@ -24,14 +26,14 @@ fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Lon
         mutableStateOf(false)
     }
     if (isConfirmationOpen.value) {
-        ScreenSelectedDialog(title = "Archive all selected?", entries = listOf(
+        ScreenSelectedDialog(title = stringResource(id = R.string.dialog_archive_all), entries = listOf(
             DialogEntry(
-                Icons.Default.CheckCircle, "Confirm", {
+                Icons.Default.CheckCircle, stringResource(id = R.string.label_confirm), {
                     mvm.archiveSelected()
                 }, needsConfirmation = false
             ), DialogEntry(
                 null,
-                "Cancel",
+                stringResource(id = R.string.label_cancel),
                 onClick = { isConfirmationOpen.value = false },
                 needsConfirmation = false
             )
@@ -79,9 +81,9 @@ fun ArchiveScreenFloatingButtons(avm: ArchiveScreenViewModel) {
         mutableStateOf(ArchiveConfirmType.UNARCHIVE)
     }
     if (isConfirmationOpen.value) {
-        ScreenSelectedDialog(title = "Are you sure?", entries = listOf(
+        ScreenSelectedDialog(title = stringResource(id = R.string.label_are_you_sure), entries = listOf(
             DialogEntry(
-                Icons.Default.CheckCircle, "Confirm", {
+                Icons.Default.CheckCircle, stringResource(id = R.string.label_confirm), {
                     when (confirmationType.value) {
                         ArchiveConfirmType.DELETE -> avm.removeSelected()
                         ArchiveConfirmType.UNARCHIVE -> avm.unarchiveSelected()
@@ -89,7 +91,7 @@ fun ArchiveScreenFloatingButtons(avm: ArchiveScreenViewModel) {
                 }, needsConfirmation = false
             ), DialogEntry(
                 null,
-                "Cancel",
+                stringResource(id = R.string.label_cancel),
                 onClick = { isConfirmationOpen.value = false },
                 needsConfirmation = false
             )

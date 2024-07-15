@@ -23,7 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsScreenViewModel @Inject constructor(private val settingsManager: SettingsManager, private val settingsMapper: SettingsMapper) :
     ViewModel() {
-    private val _state: MutableStateFlow<Map<Pair<String, ImageVector>, List<SettingDomainModel>>> =
+    private val _state: MutableStateFlow<Map<Pair<Int, ImageVector>, List<SettingDomainModel>>> =
         MutableStateFlow(emptyMap())
     val state = _state.asStateFlow()
 
