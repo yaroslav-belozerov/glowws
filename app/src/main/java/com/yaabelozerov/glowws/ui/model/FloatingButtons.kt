@@ -1,20 +1,43 @@
 package com.yaabelozerov.glowws.ui.model
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.TransitionState
+import androidx.compose.animation.core.rememberTransition
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.main.MainScreenViewModel
@@ -71,6 +94,55 @@ fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Lon
                 imageVector = Icons.Default.MoreVert, contentDescription = "sort filter button"
             )
         }
+    }
+    var isSearchOpen by remember {
+        mutableStateOf(mvm.state.value.searchQuery.isNotEmpty())
+    }
+    val searchFocus = remember {
+        FocusRequester()
+    }
+    if (!isSearchOpen) Row {
+        if (mvm.state.collectAsState().value.searchQuery.isNotBlank()) {
+            FloatingActionButton(onClick = { mvm.updateSearchQuery("") }) {
+                Icon(imageVector = Icons.Default.Clear, contentDescription = "clear search button")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+        FloatingActionButton(onClick = {
+            isSearchOpen = true
+        }) {
+            Icon(
+                imageVector = Icons.Default.Search, contentDescription = "open search button"
+            )
+        }
+    } else {
+        LaunchedEffect(key1 = Unit) {
+            searchFocus.requestFocus()
+        }
+        OutlinedTextField(
+            modifier = Modifier
+                .padding(32.dp, 0.dp, 0.dp, 0.dp)
+                .focusRequester(searchFocus),
+            singleLine = true,
+            shape = MaterialTheme.shapes.large,
+            value = mvm.state.collectAsState().value.searchQuery,
+            onValueChange = { mvm.updateSearchQuery(it) },
+            trailingIcon = {
+                IconButton(onClick = {
+                    mvm.updateSearchQuery("")
+                    isSearchOpen = false
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "clear search icon",
+                    )
+                }
+            },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = {
+                isSearchOpen = false
+            })
+        )
     }
 }
 

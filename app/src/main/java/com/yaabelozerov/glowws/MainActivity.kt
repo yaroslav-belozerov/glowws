@@ -99,7 +99,7 @@ class MainActivity : ComponentActivity() {
 
                     SortFilterModalBottomSheet(mvm = mvm)
                 }, floatingActionButton = {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.End) {
                         when (navController.currentBackStackEntryAsState().value?.destination?.route) {
                             NavDestinations.MainScreenRoute.route -> MainScreenFloatingButtons(mvm = mvm,
                                 addNewIdeaCallback = { id ->

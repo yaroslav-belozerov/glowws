@@ -1,16 +1,11 @@
 package com.yaabelozerov.glowws.data.local.room
 
-import android.util.Log
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Upsert
-import com.yaabelozerov.glowws.ui.model.FilterModel
-import com.yaabelozerov.glowws.ui.model.SortModel
-import com.yaabelozerov.glowws.ui.model.SortType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 
 @Dao
 interface IdeaDao {
@@ -44,6 +39,16 @@ interface IdeaDao {
         "SELECT * FROM `group` JOIN idea ON groupId = groupParentId WHERE isArchived = 0"
     )
     fun getGroupsWithIdeasNotArchived(): Flow<Map<Group, List<Idea>>>
+
+    @Query(
+        "SELECT * FROM `group` JOIN idea ON groupId = groupParentId WHERE groupId = :groupId"
+    )
+    fun getGroupsWithIdeasNotArchivedRestricted(groupId: Long): Flow<Map<Group, List<Idea>>>
+
+    @Query(
+        "SELECT groupId FROM `group` WHERE EXISTS (SELECT * FROM idea WHERE content LIKE :query AND groupParentId = groupId) OR name LIKE :query AND isArchived = 0"
+    )
+    fun getGroupsIdsNotArchivedQuery(query: String): Flow<List<Long>>
 
     @Query(
         "SELECT * FROM idea WHERE EXISTS (SELECT * FROM `group` WHERE groupId = groupParentId AND isArchived = 1)"

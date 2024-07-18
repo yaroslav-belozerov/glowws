@@ -1,8 +1,10 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yaabelozerov.glowws.R
+import com.yaabelozerov.glowws.data.local.room.Group
 import com.yaabelozerov.glowws.data.local.room.Idea
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.di.SettingsManager
@@ -16,8 +18,11 @@ import com.yaabelozerov.glowws.ui.model.TooltipBarState
 import com.yaabelozerov.glowws.ui.model.reversed
 import com.yaabelozerov.glowws.ui.model.select
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -82,14 +87,27 @@ class MainScreenViewModel @Inject constructor(
 
     fun fetchMainScreen() {
         viewModelScope.launch {
-            dao.getGroupsWithIdeasNotArchived().collect { items ->
-                val new = ideaMapper.toDomainModel(
-                    items, _state.value.filter, _state.value.sort
-                )
-                _state.update {
-                    it.copy(ideas = new)
+            if (_state.value.searchQuery.isBlank()) dao.getGroupsWithIdeasNotArchived()
+                .collect { items ->
+                    val new = ideaMapper.toDomainModel(
+                        items, _state.value.filter, _state.value.sort
+                    )
+                    _state.update {
+                        it.copy(ideas = new)
+                    }
+                } else dao.getGroupsIdsNotArchivedQuery("%${_state.value.searchQuery}%")
+                .collect { groupIds ->
+                    groupIds.map { dao.getGroupsWithIdeasNotArchivedRestricted(it) }.merge()
+                        .collect { map ->
+                            _state.update {
+                                it.copy(
+                                    ideas = ideaMapper.toDomainModel(
+                                        map, _state.value.filter, _state.value.sort
+                                    )
+                                )
+                            }
+                        }
                 }
-            }
         }
     }
 
@@ -147,4 +165,9 @@ class MainScreenViewModel @Inject constructor(
 
     fun deselectAll() = _selection.update { Selection() }
     fun onSelect(ideaId: Long) = _selection.update { it.select(ideaId) }
+
+    fun updateSearchQuery(newQuery: String) {
+        _state.update { it.copy(searchQuery = newQuery) }
+        fetchMainScreen()
+    }
 }

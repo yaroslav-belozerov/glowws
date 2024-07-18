@@ -12,5 +12,6 @@ import java.util.SortedMap
 data class MainScreenState(
     val ideas: List<GroupDomainModel> = emptyList(),
     val sort: SortModel = SortModel(SortOrder.ASCENDING, SortType.TIMESTAMP_MODIFIED),
-    val filter: FilterModel = FilterModel(emptyMap())
+    val filter: FilterModel = FilterModel(emptyMap()),
+    val searchQuery: String = ""
 )
