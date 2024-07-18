@@ -8,6 +8,8 @@ abstract class SettingDomainModel {
     abstract val value: Any
 }
 
+fun List<SettingDomainModel>.findBooleanKey(key: SettingsKeys) = findLast { it.key == key }?.value.toString() == "true"
+
 data class BooleanSettingDomainModel(
     override val key: SettingsKeys,
     override val nameRes: Int,

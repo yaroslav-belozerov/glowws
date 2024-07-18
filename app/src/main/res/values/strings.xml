@@ -8,9 +8,9 @@
     <string name="s_user_default_sort_alpha">Alphabetical</string>
     <string name="s_user_default_sort_creation">Creation Date</string>
     <string name="s_user_default_sort_modification">Last Modified</string>
-    <string name="s_display_group_placeholder">Project name placeholders</string>
+    <string name="s_display_placeholders">Show Placeholders</string>
     <string name="s_screen_name">Settings</string>
-    <string name="placeholder_unset">None</string>
+    <string name="placeholder_noname">Unnamed</string>
     <string name="label_edit">Edit</string>
     <string name="label_are_you_sure">Are you sure?</string>
     <string name="label_confirm">Confirm</string>
@@ -35,4 +35,5 @@
     <string name="s_default_sort_asc">Ascending</string>
     <string name="s_default_sort_desc">Descending</string>
     <string name="s_user_default_sort_order">Sort Order</string>
+    <string name="placeholder_null">None</string>
 </resources>

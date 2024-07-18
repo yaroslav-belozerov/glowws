@@ -26,18 +26,20 @@ fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Lon
         mutableStateOf(false)
     }
     if (isConfirmationOpen.value) {
-        ScreenSelectedDialog(title = stringResource(id = R.string.dialog_archive_all), entries = listOf(
-            DialogEntry(
-                Icons.Default.CheckCircle, stringResource(id = R.string.label_confirm), {
-                    mvm.archiveSelected()
-                }, needsConfirmation = false
-            ), DialogEntry(
-                null,
-                stringResource(id = R.string.label_cancel),
-                onClick = { isConfirmationOpen.value = false },
-                needsConfirmation = false
-            )
-        ), onDismiss = { isConfirmationOpen.value = false })
+        ScreenSelectedDialog(title = stringResource(id = R.string.dialog_archive_all),
+            entries = listOf(
+                DialogEntry(
+                    Icons.Default.CheckCircle, stringResource(id = R.string.label_confirm), {
+                        mvm.archiveSelected()
+                    }, needsConfirmation = false
+                ), DialogEntry(
+                    null,
+                    stringResource(id = R.string.label_cancel),
+                    onClick = { isConfirmationOpen.value = false },
+                    needsConfirmation = false
+                )
+            ),
+            onDismiss = { isConfirmationOpen.value = false })
     }
     if (mvm.selection.collectAsState().value.inSelectionMode) {
         FloatingActionButton(onClick = {
@@ -81,27 +83,26 @@ fun ArchiveScreenFloatingButtons(avm: ArchiveScreenViewModel) {
         mutableStateOf(ArchiveConfirmType.UNARCHIVE)
     }
     if (isConfirmationOpen.value) {
-        ScreenSelectedDialog(title = stringResource(id = R.string.label_are_you_sure), entries = listOf(
-            DialogEntry(
-                Icons.Default.CheckCircle, stringResource(id = R.string.label_confirm), {
-                    when (confirmationType.value) {
-                        ArchiveConfirmType.DELETE -> avm.removeSelected()
-                        ArchiveConfirmType.UNARCHIVE -> avm.unarchiveSelected()
-                    }
-                }, needsConfirmation = false
-            ), DialogEntry(
-                null,
-                stringResource(id = R.string.label_cancel),
-                onClick = { isConfirmationOpen.value = false },
-                needsConfirmation = false
-            )
-        ), onDismiss = { isConfirmationOpen.value = false })
+        ScreenSelectedDialog(title = stringResource(id = R.string.label_are_you_sure),
+            entries = listOf(
+                DialogEntry(
+                    Icons.Default.CheckCircle, stringResource(id = R.string.label_confirm), {
+                        when (confirmationType.value) {
+                            ArchiveConfirmType.DELETE -> avm.removeSelected()
+                            ArchiveConfirmType.UNARCHIVE -> avm.unarchiveSelected()
+                        }
+                    }, needsConfirmation = false
+                ), DialogEntry(
+                    null,
+                    stringResource(id = R.string.label_cancel),
+                    onClick = { isConfirmationOpen.value = false },
+                    needsConfirmation = false
+                )
+            ),
+            onDismiss = { isConfirmationOpen.value = false })
     }
     if (avm.selection.collectAsState().value.inSelectionMode) {
-        FloatingActionButton(onClick = {
-            isConfirmationOpen.value = true
-            confirmationType.value = ArchiveConfirmType.UNARCHIVE
-        }) {
+        FloatingActionButton(onClick = { avm.unarchiveSelected() }) {
             Icon(
                 imageVector = Icons.Default.Refresh, contentDescription = "restore selected button"
             )

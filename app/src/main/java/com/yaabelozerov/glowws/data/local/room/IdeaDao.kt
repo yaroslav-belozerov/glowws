@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.data.local.room
 
+import android.util.Log
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -9,6 +10,7 @@ import com.yaabelozerov.glowws.ui.model.SortModel
 import com.yaabelozerov.glowws.ui.model.SortType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
 @Dao
 interface IdeaDao {
@@ -169,28 +171,29 @@ interface IdeaDao {
     suspend fun setArchiveGroup(groupId: Long)
 
     suspend fun archiveGroup(groupId: Long) {
+        val m = System.currentTimeMillis()
         getAllIdeasFromGroup(groupId).forEach {
-            archiveStrayIdea(it.ideaId)
+            val newGroup = createGroup(Group(0, m, m, "", isArchived = true))
+            modifyIdeaGroup(it.ideaId, newGroup)
         }
+        cleanProjects()
     }
 
     suspend fun archiveStrayIdea(ideaId: Long) {
         val m = System.currentTimeMillis()
         val parent = getGroupByIdea(ideaId)
-        val siblings = getAllIdeasFromGroup(parent)
-        if (siblings.size == 2) { setGroupName(parent, siblings.first().content) }
-        val groupId = createGroup(Group(0, m, m, "", isArchived = true))
         updateGroupTimestamp(parent, m)
+        val groupId = createGroup(Group(0, m, m, "", isArchived = true))
         modifyIdeaGroup(ideaId, groupId)
         cleanProjects()
     }
 
-    @Query("UPDATE `group` SET isArchived = 0 WHERE EXISTS (SELECT * FROM idea WHERE groupParentId = groupId AND ideaId = :ideaId) AND isArchived = 1")
-    suspend fun setNotArchivedIdea(ideaId: Long)
+    @Query("UPDATE `group` SET isArchived = 0 WHERE groupId = :groupId AND isArchived = 1")
+    suspend fun setNotArchivedGroup(groupId: Long)
 
     suspend fun unarchiveIdea(ideaId: Long) {
-        setNotArchivedIdea(ideaId)
         val parent = getGroupByIdea(ideaId)
+        setNotArchivedGroup(parent)
         val content = getIdea(ideaId).first().content
         updateGroupName(parent, content)
     }

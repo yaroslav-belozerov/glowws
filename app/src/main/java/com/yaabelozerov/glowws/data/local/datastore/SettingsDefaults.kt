@@ -10,7 +10,7 @@ import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
 
 enum class SettingsKeys(val resId: Int) {
-    SHOW_PROJECT_EMPTY_NAME(R.string.s_display_group_placeholder), SORT_TYPE(R.string.s_user_default_sort_type), SORT_ORDER(
+    SHOW_PLACEHOLDERS(R.string.s_display_placeholders), SORT_TYPE(R.string.s_user_default_sort_type), SORT_ORDER(
         R.string.s_user_default_sort_order
     ),
     FILTER(R.string.s_user_default_filter)
@@ -38,7 +38,7 @@ class SettingsDefaults {
                     "",
                     choices = FilterFlag.entries.map { it.name }),
                 SettingsModel(
-                    SettingsKeys.SHOW_PROJECT_EMPTY_NAME,
+                    SettingsKeys.SHOW_PLACEHOLDERS,
                     SettingsCategories.DISPLAY,
                     SettingsTypes.BOOLEAN,
                     "true"

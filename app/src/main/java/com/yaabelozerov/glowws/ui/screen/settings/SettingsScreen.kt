@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -31,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,7 +44,6 @@ import com.yaabelozerov.glowws.domain.model.DoubleSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.MultipleChoiceSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.domain.model.StringSettingDomainModel
-import java.util.Locale
 
 fun String.toReadableKey() =
     replace("_", " ").lowercase().replaceFirstChar { char -> char.uppercase() }
@@ -67,11 +66,11 @@ fun SettingsScreen(
                 textAlign = TextAlign.Center
             )
         }
-        items(settings.keys.toList()) { key ->
+        items(settings.keys.toList(), key = { it }) { key ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(16.dp, 24.dp, 16.dp, 8.dp)
+                modifier = Modifier.padding(16.dp, 24.dp, 16.dp, 8.dp).animateItem()
             ) {
                 Icon(imageVector = key.second, contentDescription = "${key.first} icon")
                 Text(text = stringResource(id = key.first), fontSize = 32.sp)
@@ -80,15 +79,18 @@ fun SettingsScreen(
                 when (entry) {
                     is BooleanSettingDomainModel -> {
                         val checked = remember { mutableStateOf(entry.value) }
-                        Row(modifier = Modifier.clickable {
-                            checked.value = !checked.value
-                            onModify(entry.key, checked.value.toString())
-                        }.padding(16.dp, 16.dp)) {
+                        Row(modifier = Modifier
+                            .clickable {
+                                checked.value = !checked.value
+                                onModify(entry.key, checked.value.toString())
+                            }
+                            .padding(16.dp, 16.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = stringResource(entry.nameRes),
                                 fontSize = 24.sp,
-                                modifier = Modifier.weight(1f, false)
+                                modifier = Modifier.weight(1f)
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Switch(checked = checked.value, onCheckedChange = {
                                 checked.value = !checked.value
                                 onModify(entry.key, checked.value.toString())
@@ -114,7 +116,10 @@ fun SettingsScreen(
                         var expanded by remember {
                             mutableStateOf(false)
                         }
-                        Column(modifier = Modifier.clickable { expanded = true }.fillParentMaxWidth().padding(16.dp, 16.dp)) {
+                        Column(modifier = Modifier
+                            .clickable { expanded = true }
+                            .fillParentMaxWidth()
+                            .padding(16.dp, 16.dp)) {
                             Text(text = stringResource(entry.nameRes), fontSize = 24.sp)
                             DropdownMenu(expanded = expanded,
                                 onDismissRequest = { expanded = false }) {
@@ -144,7 +149,10 @@ fun SettingsScreen(
                         var expanded by remember {
                             mutableStateOf(false)
                         }
-                        Column(modifier = Modifier.clickable { expanded = true }.fillParentMaxWidth().padding(16.dp, 16.dp)) {
+                        Column(modifier = Modifier
+                            .clickable { expanded = true }
+                            .fillParentMaxWidth()
+                            .padding(16.dp, 16.dp)) {
                             Text(text = stringResource(entry.nameRes), fontSize = 24.sp)
                             DropdownMenu(expanded = expanded,
                                 onDismissRequest = { expanded = false }) {
@@ -179,7 +187,7 @@ fun SettingsScreen(
                                     }
                                 }
                             }
-                            Text(text = if (entry.value.all { !it }) stringResource(id = R.string.placeholder_unset) else entry.choices.mapIndexed { index, s ->
+                            Text(text = if (entry.value.all { !it }) stringResource(id = R.string.placeholder_null) else entry.choices.mapIndexed { index, s ->
                                 val local = entry.localChoicesIds.getOrNull(index)
                                 if (local != null) stringResource(id = local) else s.toReadableKey()
                             }.joinToString(", "), modifier = Modifier.clickable { expanded = true })
@@ -189,7 +197,9 @@ fun SettingsScreen(
             }
         }
         item {
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp, 0.dp)) {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp, 0.dp)) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

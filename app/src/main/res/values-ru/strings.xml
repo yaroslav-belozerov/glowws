@@ -8,9 +8,9 @@
     <string name="s_user_default_sort_alpha">По алфавиту</string>
     <string name="s_user_default_sort_creation">Дата создания</string>
     <string name="s_user_default_sort_modification">Дата изменения</string>
-    <string name="s_display_group_placeholder">Показывать пустое название проекта</string>
+    <string name="s_display_placeholders">Показывать пустые значения</string>
     <string name="s_screen_name">Настройки</string>
-    <string name="placeholder_unset">Нет</string>
+    <string name="placeholder_noname">Без названия</string>
     <string name="label_edit">Изменить</string>
     <string name="label_are_you_sure">Вы уверены?</string>
     <string name="label_confirm">Подтвердить</string>
@@ -35,4 +35,5 @@
     <string name="s_default_sort_asc">По возрастанию</string>
     <string name="s_default_sort_desc">По убыванию</string>
     <string name="s_user_default_sort_order">Направление сортировки</string>
+    <string name="placeholder_null">Нет</string>
 </resources>

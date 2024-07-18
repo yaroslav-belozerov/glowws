@@ -2,7 +2,6 @@ package com.yaabelozerov.glowws.ui.screen.idea
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,10 +11,12 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -37,9 +38,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.yaabelozerov.glowws.R
+import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
+import com.yaabelozerov.glowws.domain.model.SettingDomainModel
+import com.yaabelozerov.glowws.domain.model.findBooleanKey
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun IdeaScreen(
     modifier: Modifier,
@@ -47,17 +50,17 @@ fun IdeaScreen(
     onBack: () -> Unit,
     onAdd: (Long) -> Unit,
     onSave: (Long, String, Boolean) -> Unit,
-    onRemove: (Long) -> Unit
+    onRemove: (Long) -> Unit,
+    settings: List<SettingDomainModel>
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = modifier
+            .fillMaxSize()
             .padding(16.dp)
-            .then(modifier),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .background(MaterialTheme.colorScheme.background),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-
-        item {
+        item(-1) {
             Row {
                 IconButton(onClick = onBack) {
                     Icon(
@@ -70,13 +73,17 @@ fun IdeaScreen(
             }
         }
 
-        items(points.size) { ind ->
-            Point(text = points[ind].content,
-                isMain = points[ind].isMain,
-                onSave = { newText, isMain -> onSave(points[ind].id, newText, isMain) },
-                onRemove = { onRemove(points[ind].id) })
+        items(points, key = { it.id }) { point ->
+            Point(
+                modifier = Modifier.animateItem(),
+                text = point.content,
+                isMain = point.isMain,
+                onSave = { newText, isMain -> onSave(point.id, newText, isMain) },
+                onRemove = { onRemove(point.id) },
+                showPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS)
+            )
             Spacer(modifier = Modifier.height(16.dp))
-            AddPointLine(onAdd = { onAdd(ind.toLong() + 1) })
+            AddPointLine(onAdd = { onAdd(points.indexOf(point).toLong() + 1) })
         }
     }
 }
@@ -117,12 +124,13 @@ fun Point(
     text: String,
     isMain: Boolean,
     onSave: (String, Boolean) -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    showPlaceholders: Boolean
 ) {
     val isBeingModified = remember {
         mutableStateOf(false)
     }
-    Crossfade(targetState = isMain) { main ->
+    Crossfade(modifier = modifier, targetState = isMain) { main ->
         Card(modifier = Modifier
             .fillMaxWidth()
             .clickable { isBeingModified.value = !isBeingModified.value }
@@ -132,7 +140,7 @@ fun Point(
             if (!isBeingModified.value) Crossfade(targetState = text) {
                 Text(
                     modifier = Modifier.padding(8.dp),
-                    text = it.ifBlank { stringResource(id = R.string.placeholder_unset) },
+                    text = if (it.isBlank() && showPlaceholders) stringResource(id = R.string.placeholder_noname) else it,
                     color = (if (main) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface).copy(
                         alpha = if (it.isBlank()) 0.3f else 1f
                     )

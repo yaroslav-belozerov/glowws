@@ -1,5 +1,28 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
+import android.util.Log
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseInBounce
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideOut
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -40,7 +63,18 @@ fun MainScreenNavHost(
     svm: SettingsScreenViewModel,
     avm: ArchiveScreenViewModel
 ) {
-    NavHost(navController = navController, startDestination = startDestination.route) {
+    NavHost(navController = navController,
+        startDestination = startDestination.route,
+        enterTransition = {
+            fadeIn(
+                animationSpec = tween(200, easing = LinearEasing)
+            )
+        },
+        exitTransition = {
+            fadeOut(
+                animationSpec = tween(200, easing = LinearEasing)
+            )
+        }) {
         composable(NavDestinations.MainScreenRoute.route) {
             Column(Modifier.then(modifier)) {
                 TitleBar(onSettings = { navController.navigate(NavDestinations.SettingsScreenRoute.route) },
@@ -63,14 +97,16 @@ fun MainScreenNavHost(
                     onSelect = { id -> mvm.onSelect(id) },
                     inSelectionMode = mvm.selection.collectAsState().value.inSelectionMode,
                     selection = mvm.selection.collectAsState().value.entries,
-                    settings = svm.state.collectAsState().value.map { it.value }.flatten()
+                    settings = svm.state.collectAsState().value.values.flatten()
                 )
             }
         }
         composable(
-            NavDestinations.IdeaScreenRoute.withParam("{id}"), arguments = listOf(navArgument("id") { type = NavType.LongType })
+            route = NavDestinations.IdeaScreenRoute.withParam("{id}"),
+            arguments = listOf(navArgument("id") { type = NavType.LongType }),
         ) { backStackEntry ->
-            IdeaScreen(modifier = Modifier.then(modifier),
+            IdeaScreen(
+                modifier = Modifier.then(modifier),
                 points = ivm.points.collectAsState().value,
                 onBack = {
                     navController.navigateUp()
@@ -87,11 +123,11 @@ fun MainScreenNavHost(
                 },
                 onRemove = { pointId ->
                     ivm.removePoint(pointId)
-                })
+                },
+                settings = svm.state.collectAsState().value.values.flatten()
+            )
         }
-        composable(
-            NavDestinations.SettingsScreenRoute.route
-        ) {
+        composable(NavDestinations.SettingsScreenRoute.route) {
             SettingsScreen(modifier = Modifier.then(modifier),
                 svm.state.collectAsState().value,
                 onModify = { key, value ->

@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,6 +50,7 @@ import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.domain.model.GroupDomainModel
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
+import com.yaabelozerov.glowws.domain.model.findBooleanKey
 import com.yaabelozerov.glowws.ui.model.DialogEntry
 import com.yaabelozerov.glowws.ui.theme.Typography
 
@@ -76,17 +78,21 @@ fun MainScreen(
         items(ideas) { proj ->
             if (proj.entries.size == 1) {
                 val idea = proj.entries.first()
-                Idea(idea.content,
+                Idea(
+                    modifier = Modifier.animateItem(),
+                    idea.content,
                     idea.modified,
                     { onClickIdea(idea.id) },
                     { onAddIdeaToGroup(idea.groupId) },
                     { onArchiveIdea(idea.id) },
                     { onSelect(idea.id) },
                     inSelectionMode,
-                    selection.contains(idea.id)
+                    selection.contains(idea.id),
+                    displayPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS)
                 )
             } else {
                 Project(
+                    modifier = Modifier.animateItem(),
                     name = proj.content,
                     modified = proj.modified,
                     ideas = proj.entries,
@@ -100,7 +106,7 @@ fun MainScreen(
                     },
                     inSelectionMode,
                     selection,
-                    displayPlaceholder = settings.findLast { it.key == SettingsKeys.SHOW_PROJECT_EMPTY_NAME }?.value.toString() == "true"
+                    displayPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS)
                 )
             }
         }
@@ -110,6 +116,7 @@ fun MainScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Idea(
+    modifier: Modifier = Modifier,
     previewText: String,
     modified: String,
     onClick: () -> Unit,
@@ -117,12 +124,15 @@ fun Idea(
     onArchive: () -> Unit,
     onSelect: () -> Unit,
     inSelectionMode: Boolean,
-    isSelected: Boolean
+    isSelected: Boolean,
+    displayPlaceholders: Boolean
 ) {
     val isDialogOpen = remember { mutableStateOf(false) }
 
     Row(
-        verticalAlignment = Alignment.CenterVertically, modifier = Modifier
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .then(modifier)
             .fillMaxWidth()
             .then(
                 if (isSelected) Modifier.border(
@@ -137,7 +147,9 @@ fun Idea(
             }, onLongClick = { if (!inSelectionMode) isDialogOpen.value = true })
     ) {
         Text(
-            text = previewText.ifBlank { stringResource(id = R.string.placeholder_unset) },
+            text = if (previewText.isBlank() && displayPlaceholders) {
+                stringResource(id = R.string.placeholder_noname)
+            } else previewText,
             Modifier
                 .padding(16.dp)
                 .weight(1f),
@@ -168,20 +180,22 @@ fun Idea(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NestedIdea(
+    modifier: Modifier = Modifier,
     previewText: String,
     modified: String,
     onClick: () -> Unit,
     onArchive: () -> Unit,
     onSelect: () -> Unit,
     inSelectionMode: Boolean,
-    isSelected: Boolean
+    isSelected: Boolean,
+    displayPlaceholders: Boolean
 ) {
     val isDialogOpen = remember { mutableStateOf(false) }
 
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.background
-        ), modifier = Modifier
+        ), modifier = modifier
             .fillMaxWidth()
             .then(
                 if (isSelected) Modifier.border(
@@ -197,7 +211,7 @@ fun NestedIdea(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = previewText.ifBlank { stringResource(id = R.string.placeholder_unset) },
+                text = if (previewText.isBlank() && displayPlaceholders) stringResource(id = R.string.placeholder_noname) else previewText,
                 modifier = Modifier.padding(8.dp),
                 style = Typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (previewText.isBlank()) 0.3f else 1f)
@@ -223,6 +237,7 @@ fun NestedIdea(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Project(
+    modifier: Modifier = Modifier,
     name: String,
     modified: String,
     ideas: List<IdeaDomainModel>,
@@ -234,7 +249,7 @@ fun Project(
     onSelectIdea: (Long) -> Unit,
     inSelection: Boolean,
     currentSelection: List<Long>,
-    displayPlaceholder: Boolean
+    displayPlaceholders: Boolean
 ) {
     val isBeingModified = remember {
         mutableStateOf(
@@ -245,8 +260,9 @@ fun Project(
         mutableStateOf(false)
     }
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .animateContentSize()
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .combinedClickable(onClick = { if (inSelection) ideas.forEach { onSelectIdea(it.id) } },
                 onLongClick = { if (!inSelection) isDialogOpen.value = true })
@@ -263,9 +279,9 @@ fun Project(
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = if (name.isBlank()) 0.3f else 1f)
                 )
-            } else if (displayPlaceholder) {
+            } else if (displayPlaceholders) {
                 Text(
-                    text = stringResource(id = R.string.placeholder_unset),
+                    text = stringResource(id = R.string.placeholder_noname),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
@@ -286,18 +302,16 @@ fun Project(
                 Text(text = stringResource(id = R.string.label_save))
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            ideas.forEach {
-                NestedIdea(
-                    previewText = it.content,
-                    modified = it.modified,
-                    onClick = { onClickIdea(it.id) },
-                    onArchive = { onArchiveIdea(it.id) },
-                    onSelect = { onSelectIdea(it.id) },
-                    inSelectionMode = inSelection,
-                    isSelected = currentSelection.contains(it.id)
-                )
-            }
+        ideas.forEach {
+            NestedIdea(previewText = it.content,
+                modified = it.modified,
+                onClick = { onClickIdea(it.id) },
+                onArchive = { onArchiveIdea(it.id) },
+                onSelect = { onSelectIdea(it.id) },
+                inSelectionMode = inSelection,
+                isSelected = currentSelection.contains(it.id),
+                displayPlaceholders = displayPlaceholders
+            )
         }
     }
     if (isDialogOpen.value) {
@@ -324,7 +338,7 @@ fun Project(
 @Composable
 fun TitleBar(modifier: Modifier = Modifier, onSettings: () -> Unit, onArchive: () -> Unit) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(0.dp, 0.dp, 0.dp, 16.dp),
         verticalAlignment = Alignment.CenterVertically,

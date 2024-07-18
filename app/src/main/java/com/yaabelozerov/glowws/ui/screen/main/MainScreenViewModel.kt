@@ -93,12 +93,8 @@ class MainScreenViewModel @Inject constructor(
 
     fun archiveIdea(ideaId: Long) {
         viewModelScope.launch {
-            try {
-                dao.archiveStrayIdea(ideaId)
-                fetchMainScreen()
-            } catch (e: Error) {
-                e.printStackTrace()
-            }
+            dao.archiveStrayIdea(ideaId)
+            fetchMainScreen()
         }
     }
 

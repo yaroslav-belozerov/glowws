@@ -19,7 +19,6 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -52,8 +51,9 @@ fun ArchiveScreen(
                 .padding(16.dp, 8.dp)
                 .fillParentMaxWidth(), fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         }
-        items(ideas) {
-            ArchiveIdea(previewText = it.content,
+        items(ideas, key = { it.id }) {
+            ArchiveIdea(modifier = Modifier.animateItem(),
+                previewText = it.content,
                 onClick = { onClick(it.id) },
                 onRemove = { onRemove(it.id) },
                 onUnarchive = { onUnarchive(it.id) },
@@ -70,6 +70,7 @@ fun ArchiveScreen(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ArchiveIdea(
+    modifier: Modifier = Modifier,
     previewText: String,
     onClick: () -> Unit,
     onRemove: () -> Unit,
@@ -81,7 +82,7 @@ fun ArchiveIdea(
     val isDialogOpen = remember { mutableStateOf(false) }
 
     Row(
-        verticalAlignment = Alignment.CenterVertically, modifier = Modifier
+        verticalAlignment = Alignment.CenterVertically, modifier = modifier
             .fillMaxWidth()
             .then(
                 if (isSelected) Modifier.border(
@@ -93,7 +94,7 @@ fun ArchiveIdea(
                 onLongClick = { if (!inSelectionMode) isDialogOpen.value = true })
     ) {
         Text(
-            text = previewText.ifBlank { stringResource(id = R.string.placeholder_unset) },
+            text = previewText.ifBlank { stringResource(id = R.string.placeholder_noname) },
             Modifier
                 .padding(16.dp)
                 .weight(1f),
