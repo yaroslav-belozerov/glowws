@@ -1,8 +1,8 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.room.Idea
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.di.SettingsManager
@@ -12,6 +12,7 @@ import com.yaabelozerov.glowws.ui.model.FilterFlag
 import com.yaabelozerov.glowws.ui.model.Selection
 import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
+import com.yaabelozerov.glowws.ui.model.TooltipBarState
 import com.yaabelozerov.glowws.ui.model.reversed
 import com.yaabelozerov.glowws.ui.model.select
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,8 +38,21 @@ class MainScreenViewModel @Inject constructor(
     private var _isSortFilterOpen = MutableStateFlow(false)
     val sortFilterOpen = _isSortFilterOpen.asStateFlow()
 
+    private var _tooltipBarState = MutableStateFlow(TooltipBarState())
+    val tooltipBarState = _tooltipBarState.asStateFlow()
+
     init {
         fetchSortFilter()
+        viewModelScope.launch {
+            when (settingsManager.getAppVisits()) {
+                0L -> sendTooltipMessage(R.string.tooltipbar_welcome, R.string.placeholder_dismiss)
+            }
+            settingsManager.visitApp()
+        }
+    }
+
+    fun sendTooltipMessage(vararg msgResId: Int) = _tooltipBarState.update {
+        TooltipBarState(true, msgResId.toList()) { _tooltipBarState.update { TooltipBarState() } }
     }
 
     fun fetchSortFilter() {

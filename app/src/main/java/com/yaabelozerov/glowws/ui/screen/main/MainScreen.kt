@@ -1,9 +1,12 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +57,7 @@ import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.domain.model.findBooleanKey
 import com.yaabelozerov.glowws.ui.model.DialogEntry
+import com.yaabelozerov.glowws.ui.model.TooltipBarState
 import com.yaabelozerov.glowws.ui.theme.Typography
 
 @Composable
@@ -336,36 +342,75 @@ fun Project(
 }
 
 @Composable
-fun TitleBar(modifier: Modifier = Modifier, onSettings: () -> Unit, onArchive: () -> Unit) {
+fun TitleBar(
+    modifier: Modifier = Modifier,
+    tooltipState: TooltipBarState,
+    onSettings: () -> Unit,
+    onArchive: () -> Unit
+) {
+    LazyColumn(
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize()
+    ) {
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp, 0.dp, 0.dp, 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                IconButton(onClick = { onArchive() }) {
+                    Icon(
+                        modifier = Modifier.size(32.dp),
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "archive button",
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                    )
+                }
+                Text(
+                    text = stringResource(id = R.string.app_name),
+                    fontSize = 48.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                IconButton(onClick = { onSettings() }) {
+                    Icon(
+                        modifier = Modifier.size(32.dp),
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "settings button",
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                    )
+                }
+            }
+        }
+        if (tooltipState.show) item {
+            TooltipBar(modifier = Modifier.animateItem(), message = tooltipState.messageResId.map {
+                stringResource(
+                    it
+                )
+            }.joinToString("\n"), onClick = tooltipState.onClick)
+        }
+    }
+}
+
+@Composable
+fun TooltipBar(modifier: Modifier = Modifier, message: String, onClick: () -> Unit = {}) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(0.dp, 0.dp, 0.dp, 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceEvenly
+            .padding(0.dp, 0.dp, 0.dp, 16.dp)
+            .background(MaterialTheme.colorScheme.tertiaryContainer)
+            .clickable { onClick() },
+        horizontalArrangement = Arrangement.Center
     ) {
-        IconButton(onClick = { onArchive() }) {
-            Icon(
-                modifier = Modifier.size(32.dp),
-                imageVector = Icons.Default.Delete,
-                contentDescription = "archive button",
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-            )
-        }
         Text(
-            text = stringResource(id = R.string.app_name),
-            fontSize = 48.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            text = message,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(8.dp),
+            color = MaterialTheme.colorScheme.onTertiaryContainer
         )
-        IconButton(onClick = { onSettings() }) {
-            Icon(
-                modifier = Modifier.size(32.dp),
-                imageVector = Icons.Default.Settings,
-                contentDescription = "settings button",
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-            )
-        }
     }
 }
 

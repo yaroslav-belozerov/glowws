@@ -40,4 +40,7 @@ class SettingsManager(
         )!!.list!!.map { if (it.key!! == key) it.copy(value = value) else it }
         setSettings(SettingsList(settings))
     }
+
+    suspend fun visitApp() = dataStoreManager.setTimesOpened(dataStoreManager.getTimesOpened().first() + 1)
+    suspend fun getAppVisits() = dataStoreManager.getTimesOpened().first()
 }

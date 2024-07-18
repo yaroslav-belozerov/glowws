@@ -2,6 +2,7 @@ package com.yaabelozerov.glowws.di
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
@@ -60,5 +61,10 @@ object AppModule {
         fun getSettings(): Flow<String> = settingsDataStore.data.map { it[settingsKey] ?: "" }
         suspend fun setSettings(settings: String) =
             settingsDataStore.edit { it[settingsKey] = settings }
+
+        private val timesOpenedKey = longPreferencesKey("times_opened")
+        fun getTimesOpened(): Flow<Long> = settingsDataStore.data.map { it[timesOpenedKey] ?: 0 }
+        suspend fun setTimesOpened(timesOpened: Long) =
+            settingsDataStore.edit { it[timesOpenedKey] = timesOpened }
     }
 }

@@ -77,7 +77,7 @@ fun MainScreenNavHost(
         }) {
         composable(NavDestinations.MainScreenRoute.route) {
             Column(Modifier.then(modifier)) {
-                TitleBar(onSettings = { navController.navigate(NavDestinations.SettingsScreenRoute.route) },
+                TitleBar(tooltipState = mvm.tooltipBarState.collectAsState().value, onSettings = { navController.navigate(NavDestinations.SettingsScreenRoute.route) },
                     onArchive = { navController.navigate(NavDestinations.ArchiveScreenRoute.route) })
                 MainScreen(
                     ideas = mvm.state.collectAsState().value.ideas,

@@ -33,11 +33,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,6 +68,7 @@ import com.yaabelozerov.glowws.ui.screen.main.SortFilterModalBottomSheet
 import com.yaabelozerov.glowws.ui.screen.main.withParam
 import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreenViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -96,11 +101,19 @@ class MainActivity : ComponentActivity() {
                 }, floatingActionButton = {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         when (navController.currentBackStackEntryAsState().value?.destination?.route) {
-                            NavDestinations.MainScreenRoute.route -> MainScreenFloatingButtons(mvm = mvm, addNewIdeaCallback = { id ->
-                                navController.navigate(NavDestinations.IdeaScreenRoute.withParam(id))
-                                ivm.refreshPoints(id)
-                            })
-                            NavDestinations.ArchiveScreenRoute.route -> ArchiveScreenFloatingButtons(avm = avm)
+                            NavDestinations.MainScreenRoute.route -> MainScreenFloatingButtons(mvm = mvm,
+                                addNewIdeaCallback = { id ->
+                                    navController.navigate(
+                                        NavDestinations.IdeaScreenRoute.withParam(
+                                            id
+                                        )
+                                    )
+                                    ivm.refreshPoints(id)
+                                })
+
+                            NavDestinations.ArchiveScreenRoute.route -> ArchiveScreenFloatingButtons(
+                                avm = avm
+                            )
                         }
                     }
                 })
