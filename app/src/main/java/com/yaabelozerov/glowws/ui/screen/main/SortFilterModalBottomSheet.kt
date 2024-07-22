@@ -22,6 +22,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -76,16 +77,17 @@ fun FilterColumn(
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = stringResource(id = R.string.m_reset_sortfilter),
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                modifier = Modifier.clickable { resetFilter() },
-                fontWeight = FontWeight.Bold
-            )
+            TextButton(onClick = { resetFilter() }) {
+                Text(
+                    text = stringResource(id = R.string.m_reset_sortfilter),
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    fontWeight = FontWeight.Bold
+                )
+            }
             Spacer(modifier = Modifier.width(4.dp))
         }
-        FlowRow {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             flags.forEach {
                 if (it.value) {
                     Button(onClick = {
@@ -101,7 +103,7 @@ fun FilterColumn(
                                 modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
                             )
                         }
-                        Text(text = stringResource(id = it.key.resId))
+                        Text(text = stringResource(id = it.key.resId), fontSize = 16.sp)
                     }
                 } else {
                     OutlinedButton(onClick = {
@@ -117,7 +119,7 @@ fun FilterColumn(
                                 modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
                             )
                         }
-                        Text(text = stringResource(id = it.key.resId))
+                        Text(text = stringResource(id = it.key.resId), fontSize = 16.sp)
                     }
                 }
             }
@@ -154,16 +156,17 @@ fun SortColumn(
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = stringResource(id = R.string.m_reset_sortfilter),
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                modifier = Modifier.clickable { resetSort() },
-                fontWeight = FontWeight.Bold
-            )
+            TextButton(onClick = { resetSort() }) {
+                Text(
+                    text = stringResource(id = R.string.m_reset_sortfilter),
+                    fontSize = 20.sp,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    fontWeight = FontWeight.Bold
+                )
+            }
             Spacer(modifier = Modifier.width(4.dp))
         }
-        FlowRow {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SortType.entries.forEach {
                 if (sortModel.type == it) {
                     Button(onClick = {
@@ -174,13 +177,13 @@ fun SortColumn(
                             contentDescription = "filter applied icon",
                             modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
                         )
-                        Text(text = stringResource(it.resId))
+                        Text(text = stringResource(it.resId), fontSize = 16.sp)
                     }
                 } else {
                     OutlinedButton(onClick = {
                         setSortType(it)
                     }) {
-                        Text(text = stringResource(it.resId))
+                        Text(text = stringResource(it.resId), fontSize = 16.sp)
                     }
                 }
             }

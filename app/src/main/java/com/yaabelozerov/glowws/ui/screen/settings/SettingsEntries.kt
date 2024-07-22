@@ -82,16 +82,12 @@ fun ChoiceSettingDomainEntry(
             .padding(16.dp, 16.dp)
     ) {
         Text(text = stringResource(entry.nameRes), fontSize = 24.sp)
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             entry.choices.forEachIndexed { index, value ->
-                val local = entry.localChoicesIds.getOrNull(index)
-                Text(
-                    text = if (local != null) stringResource(id = local) else value.toReadableKey(),
-                    fontWeight = if (value == entry.value) FontWeight.Bold else FontWeight.Normal,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
+                        .fillMaxWidth()
                         .clickable {
                             onModify(
                                 entry.key,
@@ -99,16 +95,21 @@ fun ChoiceSettingDomainEntry(
                             )
                             expanded = false
                         }
-                        .padding(16.dp, 8.dp)
-                )
+                ) {
+                    val local = entry.localChoicesIds.getOrNull(index)
+                    Text(
+                        text = if (local != null) stringResource(id = local) else value.toReadableKey(),
+                        fontWeight = if (value == entry.value) FontWeight.Bold else FontWeight.Normal,
+                        modifier = Modifier.padding(16.dp, 8.dp)
+                    )
+                }
             }
         }
         val local = entry.localChoicesIds.getOrNull(
             entry.choices.indexOf(entry.value)
         )
         Text(
-            text = if (local != null) stringResource(id = local) else entry.value.toReadableKey(),
-            modifier = Modifier.clickable { expanded = true }
+            text = if (local != null) stringResource(id = local) else entry.value.toReadableKey()
         )
     }
 }
@@ -128,24 +129,28 @@ fun MultipleChoiceSettingsEntry(
             .padding(16.dp, 16.dp)
     ) {
         Text(text = stringResource(entry.nameRes), fontSize = 24.sp)
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             entry.choices.forEachIndexed { index, elem ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            onModify(
+                                entry.key,
+                                entry.value
+                                    .mapIndexed { i, value ->
+                                        if (i == index) !value else value
+                                    }
+                                    .joinToString(
+                                        ","
+                                    )
+                            )
+                        }
+                ) {
                     if (entry.value[index]) {
                         Icon(
-                            modifier = Modifier
-                                .clickable {
-                                    onModify(
-                                        entry.key,
-                                        entry.value
-                                            .mapIndexed { i, value -> if (i == index) !value else value }
-                                            .joinToString(",")
-                                    )
-                                }
-                                .padding(16.dp, 0.dp, 0.dp, 0.dp),
+                            modifier = Modifier.padding(16.dp, 0.dp, 0.dp, 0.dp),
                             imageVector = Icons.Default.Check,
                             contentDescription = null
                         )
@@ -159,20 +164,7 @@ fun MultipleChoiceSettingsEntry(
                         } else {
                             elem.toReadableKey()
                         },
-                        modifier = Modifier
-                            .clickable {
-                                onModify(
-                                    entry.key,
-                                    entry.value
-                                        .mapIndexed { i, value ->
-                                            if (i == index) !value else value
-                                        }
-                                        .joinToString(
-                                            ","
-                                        )
-                                )
-                            }
-                            .padding(16.dp, 8.dp)
+                        modifier = Modifier.padding(16.dp, 8.dp)
                     )
                 }
             }
@@ -185,8 +177,7 @@ fun MultipleChoiceSettingsEntry(
                     val local = entry.localChoicesIds.getOrNull(index)
                     if (local != null) stringResource(id = local) else s.toReadableKey()
                 }.joinToString(", ")
-            },
-            modifier = Modifier.clickable { expanded = true }
+            }
         )
     }
 }
