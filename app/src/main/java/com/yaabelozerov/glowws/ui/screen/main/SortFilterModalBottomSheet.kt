@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -18,7 +17,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -37,22 +35,28 @@ import com.yaabelozerov.glowws.ui.model.FilterFlag
 import com.yaabelozerov.glowws.ui.model.SortModel
 import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
-import com.yaabelozerov.glowws.ui.model.reversed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SortFilterModalBottomSheet(mvm: MainScreenViewModel) {
-    if (mvm.sortFilterOpen.collectAsState().value) ModalBottomSheet(onDismissRequest = { mvm.toggleSortFilterModal() }) {
-        Column(
-            Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            FilterColumn(flags = mvm.state.collectAsState().value.filter.flags,
-                setFilterFlag = { f, v -> mvm.setFilterFlag(f, v) },
-                resetFilter = { mvm.fetchFilter() })
-            SortColumn(sortModel = mvm.state.collectAsState().value.sort,
-                setSortType = { mvm.setSortType(it) },
-                reverseOrder = { mvm.reverseSortOrder() },
-                resetSort = { mvm.fetchSort() })
+    if (mvm.sortFilterOpen.collectAsState().value) {
+        ModalBottomSheet(onDismissRequest = { mvm.toggleSortFilterModal() }) {
+            Column(
+                Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                FilterColumn(
+                    flags = mvm.state.collectAsState().value.filter.flags,
+                    setFilterFlag = { f, v -> mvm.setFilterFlag(f, v) },
+                    resetFilter = { mvm.fetchFilter() }
+                )
+                SortColumn(
+                    sortModel = mvm.state.collectAsState().value.sort,
+                    setSortType = { mvm.setSortType(it) },
+                    reverseOrder = { mvm.reverseSortOrder() },
+                    resetSort = { mvm.fetchSort() }
+                )
+            }
         }
     }
 }
@@ -67,7 +71,9 @@ fun FilterColumn(
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = stringResource(id = R.string.m_filter), fontSize = 24.sp, fontWeight = FontWeight.Bold
+                text = stringResource(id = R.string.m_filter),
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
@@ -81,28 +87,38 @@ fun FilterColumn(
         }
         FlowRow {
             flags.forEach {
-                if (it.value) Button(onClick = {
-                    setFilterFlag(
-                        it.key, !it.value
-                    )
-                }) {
-                    if (it.value) Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "filter applied icon",
-                        modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
-                    )
-                    Text(text = stringResource(id = it.key.resId))
-                } else OutlinedButton(onClick = {
-                    setFilterFlag(
-                        it.key, !it.value
-                    )
-                }) {
-                    if (it.value) Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "filter applied icon",
-                        modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
-                    )
-                    Text(text = stringResource(id = it.key.resId))
+                if (it.value) {
+                    Button(onClick = {
+                        setFilterFlag(
+                            it.key,
+                            !it.value
+                        )
+                    }) {
+                        if (it.value) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "filter applied icon",
+                                modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
+                            )
+                        }
+                        Text(text = stringResource(id = it.key.resId))
+                    }
+                } else {
+                    OutlinedButton(onClick = {
+                        setFilterFlag(
+                            it.key,
+                            !it.value
+                        )
+                    }) {
+                        if (it.value) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "filter applied icon",
+                                modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
+                            )
+                        }
+                        Text(text = stringResource(id = it.key.resId))
+                    }
                 }
             }
         }
@@ -119,14 +135,20 @@ fun SortColumn(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = stringResource(id = R.string.m_sort),
+            Text(
+                text = stringResource(id = R.string.m_sort),
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.clickable { reverseOrder() })
+                modifier = Modifier.clickable { reverseOrder() }
+            )
             Spacer(modifier = Modifier.width(8.dp))
             OutlinedIconButton(onClick = { reverseOrder() }, modifier = Modifier.height(24.dp)) {
                 Icon(
-                    imageVector = if (sortModel.order == SortOrder.ASCENDING) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    imageVector = if (sortModel.order == SortOrder.ASCENDING) {
+                        Icons.Default.KeyboardArrowUp
+                    } else {
+                        Icons.Default.KeyboardArrowDown
+                    },
                     contentDescription = null,
                     modifier = Modifier.padding(4.dp, 0.dp)
                 )
@@ -143,19 +165,23 @@ fun SortColumn(
         }
         FlowRow {
             SortType.entries.forEach {
-                if (sortModel.type == it) Button(onClick = {
-                    resetSort()
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "filter applied icon",
-                        modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
-                    )
-                    Text(text = stringResource(it.resId))
-                } else OutlinedButton(onClick = {
-                    setSortType(it)
-                }) {
-                    Text(text = stringResource(it.resId))
+                if (sortModel.type == it) {
+                    Button(onClick = {
+                        resetSort()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "filter applied icon",
+                            modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
+                        )
+                        Text(text = stringResource(it.resId))
+                    }
+                } else {
+                    OutlinedButton(onClick = {
+                        setSortType(it)
+                    }) {
+                        Text(text = stringResource(it.resId))
+                    }
                 }
             }
         }

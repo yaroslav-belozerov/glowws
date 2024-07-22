@@ -16,15 +16,17 @@ enum class SettingsKeys(val resId: Int) {
     FILTER(R.string.s_user_default_filter)
 }
 
-class SettingsDefaults {
+sealed class SettingsDefaults {
     companion object {
         val DEFAULT = SettingsList(
             list = listOf(
-                SettingsModel(SettingsKeys.SORT_TYPE,
+                SettingsModel(
+                    SettingsKeys.SORT_TYPE,
                     SettingsCategories.USER,
                     SettingsTypes.CHOICE,
                     SortType.TIMESTAMP_MODIFIED.name,
-                    choices = SortType.entries.map { it.name }),
+                    choices = SortType.entries.map { it.name }
+                ),
                 SettingsModel(
                     SettingsKeys.SORT_ORDER,
                     SettingsCategories.USER,
@@ -32,11 +34,13 @@ class SettingsDefaults {
                     SortOrder.ASCENDING.name,
                     choices = SortOrder.entries.map { it.name }
                 ),
-                SettingsModel(SettingsKeys.FILTER,
+                SettingsModel(
+                    SettingsKeys.FILTER,
                     SettingsCategories.USER,
                     SettingsTypes.MULTIPLE_CHOICE,
                     "",
-                    choices = FilterFlag.entries.map { it.name }),
+                    choices = FilterFlag.entries.map { it.name }
+                ),
                 SettingsModel(
                     SettingsKeys.SHOW_PLACEHOLDERS,
                     SettingsCategories.DISPLAY,

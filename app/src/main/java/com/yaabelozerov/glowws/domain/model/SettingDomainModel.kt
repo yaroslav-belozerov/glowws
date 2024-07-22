@@ -36,7 +36,7 @@ data class ChoiceSettingDomainModel(
     val choices: List<String>,
     val localChoicesIds: List<Int?>,
     override val value: String,
-): SettingDomainModel()
+) : SettingDomainModel()
 
 data class MultipleChoiceSettingDomainModel(
     override val key: SettingsKeys,
@@ -44,4 +44,4 @@ data class MultipleChoiceSettingDomainModel(
     val choices: List<String>,
     val localChoicesIds: List<Int?>,
     override val value: List<Boolean>,
-): SettingDomainModel()
+) : SettingDomainModel()

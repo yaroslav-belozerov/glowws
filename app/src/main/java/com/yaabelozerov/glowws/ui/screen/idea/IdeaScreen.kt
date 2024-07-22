@@ -30,8 +30,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -114,7 +116,6 @@ fun AddPointLine(onAdd: () -> Unit) {
             )
         }
     }
-
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -127,67 +128,97 @@ fun Point(
     onRemove: () -> Unit,
     showPlaceholders: Boolean
 ) {
-    val isBeingModified = remember {
+    var isBeingModified by remember {
         mutableStateOf(false)
     }
     Crossfade(modifier = modifier, targetState = isMain) { main ->
-        Card(modifier = Modifier
-            .fillMaxWidth()
-            .clickable { isBeingModified.value = !isBeingModified.value }
-            .animateContentSize()
-            .then(modifier),
-            colors = CardDefaults.cardColors(containerColor = if (main && !isBeingModified.value) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer)) {
-            if (!isBeingModified.value) Crossfade(targetState = text) {
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = if (it.isBlank() && showPlaceholders) stringResource(id = R.string.placeholder_noname) else it,
-                    color = (if (main) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface).copy(
-                        alpha = if (it.isBlank()) 0.3f else 1f
-                    )
-                )
-            } else Column(Modifier.fillMaxWidth()) {
-                val currentText = remember {
-                    mutableStateOf(text)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { isBeingModified = !isBeingModified }
+                .animateContentSize()
+                .then(modifier),
+            colors = CardDefaults.cardColors(
+                containerColor = if (main && !isBeingModified) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainer
                 }
-                val currentMainStatus = remember {
-                    mutableStateOf(isMain)
-                }
-                TextField(
-                    value = currentText.value,
-                    onValueChange = { currentText.value = it },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                FlowRow(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(onClick = {
-                        isBeingModified.value = false
-                    }) {
-                        Text(text = stringResource(id = R.string.label_cancel))
-                    }
-                    OutlinedButton(onClick = {
-                        isBeingModified.value = false
-                        onRemove()
-                    }) {
-                        Text(text = stringResource(id = R.string.label_remove))
-                    }
-                    OutlinedButton(onClick = {
-                        currentMainStatus.value = !currentMainStatus.value
-                    }) {
-                        Text(
-                            text = if (currentMainStatus.value) stringResource(id = R.string.i_unset_key) else stringResource(
-                                id = R.string.i_set_key
+            )
+        ) {
+            if (!isBeingModified) {
+                Crossfade(targetState = text) {
+                    Text(
+                        modifier = Modifier.padding(8.dp),
+                        text = if (it.isBlank() && showPlaceholders) {
+                            stringResource(
+                                id = R.string.placeholder_noname
                             )
+                        } else {
+                            it
+                        },
+                        color = (
+                            if (main) {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            }
+                            ).copy(
+                            alpha = if (it.isBlank()) 0.3f else 1f
                         )
+                    )
+                }
+            } else {
+                Column(Modifier.fillMaxWidth()) {
+                    var currentText by remember {
+                        mutableStateOf(text)
                     }
-                    Button(onClick = {
-                        onSave(currentText.value, currentMainStatus.value)
-                        isBeingModified.value = false
-                    }) {
-                        Text(text = stringResource(id = R.string.label_save))
+                    var currentMainStatus by remember {
+                        mutableStateOf(isMain)
+                    }
+                    TextField(
+                        value = currentText,
+                        onValueChange = { currentText = it },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    FlowRow(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(onClick = {
+                            isBeingModified = false
+                        }) {
+                            Text(text = stringResource(id = R.string.label_cancel))
+                        }
+                        OutlinedButton(onClick = {
+                            isBeingModified = false
+                            onRemove()
+                        }) {
+                            Text(text = stringResource(id = R.string.label_remove))
+                        }
+                        OutlinedButton(onClick = {
+                            currentMainStatus = !currentMainStatus
+                        }) {
+                            Text(
+                                text = if (currentMainStatus) {
+                                    stringResource(
+                                        id = R.string.i_unset_key
+                                    )
+                                } else {
+                                    stringResource(
+                                        id = R.string.i_set_key
+                                    )
+                                }
+                            )
+                        }
+                        Button(onClick = {
+                            onSave(currentText, currentMainStatus)
+                            isBeingModified = false
+                        }) {
+                            Text(text = stringResource(id = R.string.label_save))
+                        }
                     }
                 }
             }

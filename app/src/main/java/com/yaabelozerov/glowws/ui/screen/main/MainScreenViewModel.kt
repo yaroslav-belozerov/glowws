@@ -1,27 +1,22 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yaabelozerov.glowws.R
-import com.yaabelozerov.glowws.data.local.room.Group
 import com.yaabelozerov.glowws.data.local.room.Idea
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.di.SettingsManager
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
 import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
 import com.yaabelozerov.glowws.ui.model.FilterFlag
-import com.yaabelozerov.glowws.ui.model.Selection
+import com.yaabelozerov.glowws.ui.model.SelectionState
 import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
-import com.yaabelozerov.glowws.ui.model.TooltipBarState
 import com.yaabelozerov.glowws.ui.model.reversed
 import com.yaabelozerov.glowws.ui.model.select
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -37,8 +32,8 @@ class MainScreenViewModel @Inject constructor(
     private var _state: MutableStateFlow<MainScreenState> = MutableStateFlow(MainScreenState())
     val state = _state.asStateFlow()
 
-    private var _selection: MutableStateFlow<Selection<Long>> = MutableStateFlow(Selection())
-    val selection = _selection.asStateFlow()
+    private var _selectionState: MutableStateFlow<SelectionState<Long>> = MutableStateFlow(SelectionState())
+    val selection = _selectionState.asStateFlow()
 
     private var _isSortFilterOpen = MutableStateFlow(false)
     val sortFilterOpen = _isSortFilterOpen.asStateFlow()
@@ -87,27 +82,35 @@ class MainScreenViewModel @Inject constructor(
 
     fun fetchMainScreen() {
         viewModelScope.launch {
-            if (_state.value.searchQuery.isBlank()) dao.getGroupsWithIdeasNotArchived()
-                .collect { items ->
-                    val new = ideaMapper.toDomainModel(
-                        items, _state.value.filter, _state.value.sort
-                    )
-                    _state.update {
-                        it.copy(ideas = new)
-                    }
-                } else dao.getGroupsIdsNotArchivedQuery("%${_state.value.searchQuery}%")
-                .collect { groupIds ->
-                    groupIds.map { dao.getGroupsWithIdeasNotArchivedRestricted(it) }.merge()
-                        .collect { map ->
-                            _state.update {
-                                it.copy(
-                                    ideas = ideaMapper.toDomainModel(
-                                        map, _state.value.filter, _state.value.sort
-                                    )
-                                )
-                            }
+            if (_state.value.searchQuery.isBlank()) {
+                dao.getGroupsWithIdeasNotArchived()
+                    .collect { items ->
+                        val new = ideaMapper.toDomainModel(
+                            items,
+                            _state.value.filter,
+                            _state.value.sort
+                        )
+                        _state.update {
+                            it.copy(ideas = new)
                         }
-                }
+                    }
+            } else {
+                dao.getGroupsIdsNotArchivedQuery("%${_state.value.searchQuery}%")
+                    .collect { groupIds ->
+                        groupIds.map { dao.getGroupsWithIdeasNotArchivedRestricted(it) }.merge()
+                            .collect { map ->
+                                _state.update {
+                                    it.copy(
+                                        ideas = ideaMapper.toDomainModel(
+                                            map,
+                                            _state.value.filter,
+                                            _state.value.sort
+                                        )
+                                    )
+                                }
+                            }
+                    }
+            }
         }
     }
 
@@ -159,12 +162,12 @@ class MainScreenViewModel @Inject constructor(
     }
 
     fun archiveSelected() {
-        _selection.value.entries.forEach { archiveIdea(it) }
+        _selectionState.value.entries.forEach { archiveIdea(it) }
         deselectAll()
     }
 
-    fun deselectAll() = _selection.update { Selection() }
-    fun onSelect(ideaId: Long) = _selection.update { it.select(ideaId) }
+    fun deselectAll() = _selectionState.update { SelectionState() }
+    fun onSelect(ideaId: Long) = _selectionState.update { it.select(ideaId) }
 
     fun updateSearchQuery(newQuery: String) {
         _state.update { it.copy(searchQuery = newQuery) }

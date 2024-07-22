@@ -27,7 +27,9 @@ object AppModule {
     @Singleton
     @Provides
     fun provideIdeaDatabase(@ApplicationContext app: Context) = Room.databaseBuilder(
-        app, IdeaDatabase::class.java, "glowws.db"
+        app,
+        IdeaDatabase::class.java,
+        "glowws.db"
     ).build()
 
     @Singleton

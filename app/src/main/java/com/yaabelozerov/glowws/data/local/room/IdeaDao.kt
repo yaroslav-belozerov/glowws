@@ -46,7 +46,8 @@ interface IdeaDao {
     fun getGroupsWithIdeasNotArchivedRestricted(groupId: Long): Flow<Map<Group, List<Idea>>>
 
     @Query(
-        "SELECT groupId FROM `group` WHERE EXISTS (SELECT * FROM idea WHERE content LIKE :query AND groupParentId = groupId) OR name LIKE :query AND isArchived = 0"
+        "SELECT groupId FROM `group` WHERE EXISTS (SELECT * FROM idea WHERE content " +
+            "LIKE :query AND groupParentId = groupId) OR name LIKE :query AND isArchived = 0"
     )
     fun getGroupsIdsNotArchivedQuery(query: String): Flow<List<Long>>
 
@@ -107,7 +108,9 @@ interface IdeaDao {
         val siblings = getAllIdeasFromGroup(parent)
         val content: String =
             pts.firstOrNull { it.isMain }?.content ?: (pts.firstOrNull()?.content ?: "")
-        if (siblings.size == 1) { updateGroupName(parent, content) }
+        if (siblings.size == 1) {
+            updateGroupName(parent, content)
+        }
         modifyIdeaContent(ideaId, content)
     }
 
@@ -123,7 +126,9 @@ interface IdeaDao {
     @Query("DELETE FROM point WHERE ideaParentId = :ideaId")
     suspend fun deleteIdeaPoints(ideaId: Long)
 
-    @Query("SELECT ideaId FROM idea WHERE EXISTS (SELECT * FROM point WHERE pointId = :pointId AND ideaParentId = ideaId)")
+    @Query(
+        "SELECT ideaId FROM idea WHERE EXISTS (SELECT * FROM point WHERE pointId = :pointId AND ideaParentId = ideaId)"
+    )
     suspend fun getIdeaIdFromPointId(pointId: Long): Long
 
     @Query("UPDATE point SET content = :newText WHERE pointId = :pointId")
@@ -157,8 +162,11 @@ interface IdeaDao {
         deleteIdea(ideaId)
         deleteIdeaPoints(ideaId)
         val all = getAllIdeasFromGroup(groupId)
-        if (all.isEmpty()) deleteGroupOnly(groupId)
-        else updateGroupTimestamp(groupId, System.currentTimeMillis())
+        if (all.isEmpty()) {
+            deleteGroupOnly(groupId)
+        } else {
+            updateGroupTimestamp(groupId, System.currentTimeMillis())
+        }
     }
 
     @Query("DELETE FROM `group` WHERE groupId = :groupId")

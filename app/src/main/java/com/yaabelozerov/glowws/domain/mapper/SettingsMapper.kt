@@ -1,13 +1,9 @@
 package com.yaabelozerov.glowws.domain.mapper
 
 import android.util.Log
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.util.fastJoinToString
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
-import com.yaabelozerov.glowws.data.local.datastore.model.SettingsCategories
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsTypes
 import com.yaabelozerov.glowws.domain.model.BooleanSettingDomainModel
@@ -21,7 +17,6 @@ import com.yaabelozerov.glowws.ui.model.FilterModel
 import com.yaabelozerov.glowws.ui.model.SortModel
 import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
-import com.yaabelozerov.glowws.util.valueOfOrNull
 
 class SettingsMapper {
     fun toDomainModel(settings: SettingsList): Map<Pair<Int, ImageVector>, List<SettingDomainModel>> {
@@ -33,15 +28,23 @@ class SettingsMapper {
                 val nameRes = it.key?.resId ?: -1
                 val dm = when (it.type) {
                     SettingsTypes.BOOLEAN -> BooleanSettingDomainModel(
-                        it.key!!, nameRes, it.value == "true"
+                        it.key!!,
+                        nameRes,
+                        it.value == "true"
                     )
 
                     SettingsTypes.DOUBLE -> DoubleSettingDomainModel(
-                        it.key!!, nameRes, it.min!!, it.max!!, it.value!!.toDouble()
+                        it.key!!,
+                        nameRes,
+                        it.min!!,
+                        it.max!!,
+                        it.value!!.toDouble()
                     )
 
                     SettingsTypes.STRING -> StringSettingDomainModel(
-                        it.key!!, nameRes, it.value!!
+                        it.key!!,
+                        nameRes,
+                        it.value!!
                     )
 
                     SettingsTypes.CHOICE -> {
@@ -54,14 +57,18 @@ class SettingsMapper {
                         )
                     }
 
-                    SettingsTypes.MULTIPLE_CHOICE -> MultipleChoiceSettingDomainModel(key = it.key!!,
+                    SettingsTypes.MULTIPLE_CHOICE -> MultipleChoiceSettingDomainModel(
+                        key = it.key!!,
                         nameRes = nameRes,
                         choices = it.choices!!,
                         localChoicesIds = it.choices!!.map { getLocalChoice(it) },
-                        value = it.value!!.split(",").map { it == "true" })
+                        value = it.value!!.split(",").map { it == "true" }
+                    )
 
                     null -> StringSettingDomainModel(
-                        it.key!!, nameRes, ""
+                        it.key!!,
+                        nameRes,
+                        ""
                     )
                 }
                 mp[Pair(cat, icon)] = mp[Pair(cat, icon)]?.plus(dm) ?: listOf(dm)
@@ -73,12 +80,12 @@ class SettingsMapper {
     fun getSorting(settings: SettingsList): SortModel {
         val order = try {
             SortOrder.valueOf(settings.list?.findLast { it.key == SettingsKeys.SORT_ORDER }?.value!!)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             SortOrder.ASCENDING
         }
         val type = try {
             SortType.valueOf(settings.list?.findLast { it.key == SettingsKeys.SORT_TYPE }?.value!!)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             SortType.TIMESTAMP_MODIFIED
         }
         return SortModel(order, type)
@@ -100,7 +107,7 @@ class SettingsMapper {
             in FilterFlag.entries.fastJoinToString() -> FilterFlag.valueOf(s).resId
             else -> null
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         Log.i("SettingsMapper", "Locale not found for key: $s")
         null
     }

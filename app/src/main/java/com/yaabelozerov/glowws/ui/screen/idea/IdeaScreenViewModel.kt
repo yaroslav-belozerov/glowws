@@ -53,7 +53,8 @@ class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewMo
             val point = dao.getPoint(pointId).first()
             dao.upsertPointUpdateIdea(
                 point.copy(
-                    content = content ?: point.content, isMain = isMain ?: point.isMain
+                    content = content ?: point.content,
+                    isMain = isMain ?: point.isMain
                 )
             )
         }

@@ -1,7 +1,5 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -14,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Menu
@@ -36,10 +32,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,15 +46,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.domain.model.GroupDomainModel
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.domain.model.findBooleanKey
+import com.yaabelozerov.glowws.ui.common.ScreenDialog
 import com.yaabelozerov.glowws.ui.model.DialogEntry
-import com.yaabelozerov.glowws.ui.model.TooltipBarState
 import com.yaabelozerov.glowws.ui.theme.Typography
 
 @Composable
@@ -133,7 +129,7 @@ fun Idea(
     isSelected: Boolean,
     displayPlaceholders: Boolean
 ) {
-    val isDialogOpen = remember { mutableStateOf(false) }
+    var isDialogOpen by remember { mutableStateOf(false) }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -141,21 +137,31 @@ fun Idea(
             .then(modifier)
             .fillMaxWidth()
             .then(
-                if (isSelected) Modifier.border(
-                    2.dp, MaterialTheme.colorScheme.primary
-                ) else Modifier
+                if (isSelected) {
+                    Modifier.border(
+                        2.dp,
+                        MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Modifier
+                }
             )
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .combinedClickable(onClick = if (!inSelectionMode) {
-                onClick
-            } else {
-                onSelect
-            }, onLongClick = { if (!inSelectionMode) isDialogOpen.value = true })
+            .combinedClickable(
+                onClick = if (!inSelectionMode) {
+                    onClick
+                } else {
+                    onSelect
+                },
+                onLongClick = { if (!inSelectionMode) isDialogOpen = true }
+            )
     ) {
         Text(
             text = if (previewText.isBlank() && displayPlaceholders) {
                 stringResource(id = R.string.placeholder_noname)
-            } else previewText,
+            } else {
+                previewText
+            },
             Modifier
                 .padding(16.dp)
                 .weight(1f),
@@ -165,21 +171,28 @@ fun Idea(
         Spacer(modifier = Modifier.width(16.dp))
     }
 
-    if (isDialogOpen.value) {
-        ScreenSelectedDialog(title = previewText, info = listOf(modified), entries = listOf(
-            DialogEntry(Icons.Default.Menu, stringResource(id = R.string.label_select), {
-                onSelect()
-            }), DialogEntry(
-                Icons.Default.AddCircle,
-                stringResource(id = R.string.m_add_to_project),
-                onAddToGroup
-            ), DialogEntry(
-                Icons.Default.Delete,
-                stringResource(id = R.string.m_archive_idea),
-                onArchive,
-                needsConfirmation = true
-            )
-        ), onDismiss = { isDialogOpen.value = false })
+    if (isDialogOpen) {
+        ScreenDialog(
+            title = previewText,
+            info = listOf(modified),
+            entries = listOf(
+                DialogEntry(Icons.Default.Menu, stringResource(id = R.string.label_select), {
+                    onSelect()
+                }),
+                DialogEntry(
+                    Icons.Default.AddCircle,
+                    stringResource(id = R.string.m_add_to_project),
+                    onAddToGroup
+                ),
+                DialogEntry(
+                    Icons.Default.Delete,
+                    stringResource(id = R.string.m_archive_idea),
+                    onArchive,
+                    needsConfirmation = true
+                )
+            ),
+            onDismiss = { isDialogOpen = false }
+        )
     }
 }
 
@@ -196,28 +209,44 @@ fun NestedIdea(
     isSelected: Boolean,
     displayPlaceholders: Boolean
 ) {
-    val isDialogOpen = remember { mutableStateOf(false) }
+    var isDialogOpen by remember { mutableStateOf(false) }
 
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.background
-        ), modifier = modifier
+        ),
+        modifier = modifier
             .fillMaxWidth()
             .then(
-                if (isSelected) Modifier.border(
-                    2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium
-                ) else Modifier
+                if (isSelected) {
+                    Modifier.border(
+                        2.dp,
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.shapes.medium
+                    )
+                } else {
+                    Modifier
+                }
             )
             .clip(MaterialTheme.shapes.medium)
-            .combinedClickable(onClick = if (!inSelectionMode) {
-                onClick
-            } else {
-                onSelect
-            }, onLongClick = { if (!inSelectionMode) isDialogOpen.value = true })
+            .combinedClickable(
+                onClick = if (!inSelectionMode) {
+                    onClick
+                } else {
+                    onSelect
+                },
+                onLongClick = { if (!inSelectionMode) isDialogOpen = true }
+            )
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = if (previewText.isBlank() && displayPlaceholders) stringResource(id = R.string.placeholder_noname) else previewText,
+                text = if (previewText.isBlank() && displayPlaceholders) {
+                    stringResource(
+                        id = R.string.placeholder_noname
+                    )
+                } else {
+                    previewText
+                },
                 modifier = Modifier.padding(8.dp),
                 style = Typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (previewText.isBlank()) 0.3f else 1f)
@@ -226,17 +255,23 @@ fun NestedIdea(
             Spacer(modifier = Modifier.width(16.dp))
         }
     }
-    if (isDialogOpen.value) {
-        ScreenSelectedDialog(title = previewText, info = listOf(modified), entries = listOf(
-            DialogEntry(Icons.Default.Menu, stringResource(id = R.string.label_select), {
-                onSelect()
-            }), DialogEntry(
-                Icons.Default.Delete,
-                stringResource(id = R.string.m_archive_idea),
-                onArchive,
-                needsConfirmation = true
-            )
-        ), onDismiss = { isDialogOpen.value = false })
+    if (isDialogOpen) {
+        ScreenDialog(
+            title = previewText,
+            info = listOf(modified),
+            entries = listOf(
+                DialogEntry(Icons.Default.Menu, stringResource(id = R.string.label_select), {
+                    onSelect()
+                }),
+                DialogEntry(
+                    Icons.Default.Delete,
+                    stringResource(id = R.string.m_archive_idea),
+                    onArchive,
+                    needsConfirmation = true
+                )
+            ),
+            onDismiss = { isDialogOpen = false }
+        )
     }
 }
 
@@ -246,7 +281,7 @@ fun Project(
     modifier: Modifier = Modifier,
     name: String,
     modified: String,
-    ideas: List<IdeaDomainModel>,
+    ideas: List<IdeaDomainModel> = emptyList(),
     onSave: (String) -> Unit,
     onArchive: () -> Unit,
     onAddToGroup: () -> Unit,
@@ -257,12 +292,12 @@ fun Project(
     currentSelection: List<Long>,
     displayPlaceholders: Boolean
 ) {
-    val isBeingModified = remember {
+    var isBeingModified by remember {
         mutableStateOf(
             false
         )
     }
-    val isDialogOpen = remember {
+    var isDialogOpen by remember {
         mutableStateOf(false)
     }
     Column(
@@ -270,13 +305,15 @@ fun Project(
             .fillMaxWidth()
             .animateContentSize()
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .combinedClickable(onClick = { if (inSelection) ideas.forEach { onSelectIdea(it.id) } },
-                onLongClick = { if (!inSelection) isDialogOpen.value = true })
+            .combinedClickable(
+                onClick = { if (inSelection) ideas.forEach { onSelectIdea(it.id) } },
+                onLongClick = { if (!inSelection) isDialogOpen = true }
+            )
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        if (!isBeingModified.value) {
+        if (!isBeingModified) {
             if (name.isNotBlank()) {
                 Text(
                     text = name,
@@ -295,21 +332,22 @@ fun Project(
                 )
             }
         } else {
-            val txt = remember {
+            var txt by remember {
                 mutableStateOf(name)
             }
-            OutlinedTextField(value = txt.value, onValueChange = {
-                txt.value = it
+            OutlinedTextField(value = txt, onValueChange = {
+                txt = it
             })
             Button(onClick = {
-                onSave(txt.value)
-                isBeingModified.value = false
+                onSave(txt)
+                isBeingModified = false
             }, modifier = Modifier.fillMaxWidth()) {
                 Text(text = stringResource(id = R.string.label_save))
             }
         }
         ideas.forEach {
-            NestedIdea(previewText = it.content,
+            NestedIdea(
+                previewText = it.content,
                 modified = it.modified,
                 onClick = { onClickIdea(it.id) },
                 onArchive = { onArchiveIdea(it.id) },
@@ -320,24 +358,29 @@ fun Project(
             )
         }
     }
-    if (isDialogOpen.value) {
-        ScreenSelectedDialog(title = name, info = listOf(modified), entries = listOf(
-            DialogEntry(Icons.Default.Menu, stringResource(id = R.string.label_select), {
-                ideas.forEach { onSelectIdea(it.id) }
-            }),
-            DialogEntry(Icons.Default.AddCircle, stringResource(id = R.string.m_add_to_project), {
-                onAddToGroup()
-            }),
-            DialogEntry(Icons.Default.Edit, stringResource(id = R.string.m_edit_name), {
-                isBeingModified.value = true
-            }),
-            DialogEntry(
-                Icons.Default.Delete,
-                stringResource(id = R.string.m_archive_project),
-                onArchive,
-                needsConfirmation = true
+    if (isDialogOpen) {
+        ScreenDialog(
+            title = name,
+            info = listOf(modified),
+            entries = listOf(
+                DialogEntry(Icons.Default.Menu, stringResource(id = R.string.label_select), {
+                    ideas.forEach { onSelectIdea(it.id) }
+                }),
+                DialogEntry(Icons.Default.AddCircle, stringResource(id = R.string.m_add_to_project), {
+                    onAddToGroup()
+                }),
+                DialogEntry(Icons.Default.Edit, stringResource(id = R.string.m_edit_name), {
+                    isBeingModified = true
+                }),
+                DialogEntry(
+                    Icons.Default.Delete,
+                    stringResource(id = R.string.m_archive_project),
+                    onArchive,
+                    needsConfirmation = true
+                ),
             ),
-        ), onDismiss = { isDialogOpen.value = false })
+            onDismiss = { isDialogOpen = false }
+        )
     }
 }
 
@@ -385,12 +428,18 @@ fun TitleBar(
                 }
             }
         }
-        if (tooltipState.show) item {
-            TooltipBar(modifier = Modifier.animateItem(), message = tooltipState.messageResId.map {
-                stringResource(
-                    it
+        if (tooltipState.show) {
+            item {
+                TooltipBar(
+                    modifier = Modifier.animateItem(),
+                    message = tooltipState.messageResId.map {
+                        stringResource(
+                            it
+                        )
+                    }.joinToString("\n"),
+                    onClick = tooltipState.onClick
                 )
-            }.joinToString("\n"), onClick = tooltipState.onClick)
+            }
         }
     }
 }
@@ -415,86 +464,46 @@ fun TooltipBar(modifier: Modifier = Modifier, message: String, onClick: () -> Un
 }
 
 @Composable
-fun ScreenSelectedDialog(
-    title: String,
-    info: List<String> = emptyList(),
-    entries: List<DialogEntry>,
-    onDismiss: () -> Unit
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        val confirm = remember {
-            mutableStateOf(List(entries.size) { false })
-        }
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = title, fontSize = 32.sp, textAlign = TextAlign.Center
-            )
-            info.forEach { Text(text = it) }
-            entries.forEachIndexed { ind, it ->
-                if (!it.needsConfirmation) {
-                    DialogButton(
-                        icon = it.icon, text = it.name, onClick = {
-                            it.onClick()
-                            onDismiss()
-                        }, isActive = false
+fun DialogButton(icon: ImageVector?, text: String, onClick: () -> Unit, isActive: Boolean) {
+    if (isActive) {
+        Button(onClick = onClick, content = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(4.dp)
+            ) {
+                Text(
+                    text = text,
+                    fontSize = 16.sp
+                )
+                if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
                     )
-                } else {
-                    DialogButton(icon = if (confirm.value[ind]) {
-                        Icons.Default.CheckCircle
-                    } else {
-                        it.icon
-                    }, text = if (confirm.value[ind]) {
-                        stringResource(id = R.string.label_are_you_sure)
-                    } else {
-                        it.name
-                    }, onClick = if (confirm.value[ind]) {
-                        {
-                            it.onClick()
-                            onDismiss()
-                        }
-                    } else {
-                        { confirm.value = List(entries.size) { it == ind } }
-                    }, isActive = confirm.value[ind])
                 }
             }
-        }
+        })
+    } else {
+        OutlinedButton(onClick = onClick, content = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(4.dp)
+            ) {
+                Text(
+                    text = text,
+                    fontSize = 16.sp
+                )
+                if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        })
     }
-}
-
-@Composable
-fun DialogButton(icon: ImageVector?, text: String, onClick: () -> Unit, isActive: Boolean) {
-    if (isActive) Button(onClick = onClick, content = {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(4.dp)
-        ) {
-            Text(
-                text = text, fontSize = 16.sp
-            )
-            if (icon != null) {
-                Icon(
-                    imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    }) else OutlinedButton(onClick = onClick, content = {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(4.dp)
-        ) {
-            Text(
-                text = text, fontSize = 16.sp
-            )
-            if (icon != null) {
-                Icon(
-                    imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    })
 }

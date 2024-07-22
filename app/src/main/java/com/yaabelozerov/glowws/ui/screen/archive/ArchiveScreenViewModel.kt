@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
-import com.yaabelozerov.glowws.ui.model.Selection
+import com.yaabelozerov.glowws.ui.model.SelectionState
 import com.yaabelozerov.glowws.ui.model.select
 import com.yaabelozerov.glowws.ui.model.selectAll
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,13 +18,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ArchiveScreenViewModel @Inject constructor(
-    private val dao: IdeaDao, private val mapper: IdeaMapper
+    private val dao: IdeaDao,
+    private val mapper: IdeaMapper
 ) : ViewModel() {
     private var _state: MutableStateFlow<List<IdeaDomainModel>> = MutableStateFlow(emptyList())
     val state = _state.asStateFlow()
 
-    private var _selection: MutableStateFlow<Selection<Long>> = MutableStateFlow(Selection())
-    val selection = _selection.asStateFlow()
+    private var _selectionState: MutableStateFlow<SelectionState<Long>> = MutableStateFlow(SelectionState())
+    val selection = _selectionState.asStateFlow()
 
     init {
         viewModelScope.launch { getArchiveScreenIdeas() }
@@ -53,12 +54,12 @@ class ArchiveScreenViewModel @Inject constructor(
     }
 
     fun removeSelected() =
-        _selection.value.entries.forEach { removeIdea(it) }.also { deselectAll() }
+        _selectionState.value.entries.forEach { removeIdea(it) }.also { deselectAll() }
 
     fun unarchiveSelected() =
-        _selection.value.entries.forEach { unarchiveIdea(it) }.also { deselectAll() }
+        _selectionState.value.entries.forEach { unarchiveIdea(it) }.also { deselectAll() }
 
-    fun selectAll() = _selection.update { sel -> sel.selectAll(_state.value.map { it.id }) }
-    fun deselectAll() = _selection.update { Selection() }
-    fun onSelect(ideaId: Long) = _selection.update { it.select(ideaId) }
+    fun selectAll() = _selectionState.update { sel -> sel.selectAll(_state.value.map { it.id }) }
+    fun deselectAll() = _selectionState.update { SelectionState() }
+    fun onSelect(ideaId: Long) = _selectionState.update { it.select(ideaId) }
 }
