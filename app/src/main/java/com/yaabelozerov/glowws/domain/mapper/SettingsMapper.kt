@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.util.fastJoinToString
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.data.local.datastore.model.SettingsCategories
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsTypes
 import com.yaabelozerov.glowws.domain.model.BooleanSettingDomainModel
@@ -19,8 +20,8 @@ import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
 
 class SettingsMapper {
-    fun toDomainModel(settings: SettingsList): Map<Pair<Int, ImageVector>, List<SettingDomainModel>> {
-        val mp: MutableMap<Pair<Int, ImageVector>, List<SettingDomainModel>> = mutableMapOf()
+    fun toDomainModel(settings: SettingsList): Map<SettingsCategories, List<SettingDomainModel>> {
+        val mp: MutableMap<SettingsCategories, List<SettingDomainModel>> = mutableMapOf()
         settings.list!!.forEach {
             it.category?.let { category ->
                 val cat = category.resId
@@ -71,7 +72,7 @@ class SettingsMapper {
                         ""
                     )
                 }
-                mp[Pair(cat, icon)] = mp[Pair(cat, icon)]?.plus(dm) ?: listOf(dm)
+                mp[category] = mp[category]?.plus(dm) ?: listOf(dm)
             }
         }
         return mp

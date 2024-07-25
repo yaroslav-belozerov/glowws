@@ -103,4 +103,5 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
     ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.3")
+    implementation("com.google.mediapipe:tasks-genai:0.10.14")
 }

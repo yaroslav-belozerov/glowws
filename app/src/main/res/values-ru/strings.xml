@@ -38,4 +38,5 @@
     <string name="placeholder_null">Нет</string>
     <string name="tooltipbar_welcome">Добро пожаловать! Это приложение всё ещё в разработке. Пожалуйста, отправляйте обратную связь в настройках.</string>
     <string name="placeholder_dismiss">Нажмите, чтобы скрыть</string>
+    <string name="s_cat_ai">Функции ИИ</string>
 </resources>

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,10 +14,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.yaabelozerov.glowws.ui.common.NavDestinations
 import com.yaabelozerov.glowws.ui.common.withParam
+import com.yaabelozerov.glowws.ui.screen.ai.AiScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenFloatingButtons
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
@@ -27,6 +30,7 @@ import com.yaabelozerov.glowws.ui.screen.main.SortFilterModalBottomSheet
 import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreenViewModel
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -38,6 +42,16 @@ class MainActivity : ComponentActivity() {
         val ivm: IdeaScreenViewModel by viewModels()
         val svm: SettingsScreenViewModel by viewModels()
         val avm: ArchiveScreenViewModel by viewModels()
+        val aivm: AiScreenViewModel by viewModels()
+
+        val onPickModel = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let {
+                aivm.viewModelScope.launch {
+                    aivm.inferenceManager.importModel(uri)
+                }
+            }
+        }
+        aivm.onPickModel.value = { onPickModel.launch(arrayOf("*/*")) }
 
         setContent {
             val navController = rememberNavController()
@@ -52,6 +66,7 @@ class MainActivity : ComponentActivity() {
                         ivm = ivm,
                         svm = svm,
                         avm = avm,
+                        aivm = aivm
                     )
 
                     SortFilterModalBottomSheet(mvm = mvm)

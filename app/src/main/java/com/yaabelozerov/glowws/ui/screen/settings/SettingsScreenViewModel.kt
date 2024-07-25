@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.data.local.datastore.model.SettingsCategories
 import com.yaabelozerov.glowws.di.SettingsManager
 import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
@@ -20,7 +21,7 @@ class SettingsScreenViewModel @Inject constructor(
     private val settingsMapper: SettingsMapper
 ) :
     ViewModel() {
-    private val _state: MutableStateFlow<Map<Pair<Int, ImageVector>, List<SettingDomainModel>>> =
+    private val _state: MutableStateFlow<Map<SettingsCategories, List<SettingDomainModel>>> =
         MutableStateFlow(emptyMap())
     val state = _state.asStateFlow()
 

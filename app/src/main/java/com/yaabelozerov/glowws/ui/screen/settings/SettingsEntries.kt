@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
@@ -215,6 +217,28 @@ fun FeedbackSettingsEntry(modifier: Modifier = Modifier) {
             OutlinedButton(onClick = { ctx.startActivity(intentEn) }, Modifier.weight(1f)) {
                 Text(text = "EN \uD83C\uDDFA\uD83C\uDDF8")
             }
+        }
+    }
+}
+
+@Composable
+fun AiSettingsEntry(modifier: Modifier = Modifier, onNavigate: () -> Unit) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp, 0.dp)
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(imageVector = Icons.Default.Search, contentDescription = "ai icon")
+            Text(text = stringResource(id = R.string.s_cat_ai), fontSize = 32.sp)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(onClick = { onNavigate() }) {
+            Text(text = stringResource(id = R.string.label_edit))
         }
     }
 }

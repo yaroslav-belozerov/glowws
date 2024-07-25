@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.data.local.datastore.model.SettingsCategories
 import com.yaabelozerov.glowws.domain.model.BooleanSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.ChoiceSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.DoubleSettingDomainModel
@@ -31,8 +32,9 @@ import com.yaabelozerov.glowws.domain.model.StringSettingDomainModel
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
-    settings: Map<Pair<Int, ImageVector>, List<SettingDomainModel>>,
-    onModify: (SettingsKeys, String) -> Unit
+    settings: Map<SettingsCategories, List<SettingDomainModel>>,
+    onModify: (SettingsKeys, String) -> Unit,
+    onNavigateToAi: () -> Unit
 ) {
     LazyColumn(
         modifier = modifier
@@ -54,8 +56,8 @@ fun SettingsScreen(
                     .padding(16.dp, 24.dp, 16.dp, 8.dp)
                     .animateItem()
             ) {
-                Icon(imageVector = key.second, contentDescription = "${key.first} icon")
-                Text(text = stringResource(id = key.first), fontSize = 32.sp)
+                Icon(imageVector = key.icon, contentDescription = "${stringResource(id = key.resId)} icon")
+                Text(text = stringResource(id = key.resId), fontSize = 32.sp)
             }
             settings[key]!!.forEach { entry ->
                 when (entry) {
@@ -94,6 +96,11 @@ fun SettingsScreen(
         }
         item {
             FeedbackSettingsEntry()
+        }
+        item {
+            AiSettingsEntry {
+                onNavigateToAi()
+            }
         }
     }
 }

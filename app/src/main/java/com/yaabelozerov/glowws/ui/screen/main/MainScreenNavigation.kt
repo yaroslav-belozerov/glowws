@@ -1,8 +1,12 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -11,12 +15,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.yaabelozerov.glowws.ui.common.NavDestinations
 import com.yaabelozerov.glowws.ui.common.withParam
+import com.yaabelozerov.glowws.ui.screen.ai.AiScreen
+import com.yaabelozerov.glowws.ui.screen.ai.AiScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreen
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreen
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreen
 import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreenViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun MainScreenNavHost(
@@ -26,23 +33,21 @@ fun MainScreenNavHost(
     mvm: MainScreenViewModel,
     ivm: IdeaScreenViewModel,
     svm: SettingsScreenViewModel,
-    avm: ArchiveScreenViewModel
+    avm: ArchiveScreenViewModel,
+    aivm: AiScreenViewModel
 ) {
     NavHost(
-        navController = navController,
-        startDestination = startDestination.route
+        navController = navController, startDestination = startDestination.route
     ) {
         composable(NavDestinations.MainScreenRoute.route) {
-            Column(Modifier.then(modifier)) {
-                TitleBar(
-                    tooltipState = mvm.tooltipBarState.collectAsState().value,
+            Column(modifier) {
+                TitleBar(tooltipState = mvm.tooltipBarState.collectAsState().value,
                     onSettings = {
                         navController.navigate(
                             NavDestinations.SettingsScreenRoute.route
                         )
                     },
-                    onArchive = { navController.navigate(NavDestinations.ArchiveScreenRoute.route) }
-                )
+                    onArchive = { navController.navigate(NavDestinations.ArchiveScreenRoute.route) })
                 MainScreen(
                     ideas = mvm.state.collectAsState().value.ideas,
                     onSaveProject = { id, text -> mvm.modifyGroupName(id, text) },
@@ -69,45 +74,37 @@ fun MainScreenNavHost(
             route = NavDestinations.IdeaScreenRoute.withParam("{id}"),
             arguments = listOf(navArgument("id") { type = NavType.LongType }),
         ) { backStackEntry ->
-            IdeaScreen(
-                modifier = Modifier.then(modifier),
-                points = ivm.points.collectAsState().value,
-                onBack = {
-                    navController.navigateUp()
-                },
-                onAdd = { ind ->
-                    ivm.addPointAtIndex(
-                        backStackEntry.arguments!!.getLong("id"),
-                        ind
-                    )
-                },
-                onSave = { pointId, newText, isMain ->
-                    ivm.modifyPoint(
-                        pointId,
-                        newText,
-                        isMain
-                    )
-                },
-                onRemove = { pointId ->
-                    ivm.removePoint(pointId)
-                },
-                settings = svm.state.collectAsState().value.values.flatten()
+            IdeaScreen(modifier = modifier, points = ivm.points.collectAsState().value, onBack = {
+                navController.navigateUp()
+            }, onAdd = { ind ->
+                ivm.addPointAtIndex(
+                    backStackEntry.arguments!!.getLong("id"), ind
+                )
+            }, onSave = { pointId, newText, isMain ->
+                ivm.modifyPoint(
+                    pointId, newText, isMain
+                )
+            }, onRemove = { pointId ->
+                ivm.removePoint(pointId)
+            }, onExecute = { pointId, content ->
+                aivm.executeInto(content) { new -> ivm.modifyPoint(pointId, new) }
+            }, settings = svm.state.collectAsState().value.values.flatten()
             )
         }
         composable(NavDestinations.SettingsScreenRoute.route) {
-            SettingsScreen(
-                modifier = Modifier.then(modifier),
+            SettingsScreen(modifier = modifier,
                 svm.state.collectAsState().value,
                 onModify = { key, value ->
                     svm.modifySetting(key, value) { mvm.fetchSortFilter() }
-                }
-            )
+                },
+                onNavigateToAi = {
+                    navController.navigate(NavDestinations.AiScreenRoute.route)
+                })
         }
         composable(
             NavDestinations.ArchiveScreenRoute.route
         ) {
-            ArchiveScreen(
-                modifier = Modifier.then(modifier),
+            ArchiveScreen(modifier = modifier,
                 ideas = avm.state.collectAsState().value,
                 onClick = { id ->
                     navController.navigate(NavDestinations.IdeaScreenRoute.withParam(id))
@@ -118,6 +115,14 @@ fun MainScreenNavHost(
                 onSelect = { id -> avm.onSelect(id) },
                 selectionState = avm.selection.collectAsState().value
             )
+        }
+        composable(NavDestinations.AiScreenRoute.route) {
+            AiScreen(modifier = modifier,
+                models = emptyList(),
+                onChoose = {},
+                onDelete = {},
+                onAdd = { aivm.importModel() },
+                onRefresh = { aivm.refresh() })
         }
     }
 }

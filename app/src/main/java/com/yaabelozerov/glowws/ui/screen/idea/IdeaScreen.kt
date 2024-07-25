@@ -44,6 +44,7 @@ import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.domain.model.findBooleanKey
+import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun IdeaScreen(
@@ -53,6 +54,7 @@ fun IdeaScreen(
     onAdd: (Long) -> Unit,
     onSave: (Long, String, Boolean) -> Unit,
     onRemove: (Long) -> Unit,
+    onExecute: (Long, String) -> Unit,
     settings: List<SettingDomainModel>
 ) {
     LazyColumn(
@@ -82,6 +84,7 @@ fun IdeaScreen(
                 isMain = point.isMain,
                 onSave = { newText, isMain -> onSave(point.id, newText, isMain) },
                 onRemove = { onRemove(point.id) },
+                onExecute = { onExecute(point.id, point.content) },
                 showPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS)
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -126,6 +129,7 @@ fun Point(
     isMain: Boolean,
     onSave: (String, Boolean) -> Unit,
     onRemove: () -> Unit,
+    onExecute: () -> Unit,
     showPlaceholders: Boolean
 ) {
     var isBeingModified by remember {
@@ -191,6 +195,12 @@ fun Point(
                             isBeingModified = false
                         }) {
                             Text(text = stringResource(id = R.string.label_cancel))
+                        }
+                        OutlinedButton(onClick = {
+                            isBeingModified = false
+                            onExecute()
+                        }) {
+                            Text(text = "Rephrase .")
                         }
                         OutlinedButton(onClick = {
                             isBeingModified = false

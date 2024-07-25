@@ -8,6 +8,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.yaabelozerov.glowws.data.local.ai.InferenceManager
 import com.yaabelozerov.glowws.data.local.room.IdeaDatabase
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
 import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
@@ -27,9 +28,7 @@ object AppModule {
     @Singleton
     @Provides
     fun provideIdeaDatabase(@ApplicationContext app: Context) = Room.databaseBuilder(
-        app,
-        IdeaDatabase::class.java,
-        "glowws.db"
+        app, IdeaDatabase::class.java, "glowws.db"
     ).build()
 
     @Singleton
@@ -52,6 +51,12 @@ object AppModule {
     @Provides
     fun provideSettingsManager(dataStoreManager: DataStoreManager, moshi: Moshi) =
         SettingsManager(dataStoreManager, moshi)
+
+    @Singleton
+    @Provides
+    fun provideInferenceManager(
+        @ApplicationContext app: Context
+    ): InferenceManager = InferenceManager(app)
 
     private val Context.dataStore by preferencesDataStore("settings")
 
