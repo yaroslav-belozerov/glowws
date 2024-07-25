@@ -47,4 +47,7 @@ class SettingsManager(
 
     suspend fun visitApp() = dataStoreManager.setTimesOpened(dataStoreManager.getTimesOpened().first() + 1)
     suspend fun getAppVisits() = dataStoreManager.getTimesOpened().first()
+
+    suspend fun setModelName(name: String) = dataStoreManager.setCurrentModelName(name)
+    suspend fun getModelName() = dataStoreManager.getCurrentModelName().first()
 }

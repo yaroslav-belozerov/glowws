@@ -1,12 +1,8 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -23,7 +19,6 @@ import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreen
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreen
 import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreenViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun MainScreenNavHost(
@@ -117,12 +112,17 @@ fun MainScreenNavHost(
             )
         }
         composable(NavDestinations.AiScreenRoute.route) {
-            AiScreen(modifier = modifier,
-                models = emptyList(),
-                onChoose = {},
-                onDelete = {},
+            AiScreen(
+                modifier = modifier,
+                models = aivm.models.collectAsState().value,
+                onChoose = { name -> aivm.pickModel(name) },
+                onDelete = { name -> aivm.removeModel(name) },
+                onUnload = { aivm.unloadModel() },
                 onAdd = { aivm.importModel() },
-                onRefresh = { aivm.refresh() })
+                onRefresh = { aivm.refresh() },
+                status = aivm.inferenceManager.status.collectAsState().value,
+                error = aivm.inferenceManager.error.collectAsState().value
+            )
         }
     }
 }

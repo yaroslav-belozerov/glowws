@@ -73,5 +73,12 @@ object AppModule {
         fun getTimesOpened(): Flow<Long> = settingsDataStore.data.map { it[timesOpenedKey] ?: 0 }
         suspend fun setTimesOpened(timesOpened: Long) =
             settingsDataStore.edit { it[timesOpenedKey] = timesOpened }
+
+        private val currentModelName = stringPreferencesKey("current_model_name")
+        fun getCurrentModelName(): Flow<String> =
+            settingsDataStore.data.map { it[currentModelName] ?: "" }
+
+        suspend fun setCurrentModelName(name: String) =
+            settingsDataStore.edit { it[currentModelName] = name }
     }
 }

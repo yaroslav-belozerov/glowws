@@ -48,6 +48,7 @@ class MainActivity : ComponentActivity() {
             uri?.let {
                 aivm.viewModelScope.launch {
                     aivm.inferenceManager.importModel(uri)
+                    aivm.refresh()
                 }
             }
         }
