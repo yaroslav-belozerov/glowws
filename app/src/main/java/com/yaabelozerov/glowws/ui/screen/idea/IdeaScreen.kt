@@ -55,7 +55,8 @@ fun IdeaScreen(
     onSave: (Long, String, Boolean) -> Unit,
     onRemove: (Long) -> Unit,
     onExecute: (Long, String) -> Unit,
-    settings: List<SettingDomainModel>
+    settings: List<SettingDomainModel>,
+    aiAvailable: Boolean
 ) {
     LazyColumn(
         modifier = modifier
@@ -85,7 +86,8 @@ fun IdeaScreen(
                 onSave = { newText, isMain -> onSave(point.id, newText, isMain) },
                 onRemove = { onRemove(point.id) },
                 onExecute = { onExecute(point.id, point.content) },
-                showPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS)
+                showPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS),
+                aiAvailable = aiAvailable
             )
             Spacer(modifier = Modifier.height(16.dp))
             AddPointLine(onAdd = { onAdd(points.indexOf(point).toLong() + 1) })
@@ -130,26 +132,24 @@ fun Point(
     onSave: (String, Boolean) -> Unit,
     onRemove: () -> Unit,
     onExecute: () -> Unit,
-    showPlaceholders: Boolean
+    showPlaceholders: Boolean,
+    aiAvailable: Boolean
 ) {
     var isBeingModified by remember {
         mutableStateOf(false)
     }
     Crossfade(modifier = modifier, targetState = isMain) { main ->
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { isBeingModified = !isBeingModified }
-                .animateContentSize()
-                .then(modifier),
-            colors = CardDefaults.cardColors(
-                containerColor = if (main && !isBeingModified) {
-                    MaterialTheme.colorScheme.primaryContainer
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainer
-                }
-            )
-        ) {
+        Card(modifier = Modifier
+            .fillMaxWidth()
+            .clickable { isBeingModified = !isBeingModified }
+            .animateContentSize()
+            .then(modifier), colors = CardDefaults.cardColors(
+            containerColor = if (main && !isBeingModified) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainer
+            }
+        )) {
             if (!isBeingModified) {
                 Crossfade(targetState = text) {
                     Text(
@@ -161,15 +161,13 @@ fun Point(
                         } else {
                             it
                         },
-                        color = (
-                            if (main) {
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            }
-                            ).copy(
-                            alpha = if (it.isBlank()) 0.3f else 1f
-                        )
+                        color = (if (main) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }).copy(
+                                alpha = if (it.isBlank()) 0.3f else 1f
+                            )
                     )
                 }
             } else {
@@ -196,11 +194,13 @@ fun Point(
                         }) {
                             Text(text = stringResource(id = R.string.label_cancel))
                         }
-                        OutlinedButton(onClick = {
-                            isBeingModified = false
-                            onExecute()
-                        }) {
-                            Text(text = "Rephrase .")
+                        if (aiAvailable) {
+                            OutlinedButton(onClick = {
+                                isBeingModified = false
+                                onExecute()
+                            }) {
+                                Text(text = "Rephrase")
+                            }
                         }
                         OutlinedButton(onClick = {
                             isBeingModified = false

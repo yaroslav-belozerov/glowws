@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.di
 
+import android.util.Log
 import com.squareup.moshi.Moshi
 import com.yaabelozerov.glowws.data.local.datastore.SettingsDefaults
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
@@ -49,5 +50,5 @@ class SettingsManager(
     suspend fun getAppVisits() = dataStoreManager.getTimesOpened().first()
 
     suspend fun setModelName(name: String) = dataStoreManager.setCurrentModelName(name)
-    suspend fun getModelName() = dataStoreManager.getCurrentModelName().first()
+    suspend fun getModelName() = dataStoreManager.getCurrentModelName().first().also { Log.i("SettingsManager", "model name: $it") }
 }

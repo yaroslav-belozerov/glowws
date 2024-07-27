@@ -9,6 +9,7 @@ import com.yaabelozerov.glowws.ui.screen.ai.AiModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -23,6 +24,8 @@ fun <T> MutableStateFlow<T?>.reset() = this.update { null }
 
 class InferenceManager(private val app: Context) {
     private val _model: MutableStateFlow<Pair<LlmInference, String>?> = MutableStateFlow(null)
+    val model = _model.asStateFlow()
+
     private val _state: MutableStateFlow<Pair<Boolean, String>> = MutableStateFlow(Pair(true, ""))
     private val _callback: MutableStateFlow<(String) -> Unit> =
         MutableStateFlow { st -> println("empty callback: $st") }
@@ -40,6 +43,7 @@ class InferenceManager(private val app: Context) {
                         .setResultListener { part, done ->
                             _state.update { Pair(done, it.second + part) }
                             _callback.value(_state.value.second)
+                            if (done) { _state.update { it.copy(second = "") } }
                         }.setTemperature(0.8f).setRandomSeed(101).build()
                 val inference = LlmInference.createFromOptions(app, options)
                 _model.update { Pair(inference, File(path).name) }
@@ -49,6 +53,7 @@ class InferenceManager(private val app: Context) {
             return true
         } catch (e: Exception) {
             Log.e("InferenceManager", "Error loading model on path: $path")
+            status.update { InferenceManagerState.IDLE }
             error.update { e }
             return false
         }
@@ -122,16 +127,18 @@ class InferenceManager(private val app: Context) {
         }
     }
 
-    fun refreshModels(): List<AiModel> =
-        File(app.filesDir, "Models").listFiles()?.map { AiModel(it.nameWithoutExtension, it.name, it.name == _model.value?.second) }
-            ?: emptyList()
+    fun refreshModels(): List<AiModel> = File(app.filesDir, "Models").listFiles()
+        ?.map { AiModel(it.nameWithoutExtension, it.name, it.name == _model.value?.second) }
+        ?: emptyList()
 
     fun setCallback(callback: (String) -> Unit) = _callback.update { callback }
 
-    fun executeInto(prompt: String, callback: (String) -> Unit = {}) {
-        setCallback(callback)
-        _model.value?.let {
-            it.first.generateResponseAsync(prompt)
+    suspend fun executeInto(prompt: String, callback: (String) -> Unit = {}) {
+        coroutineScope {
+            setCallback(callback)
+            _model.value?.let {
+                it.first.generateResponseAsync(prompt)
+            }
         }
     }
 

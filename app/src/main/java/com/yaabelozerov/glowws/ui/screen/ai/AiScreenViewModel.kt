@@ -29,7 +29,9 @@ class AiScreenViewModel @Inject constructor(val inferenceManager: InferenceManag
     }
 
     fun executeInto(prompt: String, callback: (String) -> Unit) {
-        inferenceManager.executeInto(prompt, callback)
+        viewModelScope.launch {
+            inferenceManager.executeInto(prompt, callback)
+        }
     }
 
     fun importModel() {

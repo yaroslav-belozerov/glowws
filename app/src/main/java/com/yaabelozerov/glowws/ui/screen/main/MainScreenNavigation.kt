@@ -69,21 +69,29 @@ fun MainScreenNavHost(
             route = NavDestinations.IdeaScreenRoute.withParam("{id}"),
             arguments = listOf(navArgument("id") { type = NavType.LongType }),
         ) { backStackEntry ->
-            IdeaScreen(modifier = modifier, points = ivm.points.collectAsState().value, onBack = {
-                navController.navigateUp()
-            }, onAdd = { ind ->
-                ivm.addPointAtIndex(
-                    backStackEntry.arguments!!.getLong("id"), ind
-                )
-            }, onSave = { pointId, newText, isMain ->
-                ivm.modifyPoint(
-                    pointId, newText, isMain
-                )
-            }, onRemove = { pointId ->
-                ivm.removePoint(pointId)
-            }, onExecute = { pointId, content ->
-                aivm.executeInto(content) { new -> ivm.modifyPoint(pointId, new) }
-            }, settings = svm.state.collectAsState().value.values.flatten()
+            IdeaScreen(modifier = modifier,
+                points = ivm.points.collectAsState().value,
+                onBack = {
+                    navController.navigateUp()
+                },
+                onAdd = { ind ->
+                    ivm.addPointAtIndex(
+                        backStackEntry.arguments!!.getLong("id"), ind
+                    )
+                },
+                onSave = { pointId, newText, isMain ->
+                    ivm.modifyPoint(
+                        pointId, newText, isMain
+                    )
+                },
+                onRemove = { pointId ->
+                    ivm.removePoint(pointId)
+                },
+                onExecute = { pointId, content ->
+                    aivm.executeInto(content) { new -> ivm.modifyPoint(pointId, new) }
+                },
+                settings = svm.state.collectAsState().value.values.flatten(),
+                aiAvailable = aivm.inferenceManager.model.collectAsState().value != null
             )
         }
         composable(NavDestinations.SettingsScreenRoute.route) {
