@@ -20,13 +20,8 @@ enum class SettingsTypes {
 @JsonClass(generateAdapter = true)
 data class SettingsModel(
     val key: SettingsKeys? = null,
-    val category: SettingsCategories? = null,
-    val type: SettingsTypes? = null,
     val value: String? = null,
-    val default: String? = null,
-    val min: Double? = null,
-    val max: Double? = null,
-    val choices: List<String>? = null
+    val limits: List<String>? = null
 )
 
 @JsonClass(generateAdapter = true)

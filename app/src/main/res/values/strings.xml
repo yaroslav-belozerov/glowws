@@ -40,4 +40,10 @@
     <string name="placeholder_dismiss">Click to dismiss</string>
     <string name="s_cat_ai">AI Capabilities</string>
     <string name="s_ai_current_model">Current Model</string>
+    <string name="ai_status_not_active">Not active</string>
+    <string name="ai_status_loading">Loading...</string>
+    <string name="ai_status_activating">Activating...</string>
+    <string name="ai_status_removing">Removing...</string>
+    <string name="ai_status_ready">Ready</string>
+    <string name="label_configure">Configure</string>
 </resources>

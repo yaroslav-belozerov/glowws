@@ -100,6 +100,7 @@ fun MainScreenNavHost(
                 onModify = { key, value ->
                     svm.modifySetting(key, value) { mvm.fetchSortFilter() }
                 },
+                aiStatus = aivm.inferenceManager.status.collectAsState().value,
                 onNavigateToAi = {
                     navController.navigate(NavDestinations.AiScreenRoute.route)
                 })

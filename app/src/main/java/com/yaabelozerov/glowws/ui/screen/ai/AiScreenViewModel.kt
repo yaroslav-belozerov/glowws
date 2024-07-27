@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.ui.screen.ai
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yaabelozerov.glowws.data.local.ai.InferenceManager
@@ -50,6 +51,9 @@ class AiScreenViewModel @Inject constructor(val inferenceManager: InferenceManag
     fun removeModel(name: String) {
         viewModelScope.launch {
             inferenceManager.removeModel(name)
+            if (name == settingsManager.getModelName()) {
+                settingsManager.setModelName("")
+            }
             refresh()
         }
     }
@@ -65,6 +69,12 @@ class AiScreenViewModel @Inject constructor(val inferenceManager: InferenceManag
             inferenceManager.unloadModel()
             settingsManager.setModelName("")
             refresh()
+        }
+    }
+
+    fun setDefaultModel(uri: Uri) {
+        viewModelScope.launch {
+            settingsManager.setModelName(uri.path!!.split("/").last())
         }
     }
 }

@@ -18,61 +18,39 @@ import com.yaabelozerov.glowws.ui.model.FilterModel
 import com.yaabelozerov.glowws.ui.model.SortModel
 import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
+import com.yaabelozerov.glowws.util.JSON_DELIMITER
 
 class SettingsMapper {
     fun toDomainModel(settings: SettingsList): Map<SettingsCategories, List<SettingDomainModel>> {
         val mp: MutableMap<SettingsCategories, List<SettingDomainModel>> = mutableMapOf()
         settings.list!!.forEach {
-            it.category?.let { category ->
-                val cat = category.resId
-                val icon = category.icon
-                val nameRes = it.key?.resId ?: -1
-                val dm = when (it.type) {
+            it.key?.let { k ->
+                val dm = when (k.type) {
                     SettingsTypes.BOOLEAN -> BooleanSettingDomainModel(
-                        it.key!!,
-                        nameRes,
-                        it.value == "true"
+                        k, it.value == "true"
                     )
 
                     SettingsTypes.DOUBLE -> DoubleSettingDomainModel(
-                        it.key!!,
-                        nameRes,
-                        it.min!!,
-                        it.max!!,
-                        it.value!!.toDouble()
+                        k, it.limits!![0].toDouble(), it.limits[1].toDouble(), it.value!!.toDouble()
                     )
 
                     SettingsTypes.STRING -> StringSettingDomainModel(
-                        it.key!!,
-                        nameRes,
-                        it.value!!
+                        k, it.value!!
                     )
 
-                    SettingsTypes.CHOICE -> {
-                        ChoiceSettingDomainModel(
-                            key = it.key!!,
-                            nameRes = nameRes,
-                            choices = it.choices!!,
-                            localChoicesIds = it.choices!!.map { getLocalChoice(it) },
-                            value = it.value!!
-                        )
-                    }
-
-                    SettingsTypes.MULTIPLE_CHOICE -> MultipleChoiceSettingDomainModel(
-                        key = it.key!!,
-                        nameRes = nameRes,
-                        choices = it.choices!!,
-                        localChoicesIds = it.choices!!.map { getLocalChoice(it) },
-                        value = it.value!!.split(",").map { it == "true" }
+                    SettingsTypes.CHOICE -> ChoiceSettingDomainModel(
+                        key = k,
+                        choices = it.limits!!,
+                        localChoicesIds = it.limits.map { s -> getLocalChoice(s) },
+                        value = it.value!!
                     )
 
-                    null -> StringSettingDomainModel(
-                        it.key!!,
-                        nameRes,
-                        ""
-                    )
+                    SettingsTypes.MULTIPLE_CHOICE -> MultipleChoiceSettingDomainModel(key = k,
+                        choices = it.limits!!,
+                        localChoicesIds = it.limits.map { s -> getLocalChoice(s) },
+                        value = it.value!!.split(JSON_DELIMITER).map { s -> s == "true" })
                 }
-                mp[category] = mp[category]?.plus(dm) ?: listOf(dm)
+                mp[k.category] = mp[k.category]?.plus(dm) ?: listOf(dm)
             }
         }
         return mp
@@ -93,7 +71,9 @@ class SettingsMapper {
     }
 
     fun getFilter(settings: SettingsList): FilterModel {
-        val split = settings.list?.findLast { it.key == SettingsKeys.FILTER }?.value?.split(",")!!
+        val split = settings.list?.findLast { it.key == SettingsKeys.FILTER }?.value?.split(
+            JSON_DELIMITER
+        )!!
         val mp = mutableMapOf<FilterFlag, Boolean>()
         FilterFlag.entries.forEachIndexed { index, filterFlag ->
             mp[filterFlag] = split[index] == "true"
@@ -101,7 +81,7 @@ class SettingsMapper {
         return FilterModel(mp)
     }
 
-    fun getLocalChoice(s: String): Int? = try {
+    private fun getLocalChoice(s: String): Int? = try {
         when (s) {
             in SortOrder.entries.fastJoinToString() -> SortOrder.valueOf(s).resId
             in SortType.entries.fastJoinToString() -> SortType.valueOf(s).resId

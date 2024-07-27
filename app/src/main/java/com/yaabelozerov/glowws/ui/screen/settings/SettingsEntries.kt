@@ -12,12 +12,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -34,10 +37,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yaabelozerov.glowws.R
+import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.domain.model.BooleanSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.ChoiceSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.MultipleChoiceSettingDomainModel
+import com.yaabelozerov.glowws.util.JSON_DELIMITER
 import com.yaabelozerov.glowws.util.toReadableKey
 
 @Composable
@@ -47,19 +52,14 @@ fun BooleanSettingsEntry(
     onModify: (SettingsKeys, String) -> Unit
 ) {
     var checked by remember { mutableStateOf(entry.value) }
-    Row(
-        modifier = modifier
-            .clickable {
-                checked = !checked
-                onModify(entry.key, checked.toString())
-            }
-            .padding(16.dp, 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    Row(modifier = modifier
+        .clickable {
+            checked = !checked
+            onModify(entry.key, checked.toString())
+        }
+        .padding(16.dp, 16.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = stringResource(entry.nameRes),
-            fontSize = 24.sp,
-            modifier = Modifier.weight(1f)
+            text = stringResource(entry.key.resId), fontSize = 24.sp, modifier = Modifier.weight(1f)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Switch(checked = checked, onCheckedChange = {
@@ -78,26 +78,21 @@ fun ChoiceSettingDomainEntry(
     var expanded by remember {
         mutableStateOf(false)
     }
-    Column(
-        modifier = modifier
-            .clickable { expanded = true }
-            .padding(16.dp, 16.dp)
-    ) {
-        Text(text = stringResource(entry.nameRes), fontSize = 24.sp)
+    Column(modifier = modifier
+        .clickable { expanded = true }
+        .padding(16.dp, 16.dp)) {
+        Text(text = stringResource(entry.key.resId), fontSize = 24.sp)
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             entry.choices.forEachIndexed { index, value ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                Row(verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
                             onModify(
-                                entry.key,
-                                value
+                                entry.key, value
                             )
                             expanded = false
-                        }
-                ) {
+                        }) {
                     val local = entry.localChoicesIds.getOrNull(index)
                     Text(
                         text = if (local != null) stringResource(id = local) else value.toReadableKey(),
@@ -125,16 +120,13 @@ fun MultipleChoiceSettingsEntry(
     var expanded by remember {
         mutableStateOf(false)
     }
-    Column(
-        modifier = modifier
-            .clickable { expanded = true }
-            .padding(16.dp, 16.dp)
-    ) {
-        Text(text = stringResource(entry.nameRes), fontSize = 24.sp)
+    Column(modifier = modifier
+        .clickable { expanded = true }
+        .padding(16.dp, 16.dp)) {
+        Text(text = stringResource(entry.key.resId), fontSize = 24.sp)
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             entry.choices.forEachIndexed { index, elem ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                Row(verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
@@ -145,11 +137,10 @@ fun MultipleChoiceSettingsEntry(
                                         if (i == index) !value else value
                                     }
                                     .joinToString(
-                                        ","
+                                        JSON_DELIMITER
                                     )
                             )
-                        }
-                ) {
+                        }) {
                     if (entry.value[index]) {
                         Icon(
                             modifier = Modifier.padding(16.dp, 0.dp, 0.dp, 0.dp),
@@ -165,8 +156,7 @@ fun MultipleChoiceSettingsEntry(
                             )
                         } else {
                             elem.toReadableKey()
-                        },
-                        modifier = Modifier.padding(16.dp, 8.dp)
+                        }, modifier = Modifier.padding(16.dp, 8.dp)
                     )
                 }
             }
@@ -208,8 +198,7 @@ fun FeedbackSettingsEntry(modifier: Modifier = Modifier) {
             Intent(Intent.ACTION_VIEW, Uri.parse("https://forms.gle/R3TwjtoDqUS9PseTA"))
         }
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedButton(onClick = { ctx.startActivity(intentRu) }, Modifier.weight(1f)) {
                 Text(text = "RU \uD83C\uDDF7\uD83C\uDDFA")
@@ -222,23 +211,56 @@ fun FeedbackSettingsEntry(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun AiSettingsEntry(modifier: Modifier = Modifier, onNavigate: () -> Unit) {
+fun AiSettingsEntry(
+    modifier: Modifier = Modifier,
+    status: InferenceManagerState,
+    modelName: String?,
+    onNavigate: () -> Unit
+) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp, 0.dp)
+        modifier = modifier.fillMaxWidth()
     ) {
         Spacer(modifier = Modifier.height(16.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(16.dp, 0.dp)
         ) {
             Icon(imageVector = Icons.Default.Search, contentDescription = "ai icon")
             Text(text = stringResource(id = R.string.s_cat_ai), fontSize = 32.sp)
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = { onNavigate() }) {
-            Text(text = stringResource(id = R.string.label_edit))
+        Row(verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clickable { onNavigate() }
+                .padding(16.dp, 8.dp)) {
+            Column(Modifier.weight(1f)) {
+                if (!modelName.isNullOrBlank()) {
+                    Text(text = modelName, fontSize = 20.sp)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(id = status.resId),
+                        fontSize = if (!modelName.isNullOrBlank()) 16.sp else 20.sp
+                    )
+                    if (status == InferenceManagerState.ACTIVE) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+            OutlinedButton(onClick = { onNavigate() }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = stringResource(id = R.string.label_edit))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
+                        contentDescription = null
+                    )
+                }
+            }
         }
     }
 }

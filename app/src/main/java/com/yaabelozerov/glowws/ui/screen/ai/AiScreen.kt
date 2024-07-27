@@ -10,12 +10,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -41,21 +44,18 @@ fun AiScreen(
     onUnload: () -> Unit,
     onAdd: () -> Unit,
     onRefresh: () -> Unit,
-    status: InferenceManagerState,
+    status: Pair<String?, InferenceManagerState>,
     error: Exception?
 ) {
     LazyColumn(modifier = modifier) {
         item {
             Text(
-                text = when (status) {
-                    InferenceManagerState.IDLE -> stringResource(id = R.string.s_cat_ai)
-                    InferenceManagerState.LOADING -> "Loading..."
-                    InferenceManagerState.ACTIVATING -> "Activating..."
-                    InferenceManagerState.REMOVING -> "Removing..."
-                },
+                text = stringResource(id = if (status.second.notBusy()) R.string.s_cat_ai else status.second.resId),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillParentMaxWidth().padding(0.dp, 0.dp, 0.dp, 16.dp),
+                modifier = Modifier
+                    .fillParentMaxWidth()
+                    .padding(0.dp, 0.dp, 0.dp, 16.dp),
                 textAlign = TextAlign.Center
             )
         }
@@ -68,9 +68,9 @@ fun AiScreen(
             }
         }
         items(models) { m ->
-            Row(modifier = Modifier
-                .background(if (m.isChosen) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.background)
-                .then(if (status.isIdle()) Modifier.clickable {
+            Row(modifier = Modifier.fillParentMaxWidth()
+                .background(if (m.isChosen) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.background)
+                .then(if (status.second.notBusy()) Modifier.clickable {
                     if (m.isChosen) {
                         onUnload()
                     } else {
@@ -79,9 +79,21 @@ fun AiScreen(
                 }
                 else Modifier)
                 .padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(text = m.name, modifier = Modifier.weight(1f))
+                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = m.name
+                    )
+                    if (m.isChosen) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.width(8.dp))
-                IconButton(enabled = status.isIdle(), onClick = { onDelete(m.fileName) }) {
+                IconButton(enabled = status.second.notBusy(), onClick = { onDelete(m.fileName) }) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "delete model button"
@@ -90,12 +102,21 @@ fun AiScreen(
             }
         }
         item {
-            Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(enabled = status.isIdle(), onClick = { onRefresh() }, modifier = Modifier.weight(1f)) {
-                    Text(text = "Refresh")
+            Row(
+                modifier = Modifier.padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                IconButton(enabled = status.second.notBusy(), onClick = { onRefresh() }) {
+                    Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
                 }
-                Button(enabled = status.isIdle(), onClick = { onAdd() }, modifier = Modifier.weight(1f)) {
-                    Text(text = "Import model")
+                OutlinedButton(
+                    enabled = status.second.notBusy(),
+                    onClick = { onAdd() },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Import model"
+                    )
                 }
             }
         }

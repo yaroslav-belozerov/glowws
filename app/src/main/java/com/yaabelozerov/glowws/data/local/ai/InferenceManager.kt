@@ -5,55 +5,63 @@ import android.net.Uri
 import android.util.Log
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import com.google.mediapipe.tasks.genai.llminference.LlmInference.LlmInferenceOptions
+import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.ui.screen.ai.AiModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.io.File
 
-enum class InferenceManagerState {
-    IDLE, LOADING, ACTIVATING, REMOVING;
+enum class InferenceManagerState(val resId: Int) {
+    IDLE(R.string.ai_status_not_active), LOADING(R.string.ai_status_loading), ACTIVATING(R.string.ai_status_activating), REMOVING(
+        R.string.ai_status_removing
+    ),
+    ACTIVE(R.string.ai_status_ready);
 
-    fun isIdle() = this == IDLE
+    fun notBusy() = this == IDLE || this == ACTIVE
 }
 
 fun <T> MutableStateFlow<T?>.reset() = this.update { null }
 
 class InferenceManager(private val app: Context) {
-    private val _model: MutableStateFlow<Pair<LlmInference, String>?> = MutableStateFlow(null)
+    private val _model: MutableStateFlow<LlmInference?> = MutableStateFlow(null)
     val model = _model.asStateFlow()
 
     private val _state: MutableStateFlow<Pair<Boolean, String>> = MutableStateFlow(Pair(true, ""))
     private val _callback: MutableStateFlow<(String) -> Unit> =
         MutableStateFlow { st -> println("empty callback: $st") }
 
-    val status: MutableStateFlow<InferenceManagerState> =
-        MutableStateFlow(InferenceManagerState.IDLE)
     val error: MutableStateFlow<Exception?> = MutableStateFlow(null)
+    val status: MutableStateFlow<Pair<String?, InferenceManagerState>> =
+        MutableStateFlow(Pair(null, InferenceManagerState.IDLE))
 
-    private suspend fun tryLoadModel(path: String): Boolean {
+    private suspend fun tryLoadModel(path: String, callback: () -> Unit = {}): Boolean {
         try {
             withContext(Dispatchers.IO) {
-                status.update { InferenceManagerState.ACTIVATING }
+                status.update {
+                    Pair(path.split("/").last(), InferenceManagerState.ACTIVATING)
+                }
                 val options =
                     LlmInferenceOptions.builder().setModelPath(path).setMaxTokens(1000).setTopK(40)
                         .setResultListener { part, done ->
                             _state.update { Pair(done, it.second + part) }
                             _callback.value(_state.value.second)
-                            if (done) { _state.update { it.copy(second = "") } }
+                            if (done) {
+                                _state.update { it.copy(second = "") }
+                            }
                         }.setTemperature(0.8f).setRandomSeed(101).build()
                 val inference = LlmInference.createFromOptions(app, options)
-                _model.update { Pair(inference, File(path).name) }
-                status.update { InferenceManagerState.IDLE }
+                _model.update { inference }
+                status.update { Pair(path.split("/").last(), InferenceManagerState.ACTIVE) }
             }
             Log.i("InferenceManager", "Model on path $path loaded")
+            callback()
             return true
         } catch (e: Exception) {
             Log.e("InferenceManager", "Error loading model on path: $path")
-            status.update { InferenceManagerState.IDLE }
+            status.update { Pair(null, InferenceManagerState.IDLE) }
             error.update { e }
             return false
         }
@@ -61,8 +69,9 @@ class InferenceManager(private val app: Context) {
 
     suspend fun removeModel(name: String) {
         error.reset()
-        coroutineScope {
-            status.update { InferenceManagerState.REMOVING }
+        withContext(Dispatchers.IO) {
+            val prevName = if (status.value.first == name) null else status.value.first
+            status.update { Pair(name, InferenceManagerState.REMOVING) }
             try {
                 val dir = File(app.filesDir, "Models")
                 val file = File(dir, name)
@@ -72,31 +81,33 @@ class InferenceManager(private val app: Context) {
             } catch (e: Exception) {
                 error.update { e }
             }
-            status.update { InferenceManagerState.IDLE }
+            status.update { Pair(prevName, InferenceManagerState.IDLE) }
         }
     }
 
     suspend fun activateModel(name: String, callback: (String) -> Unit) {
         error.reset()
-        status.update { InferenceManagerState.ACTIVATING }
-        try {
-            val dir = File(app.filesDir, "Models")
-            val file = File(dir, name)
-            if (tryLoadModel(file.absolutePath)) {
-                callback(name)
+        status.update { Pair(name, InferenceManagerState.LOADING) }
+        withContext(Dispatchers.IO) {
+            try {
+                val dir = File(app.filesDir, "Models")
+                val file = File(dir, name)
+                if (tryLoadModel(file.absolutePath)) {
+                    callback(name)
+                }
+            } catch (e: Exception) {
+                error.update { e }
+                status.update { Pair(null, InferenceManagerState.IDLE) }
             }
-        } catch (e: Exception) {
-            error.update { e }
         }
-        status.update { InferenceManagerState.IDLE }
     }
 
-    suspend fun importModel(uri: Uri) {
+    suspend fun importModel(uri: Uri, callback: () -> Unit = {}) {
         error.reset()
         withContext(Dispatchers.IO) {
-            status.update { InferenceManagerState.LOADING }
             try {
                 val fileName = uri.path!!.split("/").last()
+                status.update { Pair(fileName, InferenceManagerState.LOADING) }
                 val dir = File(app.filesDir, "Models")
                 dir.mkdir()
                 val outFile = File(dir, fileName)
@@ -112,35 +123,39 @@ class InferenceManager(private val app: Context) {
                     }
                 } catch (e: Exception) {
                     error.update { e }
+                    status.update { Pair(null, InferenceManagerState.IDLE) }
                 } finally {
                     inStream?.close()
                     outStream.close()
-                    status.update { InferenceManagerState.IDLE }
                 }
 
-                if (!tryLoadModel(File(dir, fileName).absolutePath)) {
+                if (!tryLoadModel(File(dir, fileName).absolutePath, callback)) {
                     outFile.delete()
                 }
             } catch (e: Exception) {
                 error.update { e }
+                status.update { Pair(null, InferenceManagerState.IDLE) }
             }
         }
     }
 
     fun refreshModels(): List<AiModel> = File(app.filesDir, "Models").listFiles()
-        ?.map { AiModel(it.nameWithoutExtension, it.name, it.name == _model.value?.second) }
+        ?.map { AiModel(it.nameWithoutExtension, it.name, it.name == status.value.first) }
         ?: emptyList()
 
-    fun setCallback(callback: (String) -> Unit) = _callback.update { callback }
+    private fun setCallback(callback: (String) -> Unit) = _callback.update { callback }
 
     suspend fun executeInto(prompt: String, callback: (String) -> Unit = {}) {
-        coroutineScope {
+        withContext(Dispatchers.IO) {
             setCallback(callback)
             _model.value?.let {
-                it.first.generateResponseAsync(prompt)
+                it.generateResponseAsync(prompt)
             }
         }
     }
 
-    fun unloadModel() = _model.update { null }
+    fun unloadModel() {
+        _model.update { null }
+        status.update { Pair(null, InferenceManagerState.IDLE) }
+    }
 }

@@ -14,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toFile
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -47,7 +48,7 @@ class MainActivity : ComponentActivity() {
         val onPickModel = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
                 aivm.viewModelScope.launch {
-                    aivm.inferenceManager.importModel(uri)
+                    aivm.inferenceManager.importModel(uri) { aivm.setDefaultModel(uri) }
                     aivm.refresh()
                 }
             }
