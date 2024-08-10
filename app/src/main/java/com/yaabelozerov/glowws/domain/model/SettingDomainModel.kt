@@ -7,7 +7,8 @@ abstract class SettingDomainModel {
     abstract val value: Any
 }
 
-fun List<SettingDomainModel>.findBooleanKey(key: SettingsKeys) = findLast { it.key == key }?.value.toString() == "true"
+fun List<SettingDomainModel>.findBooleanKey(key: SettingsKeys) = findLast { it.key == key }?.value?.toString() == "true"
+fun List<SettingDomainModel>.findKeyOrNull(key: SettingsKeys) = findLast { it.key == key }?.value
 
 data class BooleanSettingDomainModel(
     override val key: SettingsKeys,

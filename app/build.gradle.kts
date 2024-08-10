@@ -104,4 +104,6 @@ dependencies {
     ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.3")
     implementation("com.google.mediapipe:tasks-genai:0.10.14")
+    implementation("androidx.compose.material:material:1.6.8")
+    implementation("androidx.compose.material:material-icons-extended:1.6.8")
 }

@@ -1,5 +1,9 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,18 +35,16 @@ fun MainScreenNavHost(
     avm: ArchiveScreenViewModel,
     aivm: AiScreenViewModel
 ) {
-    NavHost(
-        navController = navController, startDestination = startDestination.route
-    ) {
+    NavHost(modifier = modifier, navController = navController,
+        startDestination = startDestination.route,
+        enterTransition = {
+            fadeIn(
+                tween(300)
+            )
+        },
+        exitTransition = { fadeOut(tween(300)) }) {
         composable(NavDestinations.MainScreenRoute.route) {
-            Column(modifier) {
-                TitleBar(tooltipState = mvm.tooltipBarState.collectAsState().value,
-                    onSettings = {
-                        navController.navigate(
-                            NavDestinations.SettingsScreenRoute.route
-                        )
-                    },
-                    onArchive = { navController.navigate(NavDestinations.ArchiveScreenRoute.route) })
+            Column {
                 MainScreen(
                     ideas = mvm.state.collectAsState().value.ideas,
                     onSaveProject = { id, text -> mvm.modifyGroupName(id, text) },
@@ -65,11 +67,13 @@ fun MainScreenNavHost(
                 )
             }
         }
-        composable(
-            route = NavDestinations.IdeaScreenRoute.withParam("{id}"),
+        composable(route = NavDestinations.IdeaScreenRoute.withParam("{id}"),
             arguments = listOf(navArgument("id") { type = NavType.LongType }),
-        ) { backStackEntry ->
-            IdeaScreen(modifier = modifier,
+            enterTransition = {
+                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) + fadeIn()
+            },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }) { backStackEntry ->
+            IdeaScreen(
                 points = ivm.points.collectAsState().value,
                 onBack = {
                     navController.navigateUp()
@@ -95,8 +99,8 @@ fun MainScreenNavHost(
             )
         }
         composable(NavDestinations.SettingsScreenRoute.route) {
-            SettingsScreen(modifier = modifier,
-                svm.state.collectAsState().value,
+            SettingsScreen(
+                settings = svm.state.collectAsState().value,
                 onModify = { key, value ->
                     svm.modifySetting(key, value) { mvm.fetchSortFilter() }
                 },
@@ -108,7 +112,7 @@ fun MainScreenNavHost(
         composable(
             NavDestinations.ArchiveScreenRoute.route
         ) {
-            ArchiveScreen(modifier = modifier,
+            ArchiveScreen(
                 ideas = avm.state.collectAsState().value,
                 onClick = { id ->
                     navController.navigate(NavDestinations.IdeaScreenRoute.withParam(id))
@@ -120,9 +124,12 @@ fun MainScreenNavHost(
                 selectionState = avm.selection.collectAsState().value
             )
         }
-        composable(NavDestinations.AiScreenRoute.route) {
+        composable(NavDestinations.AiScreenRoute.route,
+            enterTransition = {
+                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) + fadeIn()
+            },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }) {
             AiScreen(
-                modifier = modifier,
                 models = aivm.models.collectAsState().value,
                 onChoose = { name -> aivm.pickModel(name) },
                 onDelete = { name -> aivm.removeModel(name) },

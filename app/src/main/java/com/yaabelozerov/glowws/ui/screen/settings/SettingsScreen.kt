@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,31 +37,10 @@ fun SettingsScreen(
     onNavigateToAi: () -> Unit
 ) {
     LazyColumn(
-        modifier = modifier
+        modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item {
-            Text(
-                text = stringResource(id = R.string.s_screen_name),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.fillParentMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-        }
         items(settings.keys.toList(), key = { it }) { key ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .padding(16.dp, 24.dp, 16.dp, 8.dp)
-                    .animateItem()
-            ) {
-                Icon(
-                    imageVector = key.icon,
-                    contentDescription = "${stringResource(id = key.resId)} icon"
-                )
-                Text(text = stringResource(id = key.resId), fontSize = 32.sp)
-            }
+            SettingsHeader(icon = key.icon, name = stringResource(id = key.resId))
             settings[key]!!.forEach { entry ->
                 when (entry) {
                     is BooleanSettingDomainModel -> BooleanSettingsEntry(
@@ -92,12 +72,12 @@ fun SettingsScreen(
             }
         }
         item {
-            FeedbackSettingsEntry()
-        }
-        item {
             AiSettingsEntry(status = aiStatus.second, modelName = aiStatus.first) {
                 onNavigateToAi()
             }
+        }
+        item {
+            FeedbackSettingsEntry()
         }
     }
 }

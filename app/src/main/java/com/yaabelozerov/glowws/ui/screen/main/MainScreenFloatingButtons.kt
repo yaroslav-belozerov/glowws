@@ -1,5 +1,7 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -26,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -59,91 +62,97 @@ fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Lon
             onDismiss = { isConfirmationOpen = false }
         )
     }
-    if (mvm.selection.collectAsState().value.inSelectionMode) {
-        FloatingActionButton(onClick = {
-            isConfirmationOpen = true
-        }) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "archive selected button"
-            )
-        }
-        FloatingActionButton(onClick = {
-            mvm.deselectAll()
-        }) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "deselect button"
-            )
-        }
-    } else {
-        FloatingActionButton(onClick = {
-            mvm.addNewIdeaAndProject("", callback = addNewIdeaCallback)
-        }) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "add idea button"
-            )
-        }
-        FloatingActionButton(onClick = {
-            mvm.toggleSortFilterModal()
-        }) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "sort filter button"
-            )
-        }
-    }
-    var isSearchOpen by remember {
-        mutableStateOf(mvm.state.value.searchQuery.isNotEmpty())
-    }
-    val searchFocus = remember {
-        FocusRequester()
-    }
-    if (!isSearchOpen) {
-        Row {
-            if (mvm.state.collectAsState().value.searchQuery.isNotBlank()) {
-                FloatingActionButton(onClick = { mvm.updateSearchQuery("") }) {
-                    Icon(imageVector = Icons.Default.Clear, contentDescription = "clear search button")
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-            }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalAlignment = Alignment.End) {
+        if (mvm.selection.collectAsState().value.inSelectionMode) {
             FloatingActionButton(onClick = {
-                isSearchOpen = true
+                isConfirmationOpen = true
             }) {
                 Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "open search button"
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "archive selected button"
+                )
+            }
+            FloatingActionButton(onClick = {
+                mvm.deselectAll()
+            }) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "deselect button"
+                )
+            }
+        } else {
+            FloatingActionButton(onClick = {
+                mvm.addNewIdeaAndProject("", callback = addNewIdeaCallback)
+            }) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "add idea button"
+                )
+            }
+            FloatingActionButton(onClick = {
+                mvm.toggleSortFilterModal()
+            }) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "sort filter button"
                 )
             }
         }
-    } else {
-        LaunchedEffect(key1 = Unit) {
-            searchFocus.requestFocus()
+        var isSearchOpen by remember {
+            mutableStateOf(mvm.state.value.searchQuery.isNotEmpty())
         }
-        OutlinedTextField(
-            modifier = Modifier
-                .padding(32.dp, 0.dp, 0.dp, 0.dp)
-                .focusRequester(searchFocus),
-            singleLine = true,
-            shape = MaterialTheme.shapes.large,
-            value = mvm.state.collectAsState().value.searchQuery,
-            onValueChange = { mvm.updateSearchQuery(it) },
-            trailingIcon = {
-                IconButton(onClick = {
-                    mvm.updateSearchQuery("")
-                    isSearchOpen = false
+        val searchFocus = remember {
+            FocusRequester()
+        }
+        if (!isSearchOpen) {
+            Row {
+                if (mvm.state.collectAsState().value.searchQuery.isNotBlank()) {
+                    FloatingActionButton(onClick = { mvm.updateSearchQuery("") }) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "clear search button"
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                FloatingActionButton(onClick = {
+                    isSearchOpen = true
                 }) {
                     Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "clear search icon",
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "open search button"
                     )
                 }
-            },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = {
-                isSearchOpen = false
-            })
-        )
+            }
+        } else {
+            LaunchedEffect(key1 = Unit) {
+                searchFocus.requestFocus()
+            }
+            OutlinedTextField(
+                modifier = Modifier
+                    .padding(32.dp, 0.dp, 0.dp, 0.dp)
+                    .focusRequester(searchFocus),
+                singleLine = true,
+                shape = MaterialTheme.shapes.large,
+                value = mvm.state.collectAsState().value.searchQuery,
+                onValueChange = { mvm.updateSearchQuery(it) },
+                trailingIcon = {
+                    IconButton(onClick = {
+                        mvm.updateSearchQuery("")
+                        isSearchOpen = false
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "clear search icon",
+                        )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = {
+                    isSearchOpen = false
+                })
+            )
+        }
     }
 }

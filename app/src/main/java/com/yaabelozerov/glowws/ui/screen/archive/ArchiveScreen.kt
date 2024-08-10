@@ -48,17 +48,6 @@ fun ArchiveScreen(
     selectionState: SelectionState<Long>
 ) {
     LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        item {
-            Text(
-                text = stringResource(id = R.string.a_screen_name),
-                fontSize = 32.sp,
-                modifier = Modifier
-                    .padding(16.dp, 8.dp)
-                    .fillParentMaxWidth(),
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-        }
         items(ideas, key = { it.id }) {
             ArchiveIdea(
                 modifier = Modifier.animateItem(),

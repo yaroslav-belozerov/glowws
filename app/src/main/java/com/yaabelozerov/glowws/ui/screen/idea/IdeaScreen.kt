@@ -48,7 +48,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 @Composable
 fun IdeaScreen(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     points: List<PointDomainModel>,
     onBack: () -> Unit,
     onAdd: (Long) -> Unit,

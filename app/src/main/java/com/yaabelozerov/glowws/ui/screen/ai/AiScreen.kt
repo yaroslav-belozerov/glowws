@@ -48,17 +48,6 @@ fun AiScreen(
     error: Exception?
 ) {
     LazyColumn(modifier = modifier) {
-        item {
-            Text(
-                text = stringResource(id = if (status.second.notBusy()) R.string.s_cat_ai else status.second.resId),
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .fillParentMaxWidth()
-                    .padding(0.dp, 0.dp, 0.dp, 16.dp),
-                textAlign = TextAlign.Center
-            )
-        }
         error?.let {
             item {
                 Text(
