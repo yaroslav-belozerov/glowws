@@ -23,6 +23,13 @@ enum class SettingsKeys(
         emptyList(),
         R.string.s_display_placeholders
     ),
+    MONET_THEME(
+        SettingsCategories.DISPLAY,
+        SettingsTypes.BOOLEAN,
+        "true",
+        emptyList(),
+        R.string.s_display_monet_theme
+    ),
     SORT_TYPE(
         SettingsCategories.USER,
         SettingsTypes.CHOICE,

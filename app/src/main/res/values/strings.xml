@@ -46,4 +46,5 @@
     <string name="ai_status_removing">Removing...</string>
     <string name="ai_status_ready">Ready</string>
     <string name="label_configure">Configure</string>
+    <string name="s_display_monet_theme">Dynamic Colors</string>
 </resources>

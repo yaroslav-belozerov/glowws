@@ -1,5 +1,7 @@
 package com.yaabelozerov.glowws
 
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,13 +13,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toFile
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.domain.model.findBooleanKey
 import com.yaabelozerov.glowws.ui.common.NavDestinations
 import com.yaabelozerov.glowws.ui.common.withParam
 import com.yaabelozerov.glowws.ui.screen.ai.AiScreenViewModel
@@ -58,7 +62,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
 
-            GlowwsTheme {
+            GlowwsTheme(dynamicColor = svm.state.collectAsState().value.values.flatten().findBooleanKey(SettingsKeys.MONET_THEME)) {
                 Scaffold(modifier = Modifier.fillMaxSize(), content = { innerPadding ->
                     MainScreenNavHost(
                         modifier = Modifier.padding(innerPadding),
