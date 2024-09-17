@@ -21,6 +21,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,25 +48,17 @@ fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Lon
         mutableStateOf(false)
     }
     if (isConfirmationOpen) {
-        ScreenDialog(
-            title = stringResource(id = R.string.dialog_archive_all),
-            entries = listOf(
-                DialogEntry(
-                    Icons.Default.CheckCircle,
-                    stringResource(id = R.string.label_confirm),
-                    { mvm.archiveSelected() }
-                ),
-                DialogEntry(
-                    null,
-                    stringResource(id = R.string.label_cancel),
-                    onClick = { isConfirmationOpen = false }
-                )
-            ),
-            onDismiss = { isConfirmationOpen = false }
-        )
+        ScreenDialog(title = stringResource(id = R.string.dialog_archive_all),
+            entries = listOf(DialogEntry(Icons.Default.CheckCircle,
+                stringResource(id = R.string.label_confirm),
+                { mvm.archiveSelected() }), DialogEntry(null,
+                stringResource(id = R.string.label_cancel),
+                onClick = { isConfirmationOpen = false })),
+            onDismiss = { isConfirmationOpen = false })
     }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.End) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.End
+    ) {
         if (mvm.selection.collectAsState().value.inSelectionMode) {
             FloatingActionButton(onClick = {
                 isConfirmationOpen = true
@@ -77,25 +72,22 @@ fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Lon
                 mvm.deselectAll()
             }) {
                 Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "deselect button"
+                    imageVector = Icons.Default.Close, contentDescription = "deselect button"
                 )
             }
         } else {
             FloatingActionButton(onClick = {
-                mvm.addNewIdeaAndProject("", callback = addNewIdeaCallback)
+                mvm.addNewIdea("", callback = addNewIdeaCallback)
             }) {
                 Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "add idea button"
+                    imageVector = Icons.Default.Add, contentDescription = "add idea button"
                 )
             }
             FloatingActionButton(onClick = {
                 mvm.toggleSortFilterModal()
             }) {
                 Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "sort filter button"
+                    imageVector = Icons.Default.MoreVert, contentDescription = "sort filter button"
                 )
             }
         }
@@ -137,6 +129,10 @@ fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Lon
                 shape = MaterialTheme.shapes.large,
                 value = mvm.state.collectAsState().value.searchQuery,
                 onValueChange = { mvm.updateSearchQuery(it) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.background
+                ),
                 trailingIcon = {
                     IconButton(onClick = {
                         mvm.updateSearchQuery("")

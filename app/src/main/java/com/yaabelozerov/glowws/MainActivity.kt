@@ -130,25 +130,23 @@ class MainActivity : ComponentActivity() {
                     SortFilterModalBottomSheet(mvm = mvm)
                 }, floatingActionButton = {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    Crossfade(targetState = navBackStackEntry?.destination?.route?.toDestination()) {
-                        when (it) {
-                            NavDestinations.MainScreenRoute -> MainScreenFloatingButtons(
-                                mvm = mvm,
-                                addNewIdeaCallback = { id ->
-                                    navController.navigate(
-                                        NavDestinations.IdeaScreenRoute.withParam(
-                                            id
-                                        )
+                    when (navBackStackEntry?.destination?.route?.toDestination()) {
+                        NavDestinations.MainScreenRoute -> MainScreenFloatingButtons(
+                            mvm = mvm,
+                            addNewIdeaCallback = { id ->
+                                navController.navigate(
+                                    NavDestinations.IdeaScreenRoute.withParam(
+                                        id
                                     )
-                                    ivm.refreshPoints(id)
-                                })
+                                )
+                                ivm.refreshPoints(id)
+                            })
 
-                            NavDestinations.ArchiveScreenRoute -> ArchiveScreenFloatingButtons(
-                                avm = avm
-                            )
+                        NavDestinations.ArchiveScreenRoute -> ArchiveScreenFloatingButtons(
+                            avm = avm
+                        )
 
-                            else -> {}
-                        }
+                        else -> {}
                     }
                 }, bottomBar = {
                     NavigationBar {
@@ -158,7 +156,11 @@ class MainActivity : ComponentActivity() {
                             val selected =
                                 currentDestination?.hierarchy?.any { it.route == screen.route } == true
                             NavigationBarItem(selected = selected, onClick = {
-                                navController.popBackStack(screen.route, inclusive = true, saveState = true)
+                                navController.popBackStack(
+                                    screen.route,
+                                    inclusive = true,
+                                    saveState = true
+                                )
                                 navController.navigate(screen.route)
                             }, icon = {
                                 Icon(

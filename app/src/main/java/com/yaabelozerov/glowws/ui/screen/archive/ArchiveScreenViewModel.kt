@@ -33,15 +33,15 @@ class ArchiveScreenViewModel @Inject constructor(
 
     fun getArchiveScreenIdeas() {
         viewModelScope.launch {
-            dao.getArchivedIdeas().map { mapper.toDomainModelFlat(it) }.collect { ideas ->
-                _state.update { ideas }
+            dao.getAllIdeas(archived = true).collect { ideas ->
+                _state.update { mapper.toDomainModel(ideas) }
             }
         }
     }
 
     fun unarchiveIdea(ideaId: Long) {
         viewModelScope.launch {
-            dao.unarchiveIdea(ideaId)
+            dao.setNotArchivedIdea(ideaId)
             getArchiveScreenIdeas()
         }
     }

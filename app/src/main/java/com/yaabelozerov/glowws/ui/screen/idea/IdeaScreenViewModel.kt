@@ -27,7 +27,7 @@ class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewMo
             dao.getIdeaPoints(ideaId).flowOn(Dispatchers.IO).distinctUntilChanged()
                 .collectLatest { points ->
                     _points.update {
-                        points.map { PointDomainModel(it.pointId, it.content, it.isMain) }
+                        points.map { PointDomainModel(it.pointId, it.pointContent, it.isMain) }
                     }
                 }
         }
@@ -39,7 +39,7 @@ class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewMo
                 Point(
                     pointId = 0,
                     ideaParentId = ideaId,
-                    content = "",
+                    pointContent = "",
                     index = index,
                     type = 0,
                     isMain = false
@@ -53,7 +53,7 @@ class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewMo
             val point = dao.getPoint(pointId).first()
             dao.upsertPointUpdateIdea(
                 point.copy(
-                    content = content ?: point.content,
+                    pointContent = content ?: point.pointContent,
                     isMain = isMain ?: point.isMain
                 )
             )

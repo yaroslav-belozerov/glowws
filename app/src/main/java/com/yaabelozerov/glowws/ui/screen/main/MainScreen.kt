@@ -48,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
-import com.yaabelozerov.glowws.domain.model.GroupDomainModel
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.domain.model.findBooleanKey
@@ -59,11 +58,8 @@ import com.yaabelozerov.glowws.ui.theme.Typography
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
-    ideas: List<GroupDomainModel> = emptyList(),
-    onSaveProject: (Long, String) -> Unit,
-    onArchiveProject: (Long) -> Unit,
+    ideas: List<IdeaDomainModel> = emptyList(),
     onClickIdea: (Long) -> Unit,
-    onAddIdeaToGroup: (Long) -> Unit,
     onArchiveIdea: (Long) -> Unit,
     onSelect: (Long) -> Unit,
     inSelectionMode: Boolean,
@@ -77,40 +73,18 @@ fun MainScreen(
             .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(ideas) { proj ->
-            if (proj.entries.size == 1) {
-                val idea = proj.entries.first()
-                Idea(
-                    modifier = Modifier.animateItem(),
-                    idea.content,
-                    idea.modified,
-                    { onClickIdea(idea.id) },
-                    { onAddIdeaToGroup(idea.groupId) },
-                    { onArchiveIdea(idea.id) },
-                    { onSelect(idea.id) },
-                    inSelectionMode,
-                    selection.contains(idea.id),
-                    displayPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS)
-                )
-            } else {
-                Project(
-                    modifier = Modifier.animateItem(),
-                    name = proj.content,
-                    modified = proj.modified,
-                    ideas = proj.entries,
-                    onSave = { newName -> onSaveProject(proj.id, newName) },
-                    onArchive = { onArchiveProject(proj.id) },
-                    onAddToGroup = { onAddIdeaToGroup(proj.id) },
-                    onClickIdea = { id -> onClickIdea(id) },
-                    onArchiveIdea = { id -> onArchiveIdea(id) },
-                    onSelectIdea = { id ->
-                        onSelect(id)
-                    },
-                    inSelectionMode,
-                    selection,
-                    displayPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS)
-                )
-            }
+        items(ideas) { idea ->
+            Idea(
+                modifier = Modifier.animateItem(),
+                idea.content,
+                idea.modified,
+                { onClickIdea(idea.id) },
+                { onArchiveIdea(idea.id) },
+                { onSelect(idea.id) },
+                inSelectionMode,
+                selection.contains(idea.id),
+                displayPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS)
+            )
         }
     }
 }
@@ -122,7 +96,6 @@ fun Idea(
     previewText: String,
     modified: String,
     onClick: () -> Unit,
-    onAddToGroup: () -> Unit,
     onArchive: () -> Unit,
     onSelect: () -> Unit,
     inSelectionMode: Boolean,
@@ -179,11 +152,6 @@ fun Idea(
                 DialogEntry(Icons.Default.Menu, stringResource(id = R.string.label_select), {
                     onSelect()
                 }),
-                DialogEntry(
-                    Icons.Default.AddCircle,
-                    stringResource(id = R.string.m_add_to_project),
-                    onAddToGroup
-                ),
                 DialogEntry(
                     Icons.Default.Delete,
                     stringResource(id = R.string.m_archive_idea),

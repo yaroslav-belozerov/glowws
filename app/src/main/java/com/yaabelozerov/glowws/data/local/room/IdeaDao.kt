@@ -9,21 +9,20 @@ import kotlinx.coroutines.flow.first
 
 @Dao
 interface IdeaDao {
-    @Query("SELECT * from `idea`")
-    fun getAllIdeas(): Flow<List<Idea>>
+    @Query("SELECT * from `idea` WHERE isArchived = :archived")
+    fun getAllIdeas(archived: Boolean = false): Flow<List<Idea>>
+
+    @Query("SELECT * from `idea` WHERE isArchived = :archived AND EXISTS (SELECT * FROM point WHERE pointContent LIKE :query AND ideaParentId = ideaId)")
+    fun getAllIdeasSearch(query: String, archived: Boolean = false): Flow<List<Idea>>
 
     @Query("SELECT * FROM idea WHERE ideaId = :ideaId")
     fun getIdea(ideaId: Long): Flow<Idea>
-
-    @Insert
-    suspend fun createGroup(group: Group): Long
 
     @Insert
     suspend fun insertIdea(idea: Idea): Long
 
     suspend fun addIdea(idea: Idea): Long {
         val ideaId = insertIdea(idea)
-        updateGroupTimestamp(getGroupByIdea(ideaId), System.currentTimeMillis())
         return ideaId
     }
 
@@ -31,48 +30,18 @@ interface IdeaDao {
     suspend fun deleteIdea(ideaId: Long)
 
     @Query(
-        "SELECT * FROM `group` JOIN idea ON groupId = groupParentId"
-    )
-    fun getGroupsWithIdeasAll(): Flow<Map<Group, List<Idea>>>
-
-    @Query(
-        "SELECT * FROM `group` JOIN idea ON groupId = groupParentId WHERE isArchived = 0"
-    )
-    fun getGroupsWithIdeasNotArchived(): Flow<Map<Group, List<Idea>>>
-
-    @Query(
-        "SELECT * FROM `group` JOIN idea ON groupId = groupParentId WHERE groupId = :groupId"
-    )
-    fun getGroupsWithIdeasNotArchivedRestricted(groupId: Long): Flow<Map<Group, List<Idea>>>
-
-    @Query(
-        "SELECT groupId FROM `group` WHERE EXISTS (SELECT * FROM idea WHERE content " +
-            "LIKE :query AND groupParentId = groupId) OR name LIKE :query AND isArchived = 0"
-    )
-    fun getGroupsIdsNotArchivedQuery(query: String): Flow<List<Long>>
-
-    @Query(
-        "SELECT * FROM idea WHERE EXISTS (SELECT * FROM `group` WHERE groupId = groupParentId AND isArchived = 1)"
-    )
-    fun getArchivedIdeas(): Flow<List<Idea>>
-
-    @Query(
         "SELECT * FROM point WHERE ideaParentId = :ideaId ORDER BY `index` ASC"
     )
     fun getIdeaPoints(ideaId: Long): Flow<List<Point>>
 
-    @Query("UPDATE idea SET content = :content WHERE ideaId = :ideaId")
+    @Query("UPDATE idea SET ideaContent = :content WHERE ideaId = :ideaId")
     suspend fun setIdeaContent(ideaId: Long, content: String)
 
     suspend fun modifyIdeaContent(ideaId: Long, content: String) {
         setIdeaContent(ideaId, content)
         val m = System.currentTimeMillis()
         updateIdeaTimestamp(ideaId, m)
-        updateGroupTimestamp(getGroupByIdea(ideaId), m)
     }
-
-    @Query("UPDATE idea SET groupParentId = :groupId WHERE ideaId = :ideaId")
-    suspend fun modifyIdeaGroup(ideaId: Long, groupId: Long)
 
     @Query("SELECT * FROM point WHERE pointId = :pointId")
     fun getPoint(pointId: Long): Flow<Point>
@@ -104,13 +73,8 @@ interface IdeaDao {
 
     suspend fun updateIdeaContentFromPoints(ideaId: Long) {
         val pts = getIdeaPoints(ideaId).first()
-        val parent = getGroupByIdea(ideaId)
-        val siblings = getAllIdeasFromGroup(parent)
         val content: String =
-            pts.firstOrNull { it.isMain }?.content ?: (pts.firstOrNull()?.content ?: "")
-        if (siblings.size == 1) {
-            updateGroupName(parent, content)
-        }
+            pts.firstOrNull { it.isMain }?.pointContent ?: (pts.firstOrNull()?.pointContent ?: "")
         modifyIdeaContent(ideaId, content)
     }
 
@@ -131,7 +95,7 @@ interface IdeaDao {
     )
     suspend fun getIdeaIdFromPointId(pointId: Long): Long
 
-    @Query("UPDATE point SET content = :newText WHERE pointId = :pointId")
+    @Query("UPDATE point SET pointContent = :newText WHERE pointId = :pointId")
     suspend fun setPointContent(pointId: Long, newText: String)
 
     suspend fun updatePointContent(pointId: Long, newText: String) {
@@ -142,83 +106,19 @@ interface IdeaDao {
     @Query("UPDATE idea SET timestampModified = :timestamp WHERE ideaId = :ideaId")
     suspend fun updateIdeaTimestamp(ideaId: Long, timestamp: Long)
 
-    @Query("UPDATE `group` SET timestampModified = :timestamp WHERE groupId = :groupId")
-    suspend fun updateGroupTimestamp(groupId: Long, timestamp: Long)
-
-    suspend fun createIdeaAndGroup(content: String): Long {
+    suspend fun createIdea(content: String): Long {
         val m = System.currentTimeMillis()
-        val groupId = createGroup(Group(0, m, m, content, isArchived = false))
-        return insertIdea(Idea(0, groupId, m, m, content))
+        return insertIdea(Idea(0, false, m, m, content))
     }
-
-    @Query("SELECT groupParentId FROM idea WHERE ideaId = :ideaId")
-    suspend fun getGroupByIdea(ideaId: Long): Long
-
-    @Query("SELECT * FROM idea WHERE groupParentId = :groupId")
-    suspend fun getAllIdeasFromGroup(groupId: Long): List<Idea>
 
     suspend fun deleteIdeaAndPoints(ideaId: Long) {
-        val groupId = getGroupByIdea(ideaId)
         deleteIdea(ideaId)
         deleteIdeaPoints(ideaId)
-        val all = getAllIdeasFromGroup(groupId)
-        if (all.isEmpty()) {
-            deleteGroupOnly(groupId)
-        } else {
-            updateGroupTimestamp(groupId, System.currentTimeMillis())
-        }
     }
 
-    @Query("DELETE FROM `group` WHERE groupId = :groupId")
-    suspend fun deleteGroupOnly(groupId: Long)
+    @Query("UPDATE `idea` SET isArchived = 1 WHERE ideaId = :ideaId")
+    suspend fun setArchiveIdea(ideaId: Long)
 
-    suspend fun deleteGroup(groupId: Long) {
-        deleteGroupOnly(groupId)
-        deleteGroupIdeas(groupId)
-    }
-
-    @Query("DELETE FROM `group` WHERE NOT EXISTS (SELECT * FROM idea WHERE groupParentId = groupId)")
-    suspend fun cleanProjects()
-
-    @Query("UPDATE `group` SET isArchived = 1 WHERE groupId = :groupId")
-    suspend fun setArchiveGroup(groupId: Long)
-
-    suspend fun archiveGroup(groupId: Long) {
-        val m = System.currentTimeMillis()
-        getAllIdeasFromGroup(groupId).forEach {
-            val newGroup = createGroup(Group(0, m, m, "", isArchived = true))
-            modifyIdeaGroup(it.ideaId, newGroup)
-        }
-        cleanProjects()
-    }
-
-    suspend fun archiveStrayIdea(ideaId: Long) {
-        val m = System.currentTimeMillis()
-        val parent = getGroupByIdea(ideaId)
-        updateGroupTimestamp(parent, m)
-        val groupId = createGroup(Group(0, m, m, "", isArchived = true))
-        modifyIdeaGroup(ideaId, groupId)
-        cleanProjects()
-    }
-
-    @Query("UPDATE `group` SET isArchived = 0 WHERE groupId = :groupId AND isArchived = 1")
-    suspend fun setNotArchivedGroup(groupId: Long)
-
-    suspend fun unarchiveIdea(ideaId: Long) {
-        val parent = getGroupByIdea(ideaId)
-        setNotArchivedGroup(parent)
-        val content = getIdea(ideaId).first().content
-        updateGroupName(parent, content)
-    }
-
-    @Query("UPDATE `group` SET name = :newName WHERE groupId = :groupId")
-    suspend fun setGroupName(groupId: Long, newName: String)
-
-    suspend fun updateGroupName(groupId: Long, newName: String) {
-        setGroupName(groupId, newName)
-        updateGroupTimestamp(groupId, System.currentTimeMillis())
-    }
-
-    @Query("DELETE FROM idea WHERE groupParentId = :groupId")
-    suspend fun deleteGroupIdeas(groupId: Long)
+    @Query("UPDATE `idea` SET isArchived = 0 WHERE ideaId = :ideaId AND isArchived = 1")
+    suspend fun setNotArchivedIdea(ideaId: Long)
 }

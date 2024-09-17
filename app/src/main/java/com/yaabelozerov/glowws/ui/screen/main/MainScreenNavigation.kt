@@ -47,17 +47,9 @@ fun MainScreenNavHost(
             Column {
                 MainScreen(
                     ideas = mvm.state.collectAsState().value.ideas,
-                    onSaveProject = { id, text -> mvm.modifyGroupName(id, text) },
-                    onArchiveProject = { id -> mvm.archiveGroup(id) },
                     onClickIdea = { id ->
                         navController.navigate(NavDestinations.IdeaScreenRoute.withParam(id))
                         ivm.refreshPoints(id)
-                    },
-                    onAddIdeaToGroup = { groupId ->
-                        mvm.addIdeaToGroup("", groupId, callback = { id ->
-                            navController.navigate(NavDestinations.IdeaScreenRoute.withParam(id))
-                            ivm.refreshPoints(id)
-                        })
                     },
                     onArchiveIdea = { id -> mvm.archiveIdea(id) },
                     onSelect = { id -> mvm.onSelect(id) },

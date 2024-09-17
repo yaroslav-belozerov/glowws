@@ -7,6 +7,7 @@ import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import com.google.mediapipe.tasks.genai.llminference.LlmInference.LlmInferenceOptions
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.ui.screen.ai.AiModel
+import com.yaabelozerov.glowws.util.queryName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -76,6 +77,7 @@ class InferenceManager(private val app: Context) {
                 val dir = File(app.filesDir, "Models")
                 val file = File(dir, name)
                 if (file.exists()) {
+                    if (status.value.first == name) unloadModel()
                     file.delete()
                 }
             } catch (e: Exception) {
@@ -106,13 +108,14 @@ class InferenceManager(private val app: Context) {
         error.reset()
         withContext(Dispatchers.IO) {
             try {
-                val fileName = uri.path!!.split("/").last()
+                val fileName = uri.queryName(app.contentResolver)
                 status.update { Pair(fileName, InferenceManagerState.LOADING) }
                 val dir = File(app.filesDir, "Models")
                 dir.mkdir()
-                val outFile = File(dir, fileName)
-                val outStream = outFile.outputStream()
                 val inStream = app.contentResolver.openInputStream(uri)
+
+                val outFile = File(dir, uri.queryName(app.contentResolver))
+                val outStream = outFile.outputStream()
 
                 try {
                     val buf = ByteArray(16 * 1024)
