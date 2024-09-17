@@ -41,9 +41,9 @@
     <string name="s_cat_ai">Функции ИИ</string>
     <string name="s_ai_current_model">Текущая модель</string>
     <string name="ai_status_not_active">Выключено</string>
-    <string name="ai_status_loading">Загрузка...</string>
-    <string name="ai_status_activating">Активация...</string>
-    <string name="ai_status_removing">Удаление...</string>
+    <string name="ai_status_loading">Загрузка</string>
+    <string name="ai_status_activating">Активация</string>
+    <string name="ai_status_removing">Удаление</string>
     <string name="ai_status_ready">Готово</string>
     <string name="label_configure">Настроить</string>
     <string name="s_display_monet_theme">Динамические цвета</string>

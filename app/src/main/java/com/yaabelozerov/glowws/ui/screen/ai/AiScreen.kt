@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -23,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -57,7 +60,8 @@ fun AiScreen(
             }
         }
         items(models) { m ->
-            Row(modifier = Modifier.fillParentMaxWidth()
+            Row(modifier = Modifier
+                .fillParentMaxWidth()
                 .background(if (m.isChosen) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.background)
                 .then(if (status.second.notBusy()) Modifier.clickable {
                     if (m.isChosen) {
@@ -68,7 +72,9 @@ fun AiScreen(
                 }
                 else Modifier)
                 .padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         text = m.name
                     )
@@ -103,9 +109,14 @@ fun AiScreen(
                     onClick = { onAdd() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(
+                    if (status.second.notBusy()) Text(
                         text = "Import model"
-                    )
+                    ) else {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (!status.second.notBusy()) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeCap = StrokeCap.Round, color = MaterialTheme.colorScheme.primary)
+                            Text(text = stringResource(id = status.second.resId) + " " + (status.first ?: ""))
+                        }
+                    }
                 }
             }
         }

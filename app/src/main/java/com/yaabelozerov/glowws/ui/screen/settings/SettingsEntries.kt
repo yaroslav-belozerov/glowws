@@ -227,7 +227,7 @@ fun AiSettingsEntry(
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = stringResource(id = status.resId),
+                        text = stringResource(id = status.resId) + if (status.notBusy()) "" else "...",
                         fontSize = if (!modelName.isNullOrBlank()) 16.sp else 20.sp
                     )
                     if (status == InferenceManagerState.ACTIVE) {
