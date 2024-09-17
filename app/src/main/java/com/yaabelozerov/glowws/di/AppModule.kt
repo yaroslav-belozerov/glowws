@@ -6,9 +6,12 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
+import coil.ImageLoader
+import coil.imageLoader
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.yaabelozerov.glowws.data.local.ai.InferenceManager
+import com.yaabelozerov.glowws.data.local.media.MediaManager
 import com.yaabelozerov.glowws.data.local.room.IdeaDatabase
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
 import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
@@ -51,6 +54,14 @@ object AppModule {
     @Provides
     fun provideSettingsManager(dataStoreManager: DataStoreManager, moshi: Moshi) =
         SettingsManager(dataStoreManager, moshi)
+
+    @Singleton
+    @Provides
+    fun provideMediaManager(@ApplicationContext app: Context) = MediaManager(app)
+
+    @Singleton
+    @Provides
+    fun provideCoilImageLoader(@ApplicationContext app: Context): ImageLoader = app.imageLoader.newBuilder().crossfade(true).build()
 
     @Singleton
     @Provides

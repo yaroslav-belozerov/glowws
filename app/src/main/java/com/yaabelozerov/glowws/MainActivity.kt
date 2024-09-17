@@ -8,6 +8,7 @@ import android.view.Window
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.Crossfade
@@ -49,7 +50,9 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import coil.ImageLoader
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.findKeyOrNull
 import com.yaabelozerov.glowws.ui.common.NavDestinations
 import com.yaabelozerov.glowws.ui.common.toDestination
@@ -66,6 +69,7 @@ import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreenViewModel
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -89,6 +93,15 @@ class MainActivity : ComponentActivity() {
             }
         }
         aivm.onPickModel.value = { onPickModel.launch(arrayOf("*/*")) }
+
+        val onPickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+            uri?.let {
+                ivm.viewModelScope.launch {
+                    ivm.importImage(uri)
+                }
+            }
+        }
+        ivm.onPickMedia.value = { onPickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
 
         val items = listOf(
             NavDestinations.SettingsScreenRoute,

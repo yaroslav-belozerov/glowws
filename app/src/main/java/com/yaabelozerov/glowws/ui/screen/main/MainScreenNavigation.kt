@@ -13,6 +13,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import coil.ImageLoader
 import com.yaabelozerov.glowws.ui.common.NavDestinations
 import com.yaabelozerov.glowws.ui.common.withParam
 import com.yaabelozerov.glowws.ui.screen.ai.AiScreen
@@ -66,12 +67,13 @@ fun MainScreenNavHost(
             },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }) { backStackEntry ->
             IdeaScreen(
+                imageLoader = ivm.imageLoader,
                 points = ivm.points.collectAsState().value,
                 onBack = {
                     navController.navigateUp()
                 },
-                onAdd = { ind ->
-                    ivm.addPointAtIndex(
+                onAdd = { type, ind ->
+                    ivm.addPointAtIndex(type,
                         backStackEntry.arguments!!.getLong("id"), ind
                     )
                 },

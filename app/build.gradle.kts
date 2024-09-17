@@ -106,4 +106,6 @@ dependencies {
     implementation("com.google.mediapipe:tasks-genai:0.10.14")
     implementation("androidx.compose.material:material:1.6.8")
     implementation("androidx.compose.material:material-icons-extended:1.6.8")
+    implementation("io.coil-kt:coil:2.7.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 }

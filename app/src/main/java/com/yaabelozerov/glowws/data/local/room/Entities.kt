@@ -18,6 +18,10 @@ data class Point(
     val ideaParentId: Long,
     var pointContent: String,
     val index: Long,
-    var type: Int,
+    var type: PointType,
     var isMain: Boolean,
 )
+
+enum class PointType(val title: String) {
+    TEXT("Text"), IMAGE("Image")
+}

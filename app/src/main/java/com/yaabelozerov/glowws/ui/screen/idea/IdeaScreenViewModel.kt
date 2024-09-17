@@ -1,9 +1,13 @@
 package com.yaabelozerov.glowws.ui.screen.idea
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil.ImageLoader
+import com.yaabelozerov.glowws.data.local.media.MediaManager
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.data.local.room.Point
+import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -18,33 +22,45 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewModel() {
+class IdeaScreenViewModel @Inject constructor(
+    private val dao: IdeaDao,
+    private val mediaManager: MediaManager,
+    val imageLoader: ImageLoader
+) : ViewModel() {
     private var _points = MutableStateFlow(emptyList<PointDomainModel>())
     val points = _points.asStateFlow()
+
+    private var _saved = MutableStateFlow(Pair(-1L, 0L))
+
+    val onPickMedia: MutableStateFlow<(() -> Unit)?> = MutableStateFlow(null)
 
     fun refreshPoints(ideaId: Long) {
         viewModelScope.launch {
             dao.getIdeaPoints(ideaId).flowOn(Dispatchers.IO).distinctUntilChanged()
                 .collectLatest { points ->
                     _points.update {
-                        points.map { PointDomainModel(it.pointId, it.pointContent, it.isMain) }
+                        points.map { PointDomainModel(it.pointId, it.type, it.pointContent, it.isMain) }
                     }
                 }
         }
     }
 
-    fun addPointAtIndex(ideaId: Long, index: Long) {
+    fun addPointAtIndex(pointType: PointType, ideaId: Long, index: Long, content: String = "") {
         viewModelScope.launch {
-            dao.insertPointUpdateIdeaAtIndex(
-                Point(
-                    pointId = 0,
-                    ideaParentId = ideaId,
-                    pointContent = "",
-                    index = index,
-                    type = 0,
-                    isMain = false
+            when (pointType) {
+                PointType.TEXT -> dao.insertPointUpdateIdeaAtIndex(
+                    Point(
+                        pointId = 0,
+                        ideaParentId = ideaId,
+                        pointContent = content,
+                        index = index,
+                        type = pointType,
+                        isMain = false
+                    )
                 )
-            )
+
+                PointType.IMAGE -> addImage(ideaId, index)
+            }
         }
     }
 
@@ -53,8 +69,7 @@ class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewMo
             val point = dao.getPoint(pointId).first()
             dao.upsertPointUpdateIdea(
                 point.copy(
-                    pointContent = content ?: point.pointContent,
-                    isMain = isMain ?: point.isMain
+                    pointContent = content ?: point.pointContent, isMain = isMain ?: point.isMain
                 )
             )
         }
@@ -62,9 +77,35 @@ class IdeaScreenViewModel @Inject constructor(private val dao: IdeaDao) : ViewMo
 
     fun removePoint(pointId: Long) {
         viewModelScope.launch {
-            val ideaId = dao.getPoint(pointId).first().ideaParentId
+            val pt = dao.getPoint(pointId).first()
+            if (pt.type == PointType.IMAGE) {
+                mediaManager.removeMedia(pt.pointContent)
+            }
+            val ideaId = pt.ideaParentId
             dao.deletePointAndIndex(pointId)
             dao.updateIdeaContentFromPoints(ideaId)
+        }
+    }
+
+    fun addImage(ideaId: Long, index: Long) {
+        _saved.update { Pair(ideaId, index) }
+        onPickMedia.value?.invoke()
+    }
+
+    suspend fun importImage(uri: Uri) {
+        mediaManager.importMedia(uri) {
+            viewModelScope.launch {
+                dao.insertPointUpdateIdeaAtIndex(
+                    Point(
+                        pointId = 0,
+                        ideaParentId = _saved.value.first,
+                        pointContent = it,
+                        index = _saved.value.second,
+                        type = PointType.IMAGE,
+                        isMain = false
+                    )
+                )
+            }
         }
     }
 }
