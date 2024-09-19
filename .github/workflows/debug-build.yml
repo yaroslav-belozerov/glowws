@@ -31,8 +31,11 @@ jobs:
       - name: Build Release
         run: ./gradlew assembleRelease -Pandroid.injected.signing.store.file=/tmp/keystore.jks -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: marvinpinto/action-automatic-releases@latest
         with:
-          name: app-release.apk
-          path: app/build/outputs/apk/release/app-release.apk
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            *.apk
