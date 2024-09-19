@@ -1,5 +1,7 @@
 package com.yaabelozerov.glowws.ui.screen.archive
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -14,7 +16,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.ui.common.ScreenDialog
 import com.yaabelozerov.glowws.ui.model.DialogEntry
@@ -43,34 +47,38 @@ fun ArchiveScreenFloatingButtons(avm: ArchiveScreenViewModel) {
         )
     }
     if (avm.selection.collectAsState().value.inSelectionMode) {
-        FloatingActionButton(onClick = { avm.unarchiveSelected() }) {
-            Icon(
-                imageVector = Icons.Default.Refresh,
-                contentDescription = "restore selected button"
-            )
-        }
-        FloatingActionButton(onClick = {
-            isConfirmationOpen = true
-        }) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "delete selected button"
-            )
-        }
-        FloatingActionButton(onClick = { avm.deselectAll() }) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "deselect button"
-            )
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.End) {
+            FloatingActionButton(onClick = { avm.unarchiveSelected() }) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "restore selected button"
+                )
+            }
+            FloatingActionButton(onClick = {
+                isConfirmationOpen = true
+            }) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "delete selected button"
+                )
+            }
+            FloatingActionButton(onClick = { avm.deselectAll() }) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "deselect button"
+                )
+            }
         }
     } else if (avm.state.collectAsState().value.isNotEmpty()) {
-        FloatingActionButton(onClick = {
-            avm.selectAll()
-        }) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = "select all button button"
-            )
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.End) {
+            FloatingActionButton(onClick = {
+                avm.selectAll()
+            }) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "select all button button"
+                )
+            }
         }
     }
 }

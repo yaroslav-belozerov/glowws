@@ -47,4 +47,5 @@
     <string name="ai_status_ready">Готово</string>
     <string name="label_configure">Настроить</string>
     <string name="s_display_monet_theme">Динамические цвета</string>
+    <string name="s_display_full_height_images">Полная высота картинок</string>
 </resources>

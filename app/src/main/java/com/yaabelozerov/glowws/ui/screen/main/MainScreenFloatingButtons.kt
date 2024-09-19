@@ -77,7 +77,7 @@ fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Lon
             }
         } else {
             FloatingActionButton(onClick = {
-                mvm.addNewIdea("", callback = addNewIdeaCallback)
+                mvm.addNewIdea(callback = addNewIdeaCallback)
             }) {
                 Icon(
                     imageVector = Icons.Default.Add, contentDescription = "add idea button"
@@ -130,8 +130,8 @@ fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Lon
                 value = mvm.state.collectAsState().value.searchQuery,
                 onValueChange = { mvm.updateSearchQuery(it) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.background,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.background
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 ),
                 trailingIcon = {
                     IconButton(onClick = {

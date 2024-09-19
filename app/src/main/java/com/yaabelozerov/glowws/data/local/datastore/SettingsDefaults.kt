@@ -30,6 +30,13 @@ enum class SettingsKeys(
         emptyList(),
         R.string.s_display_monet_theme
     ),
+    IMAGE_FULL_HEIGHT(
+        SettingsCategories.DISPLAY,
+        SettingsTypes.BOOLEAN,
+        "false",
+        emptyList(),
+        R.string.s_display_full_height_images
+    ),
     SORT_TYPE(
         SettingsCategories.USER,
         SettingsTypes.CHOICE,
@@ -44,11 +51,11 @@ enum class SettingsKeys(
         SortOrder.entries.map { it.name },
         R.string.s_user_default_sort_order
     ),
-    FILTER(
-        SettingsCategories.USER,
-        SettingsTypes.MULTIPLE_CHOICE,
-        "",
-        FilterFlag.entries.map { it.name },
-        R.string.s_user_default_filter
-    )
+//    FILTER(
+//        SettingsCategories.USER,
+//        SettingsTypes.MULTIPLE_CHOICE,
+//        "",
+//        FilterFlag.entries.map { it.name },
+//        R.string.s_user_default_filter
+//    )
 }

@@ -1,11 +1,11 @@
 package com.yaabelozerov.glowws.domain.mapper
 
 import android.util.Log
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.util.fastJoinToString
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsCategories
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
+import com.yaabelozerov.glowws.data.local.datastore.model.SettingsModel
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsTypes
 import com.yaabelozerov.glowws.domain.model.BooleanSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.ChoiceSettingDomainModel
@@ -70,16 +70,16 @@ class SettingsMapper {
         return SortModel(order, type)
     }
 
-    fun getFilter(settings: SettingsList): FilterModel {
-        val split = settings.list?.findLast { it.key == SettingsKeys.FILTER }?.value?.split(
-            JSON_DELIMITER
-        )!!
-        val mp = mutableMapOf<FilterFlag, Boolean>()
-        FilterFlag.entries.forEachIndexed { index, filterFlag ->
-            mp[filterFlag] = split[index] == "true"
-        }
-        return FilterModel(mp)
-    }
+//    fun getFilter(settings: SettingsList): FilterModel {
+//        val split = settings.list?.findLast { it.key == SettingsKeys.FILTER }?.value?.split(
+//            JSON_DELIMITER
+//        )!!
+//        val mp = mutableMapOf<FilterFlag, Boolean>()
+//        FilterFlag.entries.forEachIndexed { index, filterFlag ->
+//            mp[filterFlag] = split[index] == "true"
+//        }
+//        return FilterModel(mp)
+//    }
 
     private fun getLocalChoice(s: String): Int? = try {
         when (s) {
@@ -91,5 +91,17 @@ class SettingsMapper {
     } catch (_: Exception) {
         Log.i("SettingsMapper", "Locale not found for key: $s")
         null
+    }
+
+    fun matchSettingsSchema(list: SettingsList): SettingsList {
+        val newList = list.list?.toMutableList() ?: mutableListOf()
+        newList.removeAll { it.key == null }
+        val allKeys = SettingsKeys.entries.toSet()
+        val hasKeys = newList.map { it.key }.toSet()
+        val new = allKeys - hasKeys
+        for (i in new) {
+            newList.add(SettingsModel(i!!, i.default, i.limits))
+        }
+        return SettingsList(newList)
     }
 }

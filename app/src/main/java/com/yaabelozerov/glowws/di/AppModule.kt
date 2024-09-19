@@ -9,9 +9,14 @@ import androidx.room.Room
 import coil.ImageLoader
 import coil.imageLoader
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.adapters.EnumJsonAdapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.yaabelozerov.glowws.data.local.ai.InferenceManager
+import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
+import com.yaabelozerov.glowws.data.local.datastore.model.SettingsModel
 import com.yaabelozerov.glowws.data.local.media.MediaManager
+import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.data.local.room.IdeaDatabase
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
 import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
@@ -40,7 +45,7 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideIdeaMapper() = IdeaMapper()
+    fun provideIdeaMapper(dao: IdeaDao) = IdeaMapper(dao)
 
     @Singleton
     @Provides
@@ -48,12 +53,15 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideMoshi(): Moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    fun provideMoshi(): Moshi = Moshi.Builder()
+        .add(SettingsKeys::class.java, EnumJsonAdapter.create(SettingsKeys::class.java).withUnknownFallback(null))
+        .add(KotlinJsonAdapterFactory())
+        .build()
 
     @Singleton
     @Provides
-    fun provideSettingsManager(dataStoreManager: DataStoreManager, moshi: Moshi) =
-        SettingsManager(dataStoreManager, moshi)
+    fun provideSettingsManager(dataStoreManager: DataStoreManager, moshi: Moshi, settingsMapper: SettingsMapper) =
+        SettingsManager(dataStoreManager, moshi, settingsMapper)
 
     @Singleton
     @Provides
