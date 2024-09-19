@@ -38,4 +38,4 @@ jobs:
           prerelease: true
           title: "Latest Commit"
           files: |
-            app-release.apk
+            /app/release/app-release.apk
