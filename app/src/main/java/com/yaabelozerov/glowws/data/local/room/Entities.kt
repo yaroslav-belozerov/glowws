@@ -9,7 +9,7 @@ data class Idea(
     val isArchived: Boolean,
     val timestampCreated: Long,
     val timestampModified: Long,
-    val ideaContent: String
+    val mainPointId: Long
 )
 
 @Entity

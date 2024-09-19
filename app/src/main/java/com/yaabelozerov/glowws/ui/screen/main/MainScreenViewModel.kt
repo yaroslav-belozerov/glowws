@@ -2,12 +2,14 @@ package com.yaabelozerov.glowws.ui.screen.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil.ImageLoader
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.di.SettingsManager
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
 import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
 import com.yaabelozerov.glowws.ui.model.FilterFlag
+import com.yaabelozerov.glowws.ui.model.FilterModel
 import com.yaabelozerov.glowws.ui.model.SelectionState
 import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
@@ -16,12 +18,14 @@ import com.yaabelozerov.glowws.ui.model.select
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MainScreenViewModel @Inject constructor(
+    val imageLoader: ImageLoader,
     private val dao: IdeaDao,
     private val ideaMapper: IdeaMapper,
     private val settingsMapper: SettingsMapper,
@@ -41,7 +45,7 @@ class MainScreenViewModel @Inject constructor(
     val tooltipBarState = _tooltipBarState.asStateFlow()
 
     init {
-        fetchSortFilter()
+        fetchSort()
         viewModelScope.launch {
             when (settingsManager.getAppVisits()) {
                 0L -> sendTooltipMessage(R.string.tooltipbar_welcome, R.string.placeholder_dismiss)
@@ -54,24 +58,14 @@ class MainScreenViewModel @Inject constructor(
         TooltipBarState(true, msgResId.toList()) { _tooltipBarState.update { TooltipBarState() } }
     }
 
-    fun fetchSortFilter() {
-        fetchSort()
-        fetchFilter()
+    fun resetFilter() {
+        _state.update { it.copy(filter = FilterModel(emptyMap())) }
     }
 
     fun fetchSort() = viewModelScope.launch {
         _state.update {
             it.copy(
                 sort = settingsMapper.getSorting(settingsManager.fetchSettings())
-            )
-        }
-        fetchMainScreen()
-    }
-
-    fun fetchFilter() = viewModelScope.launch {
-        _state.update {
-            it.copy(
-                filter = settingsMapper.getFilter(settingsManager.fetchSettings())
             )
         }
         fetchMainScreen()
@@ -124,9 +118,9 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
-    fun addNewIdea(content: String, callback: ((Long) -> Unit)? = null) {
+    fun addNewIdea(callback: ((Long) -> Unit)? = null) {
         viewModelScope.launch {
-            val id = dao.createIdea(content)
+            val id = dao.createIdea()
             callback?.invoke(id)
             fetchMainScreen()
         }

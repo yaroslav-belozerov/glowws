@@ -4,22 +4,20 @@ import android.util.Log
 import com.squareup.moshi.Moshi
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
-import com.yaabelozerov.glowws.data.local.datastore.model.SettingsModel
+import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
 import kotlinx.coroutines.flow.first
 
 class SettingsManager(
-    private val dataStoreManager: AppModule.DataStoreManager, private val moshi: Moshi
+    private val dataStoreManager: AppModule.DataStoreManager, private val moshi: Moshi, private val settingsMapper: SettingsMapper
 ) {
     private val ad = moshi.adapter(SettingsList::class.java)
 
     suspend fun fetchSettings(): SettingsList {
         val settingsData = dataStoreManager.getSettings().first()
 
-        val s = if (settingsData.isNotBlank()) ad.fromJson(settingsData)!! else SettingsList(
-            SettingsKeys.entries.map {
-                SettingsModel(it, it.default, it.limits)
-            }
-        )
+        val s = settingsMapper.matchSettingsSchema(if (settingsData.isNotBlank()) ad.fromJson(settingsData)!! else SettingsList(
+            emptyList()
+        ))
 
         setSettings(s)
         return s

@@ -47,4 +47,5 @@
     <string name="ai_status_ready">Ready</string>
     <string name="label_configure">Configure</string>
     <string name="s_display_monet_theme">Dynamic Colors</string>
+    <string name="s_display_full_height_images">Full Media Height</string>
 </resources>

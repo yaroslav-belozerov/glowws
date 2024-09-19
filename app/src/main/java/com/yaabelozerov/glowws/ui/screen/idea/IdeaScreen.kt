@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.ui.screen.idea
 
+import android.graphics.Canvas
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -24,6 +25,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarOutline
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,6 +49,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.ImageLoader
@@ -103,9 +111,14 @@ fun IdeaScreen(
                     showPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS),
                     aiAvailable = aiAvailable
                 )
-                PointType.IMAGE -> ImagePoint(imageLoader = imageLoader, content = point.content, isMain = point.isMain, onRemove = {
-                    onRemove(point.id)
-                })
+
+                PointType.IMAGE -> ImagePoint(imageLoader = imageLoader,
+                    content = point.content,
+                    isMain = point.isMain,
+                    onRemove = {
+                        onRemove(point.id)
+                    },
+                    onSave = { onSave(point.id, point.content, it) })
             }
             Spacer(modifier = Modifier.height(16.dp))
             AddPointLine(onAdd = { onAdd(it, points.indexOf(point).toLong() + 1) })
@@ -131,9 +144,7 @@ fun AddPointLine(onAdd: (PointType) -> Unit) {
                 .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
         )
-        IconButton(
-            onClick = { open = true }
-        ) {
+        IconButton(onClick = { open = true }) {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "add point button",
@@ -163,18 +174,48 @@ fun ImagePoint(
     imageLoader: ImageLoader,
     content: String,
     isMain: Boolean,
+    onSave: (Boolean) -> Unit,
     onRemove: () -> Unit
 ) {
     var uiShown by remember { mutableStateOf(false) }
-    Box(modifier = Modifier.clickable { uiShown = !uiShown }.clip(MaterialTheme.shapes.medium), contentAlignment = Alignment.BottomStart) {
-        SubcomposeAsyncImage(model = File(content), contentDescription = null, imageLoader = imageLoader)
-        Crossfade(uiShown) {
-            if (it) {
+    Crossfade(uiShown) { showUi ->
+        Box(
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.medium)
+                .fillMaxWidth()
+                .clickable { uiShown = !uiShown }, contentAlignment = Alignment.BottomStart
+        ) {
+            SubcomposeAsyncImage(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .drawWithContent {
+                        drawContent()
+                        if (showUi) drawRect(color = Color.Black.copy(alpha = 0.5f), size = size)
+                    },
+                contentScale = ContentScale.FillWidth,
+                model = File(content),
+                contentDescription = null,
+                imageLoader = imageLoader
+            )
+            if (showUi) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    FilledIconButton(onClick = { onRemove() }) {
+                    FilledIconButton(onClick = {
+                        onRemove()
+                        uiShown = false
+                    }) {
                         Icon(Icons.Default.Delete, contentDescription = null)
                     }
-                    Text(content.split('/').last())
+                    if (isMain) FilledIconButton(onClick = {
+                        onSave(false)
+                        uiShown = false
+                    }) {
+                        Icon(Icons.Default.Star, contentDescription = null)
+                    } else OutlinedIconButton(onClick = {
+                        onSave(true)
+                        uiShown = false
+                    }) {
+                        Icon(Icons.Default.StarOutline, contentDescription = null)
+                    }
                 }
             }
         }
@@ -224,8 +265,8 @@ fun TextPoint(
                         } else {
                             MaterialTheme.colorScheme.onSurface
                         }).copy(
-                                alpha = if (it.isBlank()) 0.3f else 1f
-                            )
+                            alpha = if (it.isBlank()) 0.3f else 1f
+                        )
                     )
                 }
             } else {

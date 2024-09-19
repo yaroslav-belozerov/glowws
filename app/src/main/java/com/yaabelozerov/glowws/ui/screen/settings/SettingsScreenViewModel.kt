@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.ui.screen.settings
 
+import android.util.Log
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

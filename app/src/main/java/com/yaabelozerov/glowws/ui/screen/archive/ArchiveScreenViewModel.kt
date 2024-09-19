@@ -1,8 +1,12 @@
 package com.yaabelozerov.glowws.ui.screen.archive
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import coil.ImageLoader
+import com.yaabelozerov.glowws.data.local.media.MediaManager
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
+import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.ui.model.SelectionState
@@ -11,15 +15,19 @@ import com.yaabelozerov.glowws.ui.model.selectAll
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ArchiveScreenViewModel @Inject constructor(
+    val imageLoader: ImageLoader,
     private val dao: IdeaDao,
-    private val mapper: IdeaMapper
+    private val mapper: IdeaMapper,
+    private val mediaManager: MediaManager
 ) : ViewModel() {
     private var _state: MutableStateFlow<List<IdeaDomainModel>> = MutableStateFlow(emptyList())
     val state = _state.asStateFlow()
@@ -48,8 +56,16 @@ class ArchiveScreenViewModel @Inject constructor(
 
     fun removeIdea(ideaId: Long) {
         viewModelScope.launch {
-            dao.deleteIdeaAndPoints(ideaId)
-            getArchiveScreenIdeas()
+            dao.getIdeaAttachments(ideaId).collectLatest {
+                it.forEach { p ->
+                    Log.i("ArchiveScreenViewModel", "removeIdea: $p")
+                    if (p.type == PointType.IMAGE) {
+                        mediaManager.removeMedia(p.pointContent)
+                    }
+                }
+                dao.deleteIdeaAndPoints(ideaId)
+                getArchiveScreenIdeas()
+            }
         }
     }
 

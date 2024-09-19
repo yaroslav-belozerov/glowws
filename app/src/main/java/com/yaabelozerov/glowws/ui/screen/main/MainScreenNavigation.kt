@@ -46,7 +46,9 @@ fun MainScreenNavHost(
         exitTransition = { fadeOut(tween(300)) }) {
         composable(NavDestinations.MainScreenRoute.route) {
             Column {
+
                 MainScreen(
+                    imageLoader = mvm.imageLoader,
                     ideas = mvm.state.collectAsState().value.ideas,
                     onClickIdea = { id ->
                         navController.navigate(NavDestinations.IdeaScreenRoute.withParam(id))
@@ -96,7 +98,7 @@ fun MainScreenNavHost(
             SettingsScreen(
                 settings = svm.state.collectAsState().value,
                 onModify = { key, value ->
-                    svm.modifySetting(key, value) { mvm.fetchSortFilter() }
+                    svm.modifySetting(key, value) { mvm.fetchSort() }
                 },
                 aiStatus = aivm.inferenceManager.status.collectAsState().value,
                 onNavigateToAi = {
@@ -107,6 +109,7 @@ fun MainScreenNavHost(
             NavDestinations.ArchiveScreenRoute.route
         ) {
             ArchiveScreen(
+                imageLoader = avm.imageLoader,
                 ideas = avm.state.collectAsState().value,
                 onClick = { id ->
                     navController.navigate(NavDestinations.IdeaScreenRoute.withParam(id))
@@ -115,7 +118,8 @@ fun MainScreenNavHost(
                 onRemove = { id -> avm.removeIdea(id) },
                 onUnarchive = { id -> avm.unarchiveIdea(id) },
                 onSelect = { id -> avm.onSelect(id) },
-                selectionState = avm.selection.collectAsState().value
+                selectionState = avm.selection.collectAsState().value,
+                settings = svm.state.collectAsState().value.values.flatten()
             )
         }
         composable(NavDestinations.AiScreenRoute.route,

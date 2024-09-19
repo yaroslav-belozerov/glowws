@@ -3,12 +3,8 @@ package com.yaabelozerov.glowws.data.local.media
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
-import com.yaabelozerov.glowws.data.local.ai.reset
 import com.yaabelozerov.glowws.util.queryName
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -44,10 +40,10 @@ class MediaManager(private val app: Context) {
         }
     }
 
-    suspend fun removeMedia(name: String) {
+    suspend fun removeMedia(path: String) {
         withContext(Dispatchers.IO) {
             try {
-                val file = File(name)
+                val file = File(path)
                 if (file.exists()) {
                     file.delete()
                 } else { }

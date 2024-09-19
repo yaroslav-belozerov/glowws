@@ -29,16 +29,19 @@ interface IdeaDao {
     @Query("DELETE FROM `idea` WHERE ideaId = :ideaId")
     suspend fun deleteIdea(ideaId: Long)
 
+    @Query("SELECT * FROM point WHERE ideaParentId = :ideaId")
+    fun getIdeaAttachments(ideaId: Long): Flow<List<Point>>
+
     @Query(
         "SELECT * FROM point WHERE ideaParentId = :ideaId ORDER BY `index` ASC"
     )
     fun getIdeaPoints(ideaId: Long): Flow<List<Point>>
 
-    @Query("UPDATE idea SET ideaContent = :content WHERE ideaId = :ideaId")
-    suspend fun setIdeaContent(ideaId: Long, content: String)
+    @Query("UPDATE idea SET mainPointId = :mainPointId WHERE ideaId = :ideaId")
+    suspend fun setIdeaMainPoint(ideaId: Long, mainPointId: Long)
 
-    suspend fun modifyIdeaContent(ideaId: Long, content: String) {
-        setIdeaContent(ideaId, content)
+    suspend fun modifyIdeaMainPoint(ideaId: Long, mainPointId: Long) {
+        setIdeaMainPoint(ideaId, mainPointId)
         val m = System.currentTimeMillis()
         updateIdeaTimestamp(ideaId, m)
     }
@@ -73,9 +76,9 @@ interface IdeaDao {
 
     suspend fun updateIdeaContentFromPoints(ideaId: Long) {
         val pts = getIdeaPoints(ideaId).first()
-        val content: String =
-            pts.firstOrNull { it.isMain }?.pointContent ?: (pts.firstOrNull()?.pointContent ?: "")
-        modifyIdeaContent(ideaId, content)
+        val pointId: Long =
+            pts.firstOrNull { it.isMain }?.pointId ?: (pts.firstOrNull()?.pointId ?: -1L)
+        modifyIdeaMainPoint(ideaId, pointId)
     }
 
     @Query("DELETE FROM point WHERE pointId = :pointId")
@@ -106,9 +109,9 @@ interface IdeaDao {
     @Query("UPDATE idea SET timestampModified = :timestamp WHERE ideaId = :ideaId")
     suspend fun updateIdeaTimestamp(ideaId: Long, timestamp: Long)
 
-    suspend fun createIdea(content: String): Long {
+    suspend fun createIdea(): Long {
         val m = System.currentTimeMillis()
-        return insertIdea(Idea(0, false, m, m, content))
+        return insertIdea(Idea(0, false, m, m, -1L))
     }
 
     suspend fun deleteIdeaAndPoints(ideaId: Long) {
