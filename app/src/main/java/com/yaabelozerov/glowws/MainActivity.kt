@@ -125,7 +125,7 @@ class MainActivity : ComponentActivity() {
                     val dest = navBackStackEntry?.destination?.route?.toDestination()
                     dest?.let {
                         TopAppBar(title = {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 it.resId?.let { res ->
                                     Text(
                                         text = stringResource(id = res),
@@ -134,7 +134,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                                 if (it.route == NavDestinations.MainScreenRoute.route) {
-                                    Icon(modifier = Modifier.size(16.dp), imageVector = Icons.Default.Star, contentDescription =  null)
+                                    Icon(modifier = Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary, imageVector = Icons.Default.Star, contentDescription = null)
                                 }
                             }
                         })
