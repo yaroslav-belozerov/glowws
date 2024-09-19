@@ -238,9 +238,8 @@ fun TextPoint(
         mutableStateOf(false)
     }
     Crossfade(modifier = modifier, targetState = isMain) { main ->
-        Card(modifier = Modifier
+        Card(onClick = { isBeingModified = !isBeingModified }, modifier = Modifier
             .fillMaxWidth()
-            .clickable { isBeingModified = !isBeingModified }
             .animateContentSize()
             .then(modifier), colors = CardDefaults.cardColors(
             containerColor = if (main && !isBeingModified) {

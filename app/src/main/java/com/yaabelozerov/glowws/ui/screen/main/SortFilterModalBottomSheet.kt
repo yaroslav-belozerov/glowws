@@ -46,8 +46,9 @@ fun SortFilterModalBottomSheet(mvm: MainScreenViewModel) {
                 Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                FilterColumn(
-                    flags = mvm.state.collectAsState().value.filter.flags,
+                val flags = mvm.state.collectAsState().value.filter.flags
+                if (flags.isNotEmpty()) FilterColumn(
+                    flags = flags,
                     setFilterFlag = { f, v -> mvm.setFilterFlag(f, v) },
                     resetFilter = { mvm.resetFilter() }
                 )
