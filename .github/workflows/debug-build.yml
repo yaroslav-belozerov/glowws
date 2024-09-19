@@ -31,11 +31,11 @@ jobs:
       - name: Build Release
         run: ./gradlew assembleRelease -Pandroid.injected.signing.store.file=/tmp/keystore.jks -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
 
-      - uses: marvinpinto/action-automatic-releases@latest
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: "${{ secrets.RELEASE_TOKEN }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Latest Commit"
-          files: |
-            /app/release/app-release.apk
+          repo_token: ${{ secrets.RELEASE_TOKEN }}
+          file: app/build/outputs/apk/release/app-release.apk
+          asset_name: glowws-signed-release.apk
+          tag: "latest"
+          overwrite: true
