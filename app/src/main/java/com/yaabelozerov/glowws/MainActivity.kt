@@ -14,16 +14,19 @@ import androidx.activity.viewModels
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -119,13 +122,21 @@ class MainActivity : ComponentActivity() {
             ) {
                 Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    navBackStackEntry?.destination?.route?.toDestination()?.resId?.let {
+                    val dest = navBackStackEntry?.destination?.route?.toDestination()
+                    dest?.let {
                         TopAppBar(title = {
-                            Text(
-                                text = stringResource(id = it),
-                                fontSize = 32.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                it.resId?.let { res ->
+                                    Text(
+                                        text = stringResource(id = res),
+                                        fontSize = 32.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                if (it.route == NavDestinations.MainScreenRoute.route) {
+                                    Icon(modifier = Modifier.size(16.dp), imageVector = Icons.Default.Star, contentDescription =  null)
+                                }
+                            }
                         })
                     }
                 }, content = { innerPadding ->
