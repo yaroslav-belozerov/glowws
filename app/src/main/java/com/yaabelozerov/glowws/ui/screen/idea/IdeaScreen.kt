@@ -147,6 +147,7 @@ fun AddPointLine(onAdd: (PointType) -> Unit) {
             items(PointType.entries.toList()) {
                 Button(onClick = {
                     onAdd(it)
+                    open = false
                 }) {
                     Text(it.title)
                 }
