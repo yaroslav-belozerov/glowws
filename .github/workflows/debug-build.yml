@@ -36,6 +36,6 @@ jobs:
           repo_token: "${{ secrets.RELEASE_TOKEN }}"
           automatic_release_tag: "latest"
           prerelease: true
-          title: "Development Build"
+          title: "Latest Commit"
           files: |
-            *.apk
+            app-release.apk
