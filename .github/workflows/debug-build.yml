@@ -1,13 +1,13 @@
 name: Test_and_build_debug_artifacts
 
 on:
-  pull_request:
+  push:
     branches:
-      - 'main'
+      - '*'
 
 jobs:
   build_apk_aab:
-    name: Build debug artifact
+    name: Build artifact
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
