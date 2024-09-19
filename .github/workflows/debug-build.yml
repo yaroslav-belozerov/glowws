@@ -1,0 +1,26 @@
+name: Test_and_build_debug_artifacts
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+
+jobs:
+  build_apk_aab:
+    name: Build debug artifact
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with: {java-version: 1.8}
+      - name: Test app
+        run: ./gradlew test
+      - name: Decode Keystore
+        run: echo "${{ secrets.KEYSTORE }}" | base64 --decode > /tmp/keystore.jks
+      - name: Build Release
+        run: ./gradlew assembleRelease -Pandroid.injected.signing.store.file=/tmp/keystore.jks -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-release.apk
+          path: app/build/outputs/apk/release/app-release.apk
