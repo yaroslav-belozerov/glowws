@@ -10,7 +10,7 @@
     <string name="s_user_default_sort_modification">Дата изменения</string>
     <string name="s_display_placeholders">Показывать пустые значения</string>
     <string name="s_screen_name">Настройки</string>
-    <string name="placeholder_noname">Без названия</string>
+    <string name="placeholder_noname">Пусто</string>
     <string name="label_edit">Изменить</string>
     <string name="label_are_you_sure">Вы уверены?</string>
     <string name="label_confirm">Подтвердить</string>
@@ -48,4 +48,5 @@
     <string name="label_configure">Настроить</string>
     <string name="s_display_monet_theme">Динамические цвета</string>
     <string name="s_display_full_height_images">Полная высота картинок</string>
+    <string name="s_user_long_press_type">Зажать для выбора типа мысли</string>
 </resources>

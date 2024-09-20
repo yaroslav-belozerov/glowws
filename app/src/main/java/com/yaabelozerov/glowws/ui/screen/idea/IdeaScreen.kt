@@ -3,8 +3,10 @@ package com.yaabelozerov.glowws.ui.screen.idea
 import android.graphics.Canvas
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -95,7 +97,7 @@ fun IdeaScreen(
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                AddPointLine(onAdd = { onAdd(it, 0) })
+                AddPointLine(onAdd = { onAdd(it, 0) }, holdForType = settings.findBooleanKey(SettingsKeys.LONG_PRESS_TYPE))
             }
         }
 
@@ -121,14 +123,14 @@ fun IdeaScreen(
                     onSave = { onSave(point.id, point.content, it) })
             }
             Spacer(modifier = Modifier.height(16.dp))
-            AddPointLine(onAdd = { onAdd(it, points.indexOf(point).toLong() + 1) })
+            AddPointLine(onAdd = { onAdd(it, points.indexOf(point).toLong() + 1) }, holdForType = settings.findBooleanKey(SettingsKeys.LONG_PRESS_TYPE))
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun AddPointLine(onAdd: (PointType) -> Unit) {
+fun AddPointLine(onAdd: (PointType) -> Unit, holdForType: Boolean) {
     var open by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
@@ -144,13 +146,18 @@ fun AddPointLine(onAdd: (PointType) -> Unit) {
                 .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
         )
-        IconButton(onClick = { open = true }) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "add point button",
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
+        Icon(
+            modifier = Modifier.combinedClickable(onClick = {
+                if (holdForType) {
+                    onAdd(PointType.TEXT)
+                } else {
+                    open = true
+                }
+            }, onLongClick = { open = true }),
+            imageVector = Icons.Default.Add,
+            contentDescription = "add point button",
+            tint = MaterialTheme.colorScheme.primary
+        )
     }
 
     if (open) ModalBottomSheet(onDismissRequest = { open = false }) {
@@ -238,16 +245,20 @@ fun TextPoint(
         mutableStateOf(false)
     }
     Crossfade(modifier = modifier, targetState = isMain) { main ->
-        Card(onClick = { isBeingModified = !isBeingModified }, modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize()
-            .then(modifier), colors = CardDefaults.cardColors(
-            containerColor = if (main && !isBeingModified) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceContainer
-            }
-        )) {
+        Card(
+            onClick = { isBeingModified = !isBeingModified },
+            modifier = Modifier
+                .fillMaxWidth()
+                .animateContentSize()
+                .then(modifier),
+            colors = CardDefaults.cardColors(
+                containerColor = if (main && !isBeingModified) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainer
+                }
+            )
+        ) {
             if (!isBeingModified) {
                 Crossfade(targetState = content) {
                     Text(
