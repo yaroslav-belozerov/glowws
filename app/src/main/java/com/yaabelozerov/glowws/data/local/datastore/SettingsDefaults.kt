@@ -51,6 +51,13 @@ enum class SettingsKeys(
         SortOrder.entries.map { it.name },
         R.string.s_user_default_sort_order
     ),
+    LONG_PRESS_TYPE(
+        SettingsCategories.USER,
+        SettingsTypes.BOOLEAN,
+        "false",
+        emptyList(),
+        R.string.s_user_long_press_type
+    ),
 //    FILTER(
 //        SettingsCategories.USER,
 //        SettingsTypes.MULTIPLE_CHOICE,

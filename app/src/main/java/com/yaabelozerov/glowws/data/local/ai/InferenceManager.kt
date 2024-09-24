@@ -19,7 +19,7 @@ enum class InferenceManagerState(val resId: Int) {
     IDLE(R.string.ai_status_not_active), LOADING(R.string.ai_status_loading), ACTIVATING(R.string.ai_status_activating), REMOVING(
         R.string.ai_status_removing
     ),
-    ACTIVE(R.string.ai_status_ready);
+    ACTIVE(R.string.ai_status_ready), RESPONDING(R.string.ai_status_responding);
 
     fun notBusy() = this == IDLE || this == ACTIVE
 }
@@ -51,6 +51,7 @@ class InferenceManager(private val app: Context) {
                             _callback.value(_state.value.second)
                             if (done) {
                                 _state.update { it.copy(second = "") }
+                                status.update { Pair(it.first, InferenceManagerState.ACTIVE) }
                             }
                         }.setTemperature(0.8f).setRandomSeed(101).build()
                 val inference = LlmInference.createFromOptions(app, options)
@@ -150,6 +151,7 @@ class InferenceManager(private val app: Context) {
 
     suspend fun executeInto(prompt: String, callback: (String) -> Unit = {}) {
         withContext(Dispatchers.IO) {
+            status.update { Pair(it.first, InferenceManagerState.RESPONDING) }
             setCallback(callback)
             _model.value?.let {
                 it.generateResponseAsync(prompt)

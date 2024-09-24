@@ -13,7 +13,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import coil.ImageLoader
+import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
 import com.yaabelozerov.glowws.ui.common.NavDestinations
 import com.yaabelozerov.glowws.ui.common.withParam
 import com.yaabelozerov.glowws.ui.screen.ai.AiScreen
@@ -36,7 +36,8 @@ fun MainScreenNavHost(
     avm: ArchiveScreenViewModel,
     aivm: AiScreenViewModel
 ) {
-    NavHost(modifier = modifier, navController = navController,
+    NavHost(modifier = modifier,
+        navController = navController,
         startDestination = startDestination.route,
         enterTransition = {
             fadeIn(
@@ -75,8 +76,8 @@ fun MainScreenNavHost(
                     navController.navigateUp()
                 },
                 onAdd = { type, ind ->
-                    ivm.addPointAtIndex(type,
-                        backStackEntry.arguments!!.getLong("id"), ind
+                    ivm.addPointAtIndex(
+                        type, backStackEntry.arguments!!.getLong("id"), ind
                     )
                 },
                 onSave = { pointId, newText, isMain ->
@@ -91,12 +92,12 @@ fun MainScreenNavHost(
                     aivm.executeInto(content) { new -> ivm.modifyPoint(pointId, new) }
                 },
                 settings = svm.state.collectAsState().value.values.flatten(),
-                aiAvailable = aivm.inferenceManager.model.collectAsState().value != null
+                aiAvailable = aivm.inferenceManager.model.collectAsState().value != null,
+                aiBusy = aivm.inferenceManager.status.collectAsState().value.second == InferenceManagerState.RESPONDING
             )
         }
         composable(NavDestinations.SettingsScreenRoute.route) {
-            SettingsScreen(
-                settings = svm.state.collectAsState().value,
+            SettingsScreen(settings = svm.state.collectAsState().value,
                 onModify = { key, value ->
                     svm.modifySetting(key, value) { mvm.fetchSort() }
                 },

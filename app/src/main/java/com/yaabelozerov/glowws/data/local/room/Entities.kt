@@ -1,5 +1,10 @@
 package com.yaabelozerov.glowws.data.local.room
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FormatColorText
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -22,6 +27,6 @@ data class Point(
     var isMain: Boolean,
 )
 
-enum class PointType(val title: String) {
-    TEXT("Text"), IMAGE("Image")
+enum class PointType(val title: String, val icon: ImageVector) {
+    TEXT("Text", Icons.Default.FormatColorText), IMAGE("Image", Icons.Default.Image)
 }

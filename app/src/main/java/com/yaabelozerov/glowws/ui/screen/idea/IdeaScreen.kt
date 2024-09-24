@@ -1,10 +1,11 @@
 package com.yaabelozerov.glowws.ui.screen.idea
 
-import android.graphics.Canvas
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,7 +28,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
-import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,6 +42,7 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,15 +51,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil.ImageLoader
-import coil.compose.AsyncImage
 import coil.compose.SubcomposeAsyncImage
 import com.yaabelozerov.glowws.R
+import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
@@ -77,7 +79,8 @@ fun IdeaScreen(
     onRemove: (Long) -> Unit,
     onExecute: (Long, String) -> Unit,
     settings: List<SettingDomainModel>,
-    aiAvailable: Boolean
+    aiAvailable: Boolean,
+    aiBusy: Boolean
 ) {
     LazyColumn(
         modifier = modifier
@@ -95,7 +98,10 @@ fun IdeaScreen(
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                AddPointLine(onAdd = { onAdd(it, 0) })
+                AddPointLine(
+                    onAdd = { onAdd(it, 0) },
+                    holdForType = settings.findBooleanKey(SettingsKeys.LONG_PRESS_TYPE)
+                )
             }
         }
 
@@ -109,7 +115,8 @@ fun IdeaScreen(
                     onRemove = { onRemove(point.id) },
                     onExecute = { onExecute(point.id, point.content) },
                     showPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS),
-                    aiAvailable = aiAvailable
+                    aiAvailable = aiAvailable,
+                    aiBusy = aiBusy
                 )
 
                 PointType.IMAGE -> ImagePoint(imageLoader = imageLoader,
@@ -121,20 +128,23 @@ fun IdeaScreen(
                     onSave = { onSave(point.id, point.content, it) })
             }
             Spacer(modifier = Modifier.height(16.dp))
-            AddPointLine(onAdd = { onAdd(it, points.indexOf(point).toLong() + 1) })
+            AddPointLine(
+                onAdd = { onAdd(it, points.indexOf(point).toLong() + 1) },
+                holdForType = settings.findBooleanKey(SettingsKeys.LONG_PRESS_TYPE)
+            )
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun AddPointLine(onAdd: (PointType) -> Unit) {
+fun AddPointLine(onAdd: (PointType) -> Unit, holdForType: Boolean) {
     var open by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(0.dp, 0.dp, 0.dp, 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -144,30 +154,44 @@ fun AddPointLine(onAdd: (PointType) -> Unit) {
                 .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
         )
-        IconButton(onClick = { open = true }) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "add point button",
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
+        Icon(
+            modifier = Modifier
+                .padding(4.dp)
+                .clip(MaterialTheme.shapes.extraLarge)
+                .combinedClickable(onClick = {
+                    if (holdForType) {
+                        onAdd(PointType.TEXT)
+                    } else {
+                        open = true
+                    }
+                }, onLongClick = { open = true })
+                .padding(8.dp),
+            imageVector = Icons.Default.Add,
+            contentDescription = "add point button",
+            tint = MaterialTheme.colorScheme.primary
+        )
     }
 
     if (open) ModalBottomSheet(onDismissRequest = { open = false }) {
-        LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+        LazyVerticalGrid(modifier = Modifier.padding(12.dp, 0.dp), columns = GridCells.Fixed(2), verticalArrangement = Arrangement.spacedBy(4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(PointType.entries.toList()) {
                 Button(onClick = {
                     onAdd(it)
                     open = false
                 }) {
-                    Text(it.title)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(it.icon, contentDescription = it.title)
+                        Text(it.title)
+                    }
                 }
             }
         }
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ImagePoint(
     modifier: Modifier = Modifier,
@@ -232,22 +256,34 @@ fun TextPoint(
     onRemove: () -> Unit,
     onExecute: () -> Unit,
     showPlaceholders: Boolean,
-    aiAvailable: Boolean
+    aiAvailable: Boolean,
+    aiBusy: Boolean
 ) {
     var isBeingModified by remember {
         mutableStateOf(false)
     }
     Crossfade(modifier = modifier, targetState = isMain) { main ->
-        Card(onClick = { isBeingModified = !isBeingModified }, modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize()
-            .then(modifier), colors = CardDefaults.cardColors(
-            containerColor = if (main && !isBeingModified) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceContainer
+        Card(
+            onClick = {
+                if (!aiBusy) {
+                    isBeingModified = !isBeingModified
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .animateContentSize()
+                .then(modifier),
+            colors = CardDefaults.cardColors(
+                containerColor = if (main && !isBeingModified) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainer
+                }
+            )
+        ) {
+            val pointFocus = remember {
+                FocusRequester()
             }
-        )) {
             if (!isBeingModified) {
                 Crossfade(targetState = content) {
                     Text(
@@ -276,11 +312,9 @@ fun TextPoint(
                     var currentMainStatus by remember {
                         mutableStateOf(isMain)
                     }
-                    TextField(
-                        value = currentText,
-                        onValueChange = { currentText = it },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    LaunchedEffect(key1 = Unit) {
+                        pointFocus.requestFocus()
+                    }
                     FlowRow(
                         Modifier
                             .fillMaxWidth()
@@ -295,6 +329,7 @@ fun TextPoint(
                         if (aiAvailable) {
                             OutlinedButton(onClick = {
                                 isBeingModified = false
+                                onSave(currentText, currentMainStatus)
                                 onExecute()
                             }) {
                                 Text(text = "Rephrase")
@@ -307,7 +342,8 @@ fun TextPoint(
                             Text(text = stringResource(id = R.string.label_remove))
                         }
                         OutlinedButton(onClick = {
-                            currentMainStatus = !currentMainStatus
+                            onSave(currentText, !currentMainStatus)
+                            isBeingModified = false
                         }) {
                             Text(
                                 text = if (currentMainStatus) {
@@ -328,6 +364,13 @@ fun TextPoint(
                             Text(text = stringResource(id = R.string.label_save))
                         }
                     }
+                    TextField(
+                        value = currentText,
+                        onValueChange = { currentText = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(pointFocus)
+                    )
                 }
             }
         }

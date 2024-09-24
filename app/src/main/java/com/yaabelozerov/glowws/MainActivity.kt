@@ -116,7 +116,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             val dynamicColor = svm.state.collectAsState().value.values.flatten()
-                .findKeyOrNull(SettingsKeys.MONET_THEME).also { Log.i("dynamic", it.toString()) }
+                .findKeyOrNull(SettingsKeys.MONET_THEME)
             if (dynamicColor != null) GlowwsTheme(
                 dynamicColor = dynamicColor.toString().toBoolean()
             ) {

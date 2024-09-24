@@ -10,7 +10,7 @@
     <string name="s_user_default_sort_modification">Last Modified</string>
     <string name="s_display_placeholders">Show Placeholders</string>
     <string name="s_screen_name">Settings</string>
-    <string name="placeholder_noname">Unnamed</string>
+    <string name="placeholder_noname">Empty</string>
     <string name="label_edit">Edit</string>
     <string name="label_are_you_sure">Are you sure?</string>
     <string name="label_confirm">Confirm</string>
@@ -48,4 +48,6 @@
     <string name="label_configure">Configure</string>
     <string name="s_display_monet_theme">Dynamic Colors</string>
     <string name="s_display_full_height_images">Full Media Height</string>
+    <string name="s_user_long_press_type">Long Press for Point Type</string>
+    <string name="ai_status_responding">Responding</string>
 </resources>
