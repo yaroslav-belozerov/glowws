@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -97,10 +98,17 @@ fun ChoiceSettingDomainEntry(
                             expanded = false
                         }) {
                     val local = entry.localChoicesIds.getOrNull(index)
+                    if (entry.value == value) {
+                        Icon(
+                            modifier = Modifier.padding(16.dp, 0.dp, 0.dp, 0.dp),
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null
+                        )
+                    }
                     Text(
                         text = if (local != null) stringResource(id = local) else value.toReadableKey(),
                         fontWeight = if (value == entry.value) FontWeight.Bold else FontWeight.Normal,
-                        modifier = Modifier.padding(16.dp, 8.dp)
+                        modifier = Modifier.padding(if (entry.value != value) 16.dp else 8.dp, 8.dp, 16.dp, 8.dp)
                     )
                 }
             }

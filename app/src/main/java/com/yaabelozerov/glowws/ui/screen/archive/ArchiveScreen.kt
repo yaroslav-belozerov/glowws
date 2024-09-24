@@ -5,6 +5,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,10 +15,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,7 +64,14 @@ fun ArchiveScreen(
     selectionState: SelectionState<Long>,
     settings: List<SettingDomainModel>
 ) {
-    LazyColumn(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    LazyVerticalStaggeredGrid(
+        modifier = modifier,
+        columns = StaggeredGridCells.Fixed(2),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalItemSpacing = 16.dp,
+        contentPadding = PaddingValues(16.dp)
+//        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
         items(ideas, key = { it.id }) {
             ArchiveIdea(
                 modifier = Modifier.animateItem(),
@@ -72,7 +85,8 @@ fun ArchiveScreen(
                 },
                 inSelectionMode = selectionState.inSelectionMode,
                 isSelected = selectionState.entries.contains(it.id),
-                fullImage = settings.findBooleanKey(SettingsKeys.IMAGE_FULL_HEIGHT)
+                fullImage = settings.findBooleanKey(SettingsKeys.IMAGE_FULL_HEIGHT),
+                displayPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS)
             )
         }
     }
@@ -90,34 +104,35 @@ fun ArchiveIdea(
     onSelect: () -> Unit,
     inSelectionMode: Boolean,
     isSelected: Boolean,
-    fullImage: Boolean
+    fullImage: Boolean,
+    displayPlaceholders: Boolean
 ) {
     var isDialogOpen by remember { mutableStateOf(false) }
 
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier
-        .fillMaxWidth()
-        .then(
-            if (isSelected) {
-                Modifier.border(
-                    2.dp, MaterialTheme.colorScheme.primary
-                )
-            } else {
-                Modifier
-            }
-        )
-        .background(MaterialTheme.colorScheme.primaryContainer)
-        .combinedClickable(onClick = if (inSelectionMode) onSelect else onClick,
-            onLongClick = { if (!inSelectionMode) isDialogOpen = true })) {
+    Card(
+        modifier
+            .clip(MaterialTheme.shapes.medium)
+            .then(
+                if (isSelected) {
+                    Modifier.border(
+                        2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .combinedClickable(onClick = if (inSelectionMode) onSelect else onClick,
+                onLongClick = { if (!inSelectionMode) isDialogOpen = true })
+    ) {
         when (previewPoint.type) {
-            PointType.TEXT -> Text(
-                text = previewPoint.content.ifBlank {
-                    stringResource(id = R.string.placeholder_noname)
-                },
-                maxLines = 10,
+            PointType.TEXT -> Text(text = if (previewPoint.content.isBlank() && displayPlaceholders) {
+                stringResource(id = R.string.placeholder_noname)
+            } else {
+                previewPoint.content
+            },
+                maxLines = 5,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .weight(1f),
+                modifier = Modifier.padding(16.dp),
                 style = Typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (previewPoint.content.isBlank()) 0.3f else 1f)
             )
@@ -125,7 +140,8 @@ fun ArchiveIdea(
             PointType.IMAGE -> SubcomposeAsyncImage(
                 modifier = Modifier
                     .padding(16.dp)
-                    .then(if (fullImage) Modifier else Modifier.height(128.dp)).fillMaxWidth()
+                    .then(if (fullImage) Modifier else Modifier.height(128.dp))
+                    .fillMaxWidth()
                     .clip(MaterialTheme.shapes.medium),
                 contentScale = ContentScale.FillWidth,
                 model = File(previewPoint.content),

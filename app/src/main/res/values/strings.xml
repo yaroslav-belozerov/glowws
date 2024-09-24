@@ -49,4 +49,5 @@
     <string name="s_display_monet_theme">Dynamic Colors</string>
     <string name="s_display_full_height_images">Full Media Height</string>
     <string name="s_user_long_press_type">Long Press for Point Type</string>
+    <string name="ai_status_responding">Responding</string>
 </resources>

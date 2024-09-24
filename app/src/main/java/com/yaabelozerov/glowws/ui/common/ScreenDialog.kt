@@ -39,6 +39,7 @@ fun ScreenDialog(
             Text(
                 text = title,
                 fontSize = 32.sp,
+                lineHeight = 32.sp,
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 5

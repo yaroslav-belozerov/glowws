@@ -77,7 +77,7 @@ interface IdeaDao {
     suspend fun updateIdeaContentFromPoints(ideaId: Long) {
         val pts = getIdeaPoints(ideaId).first()
         val pointId: Long =
-            pts.firstOrNull { it.isMain }?.pointId ?: (pts.firstOrNull()?.pointId ?: -1L)
+            pts.firstOrNull { it.isMain }?.pointId ?: (pts.firstOrNull { it.pointContent.isNotBlank() }?.pointId ?: -1L)
         modifyIdeaMainPoint(ideaId, pointId)
     }
 

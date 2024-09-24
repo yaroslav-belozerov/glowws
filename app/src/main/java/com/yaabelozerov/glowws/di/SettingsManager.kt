@@ -41,5 +41,4 @@ class SettingsManager(
 
     suspend fun setModelName(name: String) = dataStoreManager.setCurrentModelName(name)
     suspend fun getModelName() = dataStoreManager.getCurrentModelName().first()
-        .also { Log.i("SettingsManager", "model name: $it") }
 }

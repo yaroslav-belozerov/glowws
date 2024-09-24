@@ -49,4 +49,5 @@
     <string name="s_display_monet_theme">Динамические цвета</string>
     <string name="s_display_full_height_images">Полная высота картинок</string>
     <string name="s_user_long_press_type">Зажать для выбора типа мысли</string>
+    <string name="ai_status_responding">Отвечает</string>
 </resources>
