@@ -1,11 +1,8 @@
 package com.yaabelozerov.glowws.ui.screen.settings
 
-import android.util.Log
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
-import com.yaabelozerov.glowws.data.local.datastore.model.SettingsCategories
 import com.yaabelozerov.glowws.di.SettingsManager
 import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
@@ -20,9 +17,8 @@ import javax.inject.Inject
 class SettingsScreenViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     private val settingsMapper: SettingsMapper
-) :
-    ViewModel() {
-    private val _state: MutableStateFlow<Map<SettingsCategories, List<SettingDomainModel>>> =
+) : ViewModel() {
+    private val _state: MutableStateFlow<Map<SettingsKeys, SettingDomainModel>> =
         MutableStateFlow(emptyMap())
     val state = _state.asStateFlow()
 

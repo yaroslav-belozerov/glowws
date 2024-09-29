@@ -12,8 +12,14 @@ interface IdeaDao {
     @Query("SELECT * from `idea` WHERE isArchived = :archived")
     fun getAllIdeas(archived: Boolean = false): Flow<List<Idea>>
 
-    @Query("SELECT * from `idea` WHERE isArchived = :archived AND EXISTS (SELECT * FROM point WHERE pointContent LIKE :query AND ideaParentId = ideaId)")
-    fun getAllIdeasSearch(query: String, archived: Boolean = false): Flow<List<Idea>>
+    @Query(
+        "SELECT * from `idea` WHERE isArchived = :archived AND EXISTS " +
+            "(SELECT * FROM point WHERE pointContent LIKE :query AND ideaParentId = ideaId)"
+    )
+    fun getAllIdeasSearch(
+        query: String,
+        archived: Boolean = false
+    ): Flow<List<Idea>>
 
     @Query("SELECT * FROM idea WHERE ideaId = :ideaId")
     fun getIdea(ideaId: Long): Flow<Idea>
@@ -77,7 +83,8 @@ interface IdeaDao {
     suspend fun updateIdeaContentFromPoints(ideaId: Long) {
         val pts = getIdeaPoints(ideaId).first()
         val pointId: Long =
-            pts.firstOrNull { it.isMain }?.pointId ?: (pts.firstOrNull { it.pointContent.isNotBlank() }?.pointId ?: -1L)
+            pts.firstOrNull { it.isMain }?.pointId
+                ?: (pts.firstOrNull { it.pointContent.isNotBlank() }?.pointId ?: -1L)
         modifyIdeaMainPoint(ideaId, pointId)
     }
 

@@ -36,7 +36,8 @@ fun MainScreenNavHost(
     avm: ArchiveScreenViewModel,
     aivm: AiScreenViewModel
 ) {
-    NavHost(modifier = modifier,
+    NavHost(
+        modifier = modifier,
         navController = navController,
         startDestination = startDestination.route,
         enterTransition = {
@@ -44,10 +45,10 @@ fun MainScreenNavHost(
                 tween(300)
             )
         },
-        exitTransition = { fadeOut(tween(300)) }) {
+        exitTransition = { fadeOut(tween(300)) }
+    ) {
         composable(NavDestinations.MainScreenRoute.route) {
             Column {
-
                 MainScreen(
                     imageLoader = mvm.imageLoader,
                     ideas = mvm.state.collectAsState().value.ideas,
@@ -59,16 +60,19 @@ fun MainScreenNavHost(
                     onSelect = { id -> mvm.onSelect(id) },
                     inSelectionMode = mvm.selection.collectAsState().value.inSelectionMode,
                     selection = mvm.selection.collectAsState().value.entries,
-                    settings = svm.state.collectAsState().value.values.flatten()
+                    settings = svm.state.collectAsState().value,
+                    tooltipBarState = mvm.tooltipBarState.collectAsState().value
                 )
             }
         }
-        composable(route = NavDestinations.IdeaScreenRoute.withParam("{id}"),
+        composable(
+            route = NavDestinations.IdeaScreenRoute.withParam("{id}"),
             arguments = listOf(navArgument("id") { type = NavType.LongType }),
             enterTransition = {
                 slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) + fadeIn()
             },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }) { backStackEntry ->
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }
+        ) { backStackEntry ->
             IdeaScreen(
                 imageLoader = ivm.imageLoader,
                 points = ivm.points.collectAsState().value,
@@ -77,12 +81,16 @@ fun MainScreenNavHost(
                 },
                 onAdd = { type, ind ->
                     ivm.addPointAtIndex(
-                        type, backStackEntry.arguments!!.getLong("id"), ind
+                        type,
+                        backStackEntry.arguments!!.getLong("id"),
+                        ind
                     )
                 },
                 onSave = { pointId, newText, isMain ->
                     ivm.modifyPoint(
-                        pointId, newText, isMain
+                        pointId,
+                        newText,
+                        isMain
                     )
                 },
                 onRemove = { pointId ->
@@ -91,20 +99,22 @@ fun MainScreenNavHost(
                 onExecute = { pointId, content ->
                     aivm.executeInto(content) { new -> ivm.modifyPoint(pointId, new) }
                 },
-                settings = svm.state.collectAsState().value.values.flatten(),
+                settings = svm.state.collectAsState().value,
                 aiAvailable = aivm.inferenceManager.model.collectAsState().value != null,
                 aiBusy = aivm.inferenceManager.status.collectAsState().value.second == InferenceManagerState.RESPONDING
             )
         }
         composable(NavDestinations.SettingsScreenRoute.route) {
-            SettingsScreen(settings = svm.state.collectAsState().value,
+            SettingsScreen(
+                settings = svm.state.collectAsState().value,
                 onModify = { key, value ->
                     svm.modifySetting(key, value) { mvm.fetchSort() }
                 },
                 aiStatus = aivm.inferenceManager.status.collectAsState().value,
                 onNavigateToAi = {
                     navController.navigate(NavDestinations.AiScreenRoute.route)
-                })
+                }
+            )
         }
         composable(
             NavDestinations.ArchiveScreenRoute.route
@@ -120,14 +130,16 @@ fun MainScreenNavHost(
                 onUnarchive = { id -> avm.unarchiveIdea(id) },
                 onSelect = { id -> avm.onSelect(id) },
                 selectionState = avm.selection.collectAsState().value,
-                settings = svm.state.collectAsState().value.values.flatten()
+                settings = svm.state.collectAsState().value
             )
         }
-        composable(NavDestinations.AiScreenRoute.route,
+        composable(
+            NavDestinations.AiScreenRoute.route,
             enterTransition = {
                 slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) + fadeIn()
             },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }) {
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }
+        ) {
             AiScreen(
                 models = aivm.models.collectAsState().value,
                 onChoose = { name -> aivm.pickModel(name) },

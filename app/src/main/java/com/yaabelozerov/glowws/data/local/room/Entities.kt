@@ -1,7 +1,6 @@
 package com.yaabelozerov.glowws.data.local.room
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FormatColorText
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.ui.graphics.vector.ImageVector

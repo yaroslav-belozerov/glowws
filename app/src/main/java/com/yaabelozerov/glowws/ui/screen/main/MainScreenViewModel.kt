@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
@@ -18,7 +19,6 @@ import com.yaabelozerov.glowws.ui.model.select
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -47,15 +47,15 @@ class MainScreenViewModel @Inject constructor(
     init {
         fetchSort()
         viewModelScope.launch {
-            when (settingsManager.getAppVisits()) {
-                0L -> sendTooltipMessage(R.string.tooltipbar_welcome, R.string.placeholder_dismiss)
+            when (settingsManager.getAppVisits().also { Log.i("App visits", it.toString()) }) {
+                0L -> sendTooltipMessage(listOf(R.string.tooltipbar_welcome, R.string.placeholder_dismiss))
             }
             settingsManager.visitApp()
         }
     }
 
-    fun sendTooltipMessage(vararg msgResId: Int) = _tooltipBarState.update {
-        TooltipBarState(true, msgResId.toList()) { _tooltipBarState.update { TooltipBarState() } }
+    fun sendTooltipMessage(msgResId: List<Int>) = _tooltipBarState.update {
+        TooltipBarState(true, msgResId) { _tooltipBarState.update { TooltipBarState() } }
     }
 
     fun resetFilter() {
@@ -77,24 +77,28 @@ class MainScreenViewModel @Inject constructor(
         viewModelScope.launch {
             if (_state.value.searchQuery.isBlank()) {
                 dao.getAllIdeas().collect { items ->
-                        _state.update {
-                            it.copy(
-                                ideas = ideaMapper.toDomainModel(
-                                    items, _state.value.filter, _state.value.sort
-                                )
+                    _state.update {
+                        it.copy(
+                            ideas = ideaMapper.toDomainModel(
+                                items,
+                                _state.value.filter,
+                                _state.value.sort
                             )
-                        }
+                        )
                     }
+                }
             } else {
                 dao.getAllIdeasSearch("%${_state.value.searchQuery}%").collect { ideas ->
-                        _state.update {
-                            it.copy(
-                                ideas = ideaMapper.toDomainModel(
-                                    ideas, _state.value.filter, _state.value.sort
-                                )
+                    _state.update {
+                        it.copy(
+                            ideas = ideaMapper.toDomainModel(
+                                ideas,
+                                _state.value.filter,
+                                _state.value.sort
                             )
-                        }
+                        )
                     }
+                }
             }
         }
     }
@@ -128,7 +132,7 @@ class MainScreenViewModel @Inject constructor(
 
     fun archiveSelected() {
         _selectionState.value.entries.forEach {
-            viewModelScope.launch { dao.setArchiveIdea(it)  }
+            viewModelScope.launch { dao.setArchiveIdea(it) }
         }
         fetchMainScreen()
         deselectAll()

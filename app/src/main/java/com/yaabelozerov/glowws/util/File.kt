@@ -4,7 +4,6 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.provider.OpenableColumns
 
-
 fun Uri.queryName(resolver: ContentResolver): String {
     val returnCursor = checkNotNull(
         resolver.query(this, null, null, null, null)

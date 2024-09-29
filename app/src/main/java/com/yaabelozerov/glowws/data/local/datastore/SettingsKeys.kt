@@ -2,10 +2,7 @@ package com.yaabelozerov.glowws.data.local.datastore
 
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsCategories
-import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
-import com.yaabelozerov.glowws.data.local.datastore.model.SettingsModel
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsTypes
-import com.yaabelozerov.glowws.ui.model.FilterFlag
 import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
 

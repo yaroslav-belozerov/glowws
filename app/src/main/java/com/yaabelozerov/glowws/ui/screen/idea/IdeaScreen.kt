@@ -60,12 +60,11 @@ import androidx.compose.ui.unit.dp
 import coil.ImageLoader
 import coil.compose.SubcomposeAsyncImage
 import com.yaabelozerov.glowws.R
-import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
-import com.yaabelozerov.glowws.domain.model.findBooleanKey
+import com.yaabelozerov.glowws.ui.screen.main.boolean
 import java.io.File
 
 @Composable
@@ -78,7 +77,7 @@ fun IdeaScreen(
     onSave: (Long, String, Boolean) -> Unit,
     onRemove: (Long) -> Unit,
     onExecute: (Long, String) -> Unit,
-    settings: List<SettingDomainModel>,
+    settings: Map<SettingsKeys, SettingDomainModel>,
     aiAvailable: Boolean,
     aiBusy: Boolean
 ) {
@@ -100,7 +99,7 @@ fun IdeaScreen(
                 }
                 AddPointLine(
                     onAdd = { onAdd(it, 0) },
-                    holdForType = settings.findBooleanKey(SettingsKeys.LONG_PRESS_TYPE)
+                    holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean()
                 )
             }
         }
@@ -114,23 +113,25 @@ fun IdeaScreen(
                     onSave = { newText, isMain -> onSave(point.id, newText, isMain) },
                     onRemove = { onRemove(point.id) },
                     onExecute = { onExecute(point.id, point.content) },
-                    showPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS),
+                    showPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean(),
                     aiAvailable = aiAvailable,
                     aiBusy = aiBusy
                 )
 
-                PointType.IMAGE -> ImagePoint(imageLoader = imageLoader,
+                PointType.IMAGE -> ImagePoint(
+                    imageLoader = imageLoader,
                     content = point.content,
                     isMain = point.isMain,
                     onRemove = {
                         onRemove(point.id)
                     },
-                    onSave = { onSave(point.id, point.content, it) })
+                    onSave = { onSave(point.id, point.content, it) }
+                )
             }
             Spacer(modifier = Modifier.height(16.dp))
             AddPointLine(
                 onAdd = { onAdd(it, points.indexOf(point).toLong() + 1) },
-                holdForType = settings.findBooleanKey(SettingsKeys.LONG_PRESS_TYPE)
+                holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean()
             )
         }
     }
@@ -172,19 +173,26 @@ fun AddPointLine(onAdd: (PointType) -> Unit, holdForType: Boolean) {
         )
     }
 
-    if (open) ModalBottomSheet(onDismissRequest = { open = false }) {
-        LazyVerticalGrid(modifier = Modifier.padding(12.dp, 0.dp), columns = GridCells.Fixed(2), verticalArrangement = Arrangement.spacedBy(4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(PointType.entries.toList()) {
-                Button(onClick = {
-                    onAdd(it)
-                    open = false
-                }) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(it.icon, contentDescription = it.title)
-                        Text(it.title)
+    if (open) {
+        ModalBottomSheet(onDismissRequest = { open = false }) {
+            LazyVerticalGrid(
+                modifier = Modifier.padding(12.dp, 0.dp),
+                columns = GridCells.Fixed(2),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(PointType.entries.toList()) {
+                    Button(onClick = {
+                        onAdd(it)
+                        open = false
+                    }) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(it.icon, contentDescription = it.title)
+                            Text(it.title)
+                        }
                     }
                 }
             }
@@ -202,12 +210,13 @@ fun ImagePoint(
     onRemove: () -> Unit
 ) {
     var uiShown by remember { mutableStateOf(false) }
-    Crossfade(uiShown) { showUi ->
+    Crossfade(modifier = modifier, targetState = uiShown) { showUi ->
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .fillMaxWidth()
-                .clickable { uiShown = !uiShown }, contentAlignment = Alignment.BottomStart
+                .clickable { uiShown = !uiShown },
+            contentAlignment = Alignment.BottomStart
         ) {
             SubcomposeAsyncImage(
                 modifier = Modifier
@@ -229,16 +238,20 @@ fun ImagePoint(
                     }) {
                         Icon(Icons.Default.Delete, contentDescription = null)
                     }
-                    if (isMain) FilledIconButton(onClick = {
-                        onSave(false)
-                        uiShown = false
-                    }) {
-                        Icon(Icons.Default.Star, contentDescription = null)
-                    } else OutlinedIconButton(onClick = {
-                        onSave(true)
-                        uiShown = false
-                    }) {
-                        Icon(Icons.Default.StarOutline, contentDescription = null)
+                    if (isMain) {
+                        FilledIconButton(onClick = {
+                            onSave(false)
+                            uiShown = false
+                        }) {
+                            Icon(Icons.Default.Star, contentDescription = null)
+                        }
+                    } else {
+                        OutlinedIconButton(onClick = {
+                            onSave(true)
+                            uiShown = false
+                        }) {
+                            Icon(Icons.Default.StarOutline, contentDescription = null)
+                        }
                     }
                 }
             }
@@ -295,11 +308,13 @@ fun TextPoint(
                         } else {
                             it
                         },
-                        color = (if (main) {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        }).copy(
+                        color = (
+                            if (main) {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            }
+                            ).copy(
                             alpha = if (it.isBlank()) 0.3f else 1f
                         )
                     )

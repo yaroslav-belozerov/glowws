@@ -12,7 +12,8 @@ class MediaManager(private val app: Context) {
     suspend fun importMedia(uri: Uri, callback: (String) -> Unit = {}) {
         withContext(Dispatchers.IO) {
             try {
-                val fileName = System.currentTimeMillis().toString() + "." + uri.queryName(app.contentResolver).split('.').last()
+                val fileName = System.currentTimeMillis().toString() + "." +
+                    uri.queryName(app.contentResolver).split('.').last()
                 val dir = File(app.filesDir, "Media")
                 dir.mkdir()
                 val inStream = app.contentResolver.openInputStream(uri)
@@ -44,9 +45,8 @@ class MediaManager(private val app: Context) {
         withContext(Dispatchers.IO) {
             try {
                 val file = File(path)
-                if (file.exists()) {
-                    file.delete()
-                } else { }
+                if (!file.exists()) return@withContext
+                file.delete()
             } catch (e: Exception) {
                 Log.e("MediaManager removeMedia", e.message.toString())
             }
