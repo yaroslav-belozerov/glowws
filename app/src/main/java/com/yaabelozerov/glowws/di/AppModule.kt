@@ -13,8 +13,6 @@ import com.squareup.moshi.adapters.EnumJsonAdapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.yaabelozerov.glowws.data.local.ai.InferenceManager
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
-import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
-import com.yaabelozerov.glowws.data.local.datastore.model.SettingsModel
 import com.yaabelozerov.glowws.data.local.media.MediaManager
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.data.local.room.IdeaDatabase
@@ -36,7 +34,9 @@ object AppModule {
     @Singleton
     @Provides
     fun provideIdeaDatabase(@ApplicationContext app: Context) = Room.databaseBuilder(
-        app, IdeaDatabase::class.java, "glowws.db"
+        app,
+        IdeaDatabase::class.java,
+        "glowws.db"
     ).build()
 
     @Singleton
@@ -69,7 +69,9 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideCoilImageLoader(@ApplicationContext app: Context): ImageLoader = app.imageLoader.newBuilder().crossfade(true).build()
+    fun provideCoilImageLoader(@ApplicationContext app: Context): ImageLoader = app.imageLoader.newBuilder().crossfade(
+        true
+    ).build()
 
     @Singleton
     @Provides

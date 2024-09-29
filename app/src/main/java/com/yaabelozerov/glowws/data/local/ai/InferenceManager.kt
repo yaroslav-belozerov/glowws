@@ -16,7 +16,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 enum class InferenceManagerState(val resId: Int) {
-    IDLE(R.string.ai_status_not_active), LOADING(R.string.ai_status_loading), ACTIVATING(R.string.ai_status_activating), REMOVING(
+    IDLE(
+        R.string.ai_status_not_active
+    ), LOADING(R.string.ai_status_loading), ACTIVATING(R.string.ai_status_activating), REMOVING(
         R.string.ai_status_removing
     ),
     ACTIVE(R.string.ai_status_ready), RESPONDING(R.string.ai_status_responding);

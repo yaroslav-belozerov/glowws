@@ -23,12 +23,18 @@ enum class NavDestinations(
         Icons.Outlined.Home
     ),
     IdeaScreenRoute("IdeaScreen", null), ArchiveScreenRoute(
-        "ArchiveScreen", R.string.a_screen_name, Icons.Filled.Archive, Icons.Outlined.Archive
+        "ArchiveScreen",
+        R.string.a_screen_name,
+        Icons.Filled.Archive,
+        Icons.Outlined.Archive
     ),
     SettingsScreenRoute(
-        "SettingsScreen", R.string.s_screen_name, Icons.Filled.Settings, Icons.Outlined.Settings
+        "SettingsScreen",
+        R.string.s_screen_name,
+        Icons.Filled.Settings,
+        Icons.Outlined.Settings
     ),
-    AiScreenRoute("AiScreen", R.string.s_cat_ai);
+    AiScreenRoute("AiScreen", R.string.s_cat_ai)
 }
 
 fun NavDestinations.withParam(param: Any): String {

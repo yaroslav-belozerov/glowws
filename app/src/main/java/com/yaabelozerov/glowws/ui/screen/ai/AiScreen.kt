@@ -15,28 +15,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
-
-data class AiModel(
-    val name: String, val fileName: String, val isChosen: Boolean
-)
 
 @Composable
 fun AiScreen(
@@ -60,20 +50,32 @@ fun AiScreen(
             }
         }
         items(models) { m ->
-            Row(modifier = Modifier
-                .fillParentMaxWidth()
-                .background(if (m.isChosen) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.background)
-                .then(if (status.second.notBusy()) Modifier.clickable {
-                    if (m.isChosen) {
-                        onUnload()
-                    } else {
-                        onChoose(m.fileName)
-                    }
-                }
-                else Modifier)
-                .padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .fillParentMaxWidth()
+                    .background(
+                        if (m.isChosen) MaterialTheme.colorScheme.surfaceContainer
+                        else MaterialTheme.colorScheme.background
+                    )
+                    .then(
+                        if (status.second.notBusy()) {
+                            Modifier.clickable {
+                                if (m.isChosen) {
+                                    onUnload()
+                                } else {
+                                    onChoose(m.fileName)
+                                }
+                            }
+                        } else {
+                            Modifier
+                        }
+                    )
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Row(
-                    modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = m.name
@@ -109,12 +111,28 @@ fun AiScreen(
                     onClick = { onAdd() },
                     modifier = Modifier.weight(1f)
                 ) {
-                    if (status.second.notBusy()) Text(
-                        text = "Import model"
-                    ) else {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            if (!status.second.notBusy()) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeCap = StrokeCap.Round, color = MaterialTheme.colorScheme.primary)
-                            Text(text = stringResource(id = status.second.resId) + " " + (status.first ?: ""))
+                    if (status.second.notBusy()) {
+                        Text(
+                            text = "Import model"
+                        )
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (!status.second.notBusy()) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeCap = StrokeCap.Round,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Text(
+                                text = stringResource(id = status.second.resId) + " " + (
+                                    status.first
+                                        ?: ""
+                                    )
+                            )
                         }
                     }
                 }
@@ -122,3 +140,9 @@ fun AiScreen(
         }
     }
 }
+
+data class AiModel(
+    val name: String,
+    val fileName: String,
+    val isChosen: Boolean
+)

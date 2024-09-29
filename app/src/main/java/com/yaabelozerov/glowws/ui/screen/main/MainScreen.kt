@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,11 +49,13 @@ import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
-import com.yaabelozerov.glowws.domain.model.findBooleanKey
 import com.yaabelozerov.glowws.ui.common.ScreenDialog
 import com.yaabelozerov.glowws.ui.model.DialogEntry
 import com.yaabelozerov.glowws.ui.theme.Typography
 import java.io.File
+
+fun SettingDomainModel?.boolean() = this?.value.toString() == "true"
+fun SettingDomainModel?.booleanOrNull() = this?.let { value.toString() == "true" }
 
 @Composable
 fun MainScreen(
@@ -64,7 +67,8 @@ fun MainScreen(
     onSelect: (Long) -> Unit,
     inSelectionMode: Boolean,
     selection: List<Long>,
-    settings: List<SettingDomainModel>
+    settings: Map<SettingsKeys, SettingDomainModel>,
+    tooltipBarState: TooltipBarState
 ) {
     LazyColumn(
         modifier = Modifier
@@ -73,6 +77,22 @@ fun MainScreen(
             .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        item {
+            if (tooltipBarState.show) Row(
+                modifier = Modifier
+                    .then(modifier)
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surfaceContainer
+                    ).clickable { tooltipBarState.onClick() }
+            ) {
+                Column {
+                    tooltipBarState.messageResId.forEach {
+                        Text(text = stringResource(it), modifier = Modifier.padding(8.dp))
+                    }
+                }
+            }
+        }
         items(ideas) { idea ->
             Idea(
                 modifier = Modifier.animateItem(),
@@ -84,8 +104,10 @@ fun MainScreen(
                 { onSelect(idea.id) },
                 inSelectionMode,
                 selection.contains(idea.id),
-                displayPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS),
-                fullImage = settings.findBooleanKey(SettingsKeys.IMAGE_FULL_HEIGHT)
+                displayPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].also {
+                    Log.i("MainScreen", "displayPlaceholders: $it")
+                }!!.boolean(),
+                fullImage = settings[SettingsKeys.IMAGE_FULL_HEIGHT]!!.boolean()
             )
         }
     }
@@ -116,34 +138,52 @@ fun Idea(
             .then(
                 if (isSelected) {
                     Modifier.border(
-                        2.dp, MaterialTheme.colorScheme.primary
+                        2.dp,
+                        MaterialTheme.colorScheme.primary
                     )
                 } else {
                     Modifier
                 }
             )
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .combinedClickable(onClick = if (!inSelectionMode) {
-                onClick
-            } else {
-                onSelect
-            }, onLongClick = { if (!inSelectionMode) isDialogOpen = true })
+            .combinedClickable(
+                onClick = if (!inSelectionMode) {
+                    onClick
+                } else {
+                    onSelect
+                },
+                onLongClick = { if (!inSelectionMode) isDialogOpen = true }
+            )
     ) {
         when (previewPoint.type) {
-            PointType.TEXT -> Text(text = if (previewPoint.content.isBlank() && displayPlaceholders) {
-                stringResource(id = R.string.placeholder_noname)
-            } else {
-                previewPoint.content
-            }, maxLines = 10, overflow = TextOverflow.Ellipsis,
+            PointType.TEXT -> Text(
+                text = if (previewPoint.content.isBlank() && displayPlaceholders) {
+                    stringResource(id = R.string.placeholder_noname)
+                } else {
+                    previewPoint.content
+                },
+                maxLines = 10,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .padding(16.dp)
                     .weight(1f),
                 style = Typography.bodyLarge.copy(fontSize = 24.sp, lineHeight = 28.sp),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (previewPoint.content.isBlank()) 0.3f else 1f)
+                color = MaterialTheme.colorScheme.onSurface.copy(
+                    alpha = if (previewPoint.content.isBlank()) 0.3f else 1f
+                )
             )
-            PointType.IMAGE -> SubcomposeAsyncImage(modifier = Modifier
-                .padding(16.dp).then(if (fullImage) Modifier else Modifier.height(128.dp))
-                .clip(MaterialTheme.shapes.medium).fillMaxWidth(), contentScale = ContentScale.FillWidth, model = File(previewPoint.content), contentDescription = null, imageLoader = imageLoader)
+
+            PointType.IMAGE -> SubcomposeAsyncImage(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .then(if (fullImage) Modifier else Modifier.height(128.dp))
+                    .clip(MaterialTheme.shapes.medium)
+                    .fillMaxWidth(),
+                contentScale = ContentScale.FillWidth,
+                model = File(previewPoint.content),
+                contentDescription = null,
+                imageLoader = imageLoader
+            )
         }
         Spacer(modifier = Modifier.width(16.dp))
     }

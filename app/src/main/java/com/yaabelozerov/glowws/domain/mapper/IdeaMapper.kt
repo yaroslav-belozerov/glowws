@@ -29,7 +29,9 @@ class IdeaMapper @Inject constructor(private val dao: IdeaDao) {
             val pt = if (idea.mainPointId != -1L) dao.getPoint(idea.mainPointId).first() else null
             val point: PointDomainModel = if (pt != null) {
                 PointDomainModel(pt.pointId, pt.type, pt.pointContent, pt.isMain)
-            } else PointDomainModel(-1, PointType.TEXT, "", false)
+            } else {
+                PointDomainModel(-1, PointType.TEXT, "", false)
+            }
             val cal = Calendar.getInstance()
             cal.timeInMillis = idea.timestampCreated
             val created = cal.time
@@ -38,19 +40,27 @@ class IdeaMapper @Inject constructor(private val dao: IdeaDao) {
             out.add(
                 IdeaDomainModel(
                     idea.ideaId,
-                    JoinedTimestamp(idea.timestampCreated, SimpleDateFormat(pattern, Locale.ROOT).format(created)),
-                    JoinedTimestamp(idea.timestampModified, SimpleDateFormat(pattern, Locale.ROOT).format(modified)),
+                    JoinedTimestamp(
+                        idea.timestampCreated,
+                        SimpleDateFormat(pattern, Locale.ROOT).format(created)
+                    ),
+                    JoinedTimestamp(
+                        idea.timestampModified,
+                        SimpleDateFormat(pattern, Locale.ROOT).format(modified)
+                    ),
                     point
                 )
             )
         }
         out = out.sortedWith(
             when (sortModel.type) {
-                SortType.ALPHABETICAL -> compareBy<IdeaDomainModel> { it.mainPoint.content }.thenBy { it.modified.timestamp }
+                SortType.ALPHABETICAL -> compareBy<IdeaDomainModel> { it.mainPoint.content }
+                    .thenBy { it.modified.timestamp }
 
-                SortType.TIMESTAMP_CREATED -> compareBy<IdeaDomainModel> { it.created.timestamp }.thenBy { it.modified.timestamp }
+                SortType.TIMESTAMP_CREATED -> compareBy<IdeaDomainModel> { it.created.timestamp }
+                    .thenBy { it.modified.timestamp }
 
-                SortType.TIMESTAMP_MODIFIED -> compareBy<IdeaDomainModel> { it.modified.timestamp }
+                SortType.TIMESTAMP_MODIFIED -> compareBy { it.modified.timestamp }
             }
         ).toMutableList()
         if (sortModel.order == SortOrder.DESCENDING) out.reverse()

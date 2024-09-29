@@ -1,20 +1,15 @@
 package com.yaabelozerov.glowws.ui.screen.archive
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -30,7 +25,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -45,10 +39,10 @@ import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
-import com.yaabelozerov.glowws.domain.model.findBooleanKey
 import com.yaabelozerov.glowws.ui.common.ScreenDialog
 import com.yaabelozerov.glowws.ui.model.DialogEntry
 import com.yaabelozerov.glowws.ui.model.SelectionState
+import com.yaabelozerov.glowws.ui.screen.main.boolean
 import com.yaabelozerov.glowws.ui.theme.Typography
 import java.io.File
 
@@ -62,7 +56,7 @@ fun ArchiveScreen(
     onUnarchive: (Long) -> Unit,
     onSelect: (Long) -> Unit,
     selectionState: SelectionState<Long>,
-    settings: List<SettingDomainModel>
+    settings: Map<SettingsKeys, SettingDomainModel>
 ) {
     LazyVerticalStaggeredGrid(
         modifier = modifier,
@@ -85,8 +79,8 @@ fun ArchiveScreen(
                 },
                 inSelectionMode = selectionState.inSelectionMode,
                 isSelected = selectionState.entries.contains(it.id),
-                fullImage = settings.findBooleanKey(SettingsKeys.IMAGE_FULL_HEIGHT),
-                displayPlaceholders = settings.findBooleanKey(SettingsKeys.SHOW_PLACEHOLDERS)
+                fullImage = settings[SettingsKeys.IMAGE_FULL_HEIGHT].boolean(),
+                displayPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean()
             )
         }
     }
@@ -115,26 +109,33 @@ fun ArchiveIdea(
             .then(
                 if (isSelected) {
                     Modifier.border(
-                        2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium
+                        2.dp,
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.shapes.medium
                     )
                 } else {
                     Modifier
                 }
             )
-            .combinedClickable(onClick = if (inSelectionMode) onSelect else onClick,
-                onLongClick = { if (!inSelectionMode) isDialogOpen = true })
+            .combinedClickable(
+                onClick = if (inSelectionMode) onSelect else onClick,
+                onLongClick = { if (!inSelectionMode) isDialogOpen = true }
+            )
     ) {
         when (previewPoint.type) {
-            PointType.TEXT -> Text(text = if (previewPoint.content.isBlank() && displayPlaceholders) {
-                stringResource(id = R.string.placeholder_noname)
-            } else {
-                previewPoint.content
-            },
+            PointType.TEXT -> Text(
+                text = if (previewPoint.content.isBlank() && displayPlaceholders) {
+                    stringResource(id = R.string.placeholder_noname)
+                } else {
+                    previewPoint.content
+                },
                 maxLines = 5,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(16.dp),
                 style = Typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (previewPoint.content.isBlank()) 0.3f else 1f)
+                color = MaterialTheme.colorScheme.onSurface.copy(
+                    alpha = if (previewPoint.content.isBlank()) 0.3f else 1f
+                )
             )
 
             PointType.IMAGE -> SubcomposeAsyncImage(
@@ -153,19 +154,27 @@ fun ArchiveIdea(
     }
 
     if (isDialogOpen) {
-        ScreenDialog(title = if (previewPoint.type == PointType.TEXT) previewPoint.content else "",
+        ScreenDialog(
+            title = if (previewPoint.type == PointType.TEXT) previewPoint.content else "",
             entries = listOf(
                 DialogEntry(
-                    Icons.Default.Menu, stringResource(id = R.string.label_select), onSelect
-                ), DialogEntry(
-                    Icons.Default.Refresh, stringResource(id = R.string.a_unarchive), onUnarchive
-                ), DialogEntry(
+                    Icons.Default.Menu,
+                    stringResource(id = R.string.label_select),
+                    onSelect
+                ),
+                DialogEntry(
+                    Icons.Default.Refresh,
+                    stringResource(id = R.string.a_unarchive),
+                    onUnarchive
+                ),
+                DialogEntry(
                     Icons.Default.Delete,
                     stringResource(id = R.string.a_remove_idea),
                     onRemove,
                     needsConfirmation = true
                 )
             ),
-            onDismiss = { isDialogOpen = false })
+            onDismiss = { isDialogOpen = false }
+        )
     }
 }

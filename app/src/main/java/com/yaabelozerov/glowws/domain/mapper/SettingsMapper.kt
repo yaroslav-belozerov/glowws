@@ -3,7 +3,6 @@ package com.yaabelozerov.glowws.domain.mapper
 import android.util.Log
 import androidx.compose.ui.util.fastJoinToString
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
-import com.yaabelozerov.glowws.data.local.datastore.model.SettingsCategories
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsModel
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsTypes
@@ -14,46 +13,51 @@ import com.yaabelozerov.glowws.domain.model.MultipleChoiceSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.domain.model.StringSettingDomainModel
 import com.yaabelozerov.glowws.ui.model.FilterFlag
-import com.yaabelozerov.glowws.ui.model.FilterModel
 import com.yaabelozerov.glowws.ui.model.SortModel
 import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
 import com.yaabelozerov.glowws.util.JSON_DELIMITER
 
 class SettingsMapper {
-    fun toDomainModel(settings: SettingsList): Map<SettingsCategories, List<SettingDomainModel>> {
-        val mp: MutableMap<SettingsCategories, List<SettingDomainModel>> = mutableMapOf()
-        settings.list!!.forEach {
-            it.key?.let { k ->
-                val dm = when (k.type) {
-                    SettingsTypes.BOOLEAN -> BooleanSettingDomainModel(
-                        k, it.value == "true"
-                    )
+    fun toDomainModel(settings: SettingsList): Map<SettingsKeys, SettingDomainModel> {
+        return settings.list!!.mapNotNull {
+            it.key?.let { k -> k to asDomainModel(it) }
+        }.toMap()
+    }
 
-                    SettingsTypes.DOUBLE -> DoubleSettingDomainModel(
-                        k, it.limits!![0].toDouble(), it.limits[1].toDouble(), it.value!!.toDouble()
-                    )
+    fun asDomainModel(k: SettingsModel): SettingDomainModel {
+        return when (k.key!!.type) {
+            SettingsTypes.BOOLEAN -> BooleanSettingDomainModel(
+                k.key,
+                k.value == "true"
+            )
 
-                    SettingsTypes.STRING -> StringSettingDomainModel(
-                        k, it.value!!
-                    )
+            SettingsTypes.DOUBLE -> DoubleSettingDomainModel(
+                k.key,
+                k.limits!![0].toDouble(),
+                k.limits[1].toDouble(),
+                k.value!!.toDouble()
+            )
 
-                    SettingsTypes.CHOICE -> ChoiceSettingDomainModel(
-                        key = k,
-                        choices = it.limits!!,
-                        localChoicesIds = it.limits.map { s -> getLocalChoice(s) },
-                        value = it.value!!
-                    )
+            SettingsTypes.STRING -> StringSettingDomainModel(
+                k.key,
+                k.value!!
+            )
 
-                    SettingsTypes.MULTIPLE_CHOICE -> MultipleChoiceSettingDomainModel(key = k,
-                        choices = it.limits!!,
-                        localChoicesIds = it.limits.map { s -> getLocalChoice(s) },
-                        value = it.value!!.split(JSON_DELIMITER).map { s -> s == "true" })
-                }
-                mp[k.category] = mp[k.category]?.plus(dm) ?: listOf(dm)
-            }
+            SettingsTypes.CHOICE -> ChoiceSettingDomainModel(
+                key = k.key,
+                choices = k.limits!!,
+                localChoicesIds = k.limits.map { s -> getLocalChoice(s) },
+                value = k.value!!
+            )
+
+            SettingsTypes.MULTIPLE_CHOICE -> MultipleChoiceSettingDomainModel(
+                key = k.key,
+                choices = k.limits!!,
+                localChoicesIds = k.limits.map { s -> getLocalChoice(s) },
+                value = k.value!!.split(JSON_DELIMITER).map { s -> s == "true" }
+            )
         }
-        return mp
     }
 
     fun getSorting(settings: SettingsList): SortModel {
