@@ -19,6 +19,7 @@ import com.yaabelozerov.glowws.ui.model.select
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -41,21 +42,17 @@ class MainScreenViewModel @Inject constructor(
     private var _isSortFilterOpen = MutableStateFlow(false)
     val sortFilterOpen = _isSortFilterOpen.asStateFlow()
 
-    private var _tooltipBarState = MutableStateFlow(TooltipBarState())
-    val tooltipBarState = _tooltipBarState.asStateFlow()
-
     init {
         fetchSort()
+    }
+
+    fun appFirstVisit(callback: suspend () -> Unit = {}) {
         viewModelScope.launch {
             when (settingsManager.getAppVisits().also { Log.i("App visits", it.toString()) }) {
-                0L -> sendTooltipMessage(listOf(R.string.tooltipbar_welcome, R.string.placeholder_dismiss))
+                0L -> callback()
             }
             settingsManager.visitApp()
         }
-    }
-
-    fun sendTooltipMessage(msgResId: List<Int>) = _tooltipBarState.update {
-        TooltipBarState(true, msgResId) { _tooltipBarState.update { TooltipBarState() } }
     }
 
     fun resetFilter() {
@@ -144,5 +141,16 @@ class MainScreenViewModel @Inject constructor(
     fun updateSearchQuery(newQuery: String) {
         _state.update { it.copy(searchQuery = newQuery) }
         fetchMainScreen()
+    }
+
+    fun tryDiscardEmpty(ideaId: Long, onSuccess: () -> Unit = {}) {
+        viewModelScope.launch {
+            dao.getIdeaPoints(ideaId).first().let {
+                if (it.isEmpty() || (it.size == 1 && (it.getOrNull(0)?.pointContent?.isBlank() != false))) {
+                    dao.deleteIdea(ideaId)
+                    onSuccess()
+                }
+            }
+        }
     }
 }

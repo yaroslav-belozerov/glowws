@@ -25,6 +25,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -68,7 +70,6 @@ fun MainScreen(
     inSelectionMode: Boolean,
     selection: List<Long>,
     settings: Map<SettingsKeys, SettingDomainModel>,
-    tooltipBarState: TooltipBarState
 ) {
     LazyColumn(
         modifier = Modifier
@@ -77,22 +78,6 @@ fun MainScreen(
             .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        item {
-            if (tooltipBarState.show) Row(
-                modifier = Modifier
-                    .then(modifier)
-                    .fillMaxWidth()
-                    .background(
-                        MaterialTheme.colorScheme.surfaceContainer
-                    ).clickable { tooltipBarState.onClick() }
-            ) {
-                Column {
-                    tooltipBarState.messageResId.forEach {
-                        Text(text = stringResource(it), modifier = Modifier.padding(8.dp))
-                    }
-                }
-            }
-        }
         items(ideas) { idea ->
             Idea(
                 modifier = Modifier.animateItem(),
@@ -204,25 +189,6 @@ fun Idea(
                 )
             ),
             onDismiss = { isDialogOpen = false }
-        )
-    }
-}
-
-@Composable
-fun TooltipBar(modifier: Modifier = Modifier, message: String, onClick: () -> Unit = {}) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(0.dp, 0.dp, 0.dp, 16.dp)
-            .background(MaterialTheme.colorScheme.tertiaryContainer)
-            .clickable { onClick() },
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = message,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(8.dp),
-            color = MaterialTheme.colorScheme.onTertiaryContainer
         )
     }
 }

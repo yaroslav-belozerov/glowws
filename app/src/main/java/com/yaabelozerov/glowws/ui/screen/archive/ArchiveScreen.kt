@@ -144,7 +144,7 @@ fun ArchiveIdea(
                     .then(if (fullImage) Modifier else Modifier.height(128.dp))
                     .fillMaxWidth()
                     .clip(MaterialTheme.shapes.medium),
-                contentScale = ContentScale.FillWidth,
+                contentScale = ContentScale.Crop,
                 model = File(previewPoint.content),
                 contentDescription = null,
                 imageLoader = imageLoader

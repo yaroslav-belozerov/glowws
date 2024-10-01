@@ -83,7 +83,7 @@ fun FilterColumn(
             TextButton(onClick = { resetFilter() }) {
                 Text(
                     text = stringResource(id = R.string.m_reset_sortfilter),
-                    fontSize = 20.sp,
+                    fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                     fontWeight = FontWeight.Bold
                 )
@@ -106,7 +106,10 @@ fun FilterColumn(
                                 modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
                             )
                         }
-                        Text(text = stringResource(id = it.key.resId), fontSize = 16.sp)
+                        Text(
+                            text = stringResource(id = it.key.resId),
+//                            fontSize = 16.sp,
+                        )
                     }
                 } else {
                     OutlinedButton(onClick = {
@@ -122,7 +125,10 @@ fun FilterColumn(
                                 modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
                             )
                         }
-                        Text(text = stringResource(id = it.key.resId), fontSize = 16.sp)
+                        Text(
+                            text = stringResource(id = it.key.resId),
+//                            fontSize = 16.sp,
+                        )
                     }
                 }
             }
@@ -162,7 +168,7 @@ fun SortColumn(
             TextButton(onClick = { resetSort() }) {
                 Text(
                     text = stringResource(id = R.string.m_reset_sortfilter),
-                    fontSize = 20.sp,
+                    fontSize = 16.sp,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                     fontWeight = FontWeight.Bold
                 )
@@ -180,13 +186,19 @@ fun SortColumn(
                             contentDescription = "filter applied icon",
                             modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
                         )
-                        Text(text = stringResource(it.resId), fontSize = 16.sp)
+                        Text(
+                            text = stringResource(it.resId),
+//                            fontSize = 16.sp,
+                        )
                     }
                 } else {
                     OutlinedButton(onClick = {
                         setSortType(it)
                     }) {
-                        Text(text = stringResource(it.resId), fontSize = 16.sp)
+                        Text(
+                            text = stringResource(it.resId),
+//                            fontSize = 16.sp,
+                        )
                     }
                 }
             }
