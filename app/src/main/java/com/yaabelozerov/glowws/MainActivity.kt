@@ -7,24 +7,30 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -38,6 +44,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.ui.common.NavDestinations
 import com.yaabelozerov.glowws.ui.common.toDestination
 import com.yaabelozerov.glowws.ui.common.withParam
@@ -93,6 +100,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
 
+            val snackbarHostState = remember {
+                SnackbarHostState()
+            }
+            val scope = rememberCoroutineScope()
+            val text = stringResource(R.string.app_welcome)
+            LaunchedEffect(true) {
+                mvm.appFirstVisit {
+                    snackbarHostState.showSnackbar(message = text, duration = SnackbarDuration.Short)
+                }
+            }
             val dynamicColor =
                 svm.state.collectAsState().value[SettingsKeys.MONET_THEME].booleanOrNull()
             if (dynamicColor != null) {
@@ -117,13 +134,11 @@ class MainActivity : ComponentActivity() {
                                                 fontWeight = FontWeight.Bold
                                             )
                                         }
-                                        if (it.route == NavDestinations.MainScreenRoute.route) {
-                                            Icon(
-                                                modifier = Modifier.size(16.dp),
-                                                imageVector = Icons.Default.Star,
-                                                contentDescription = null
-                                            )
-                                        }
+                                        SnackbarHost(snackbarHostState, snackbar = {
+                                            Snackbar(snackbarData = it, shape = MaterialTheme.shapes.medium, modifier = Modifier.height(80.dp).clickable {
+                                                it.dismiss()
+                                            }, containerColor = MaterialTheme.colorScheme.surfaceContainerHigh, contentColor = MaterialTheme.colorScheme.onBackground)
+                                        })
                                     }
                                 })
                             }
@@ -137,7 +152,8 @@ class MainActivity : ComponentActivity() {
                                 ivm = ivm,
                                 svm = svm,
                                 avm = avm,
-                                aivm = aivm
+                                aivm = aivm,
+                                snackbar = Pair(snackbarHostState, scope)
                             )
 
                             SortFilterModalBottomSheet(mvm = mvm)
@@ -150,7 +166,7 @@ class MainActivity : ComponentActivity() {
                                 avm
                             )
                         },
-                        bottomBar = { BottomNavBar(navController) }
+                        bottomBar = { BottomNavBar(navController) },
                     )
                 }
             }
@@ -206,6 +222,7 @@ fun FloatingActionButtons(
                         id
                     )
                 )
+                ivm.addPointAtIndex(PointType.TEXT, id, 0, "")
                 ivm.refreshPoints(id)
             }
         )

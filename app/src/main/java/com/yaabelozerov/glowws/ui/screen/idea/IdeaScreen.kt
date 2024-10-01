@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.ui.screen.idea
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -54,9 +55,12 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.ImageLoader
 import coil.compose.SubcomposeAsyncImage
 import com.yaabelozerov.glowws.R
@@ -65,6 +69,7 @@ import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.ui.screen.main.boolean
+import com.yaabelozerov.glowws.ui.theme.Typography
 import java.io.File
 
 @Composable
@@ -81,6 +86,9 @@ fun IdeaScreen(
     aiAvailable: Boolean,
     aiBusy: Boolean
 ) {
+    BackHandler {
+        onBack()
+    }
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -155,6 +163,7 @@ fun AddPointLine(onAdd: (PointType) -> Unit, holdForType: Boolean) {
                 .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
         )
+        val haptic = LocalHapticFeedback.current
         Icon(
             modifier = Modifier
                 .padding(4.dp)
@@ -165,7 +174,10 @@ fun AddPointLine(onAdd: (PointType) -> Unit, holdForType: Boolean) {
                     } else {
                         open = true
                     }
-                }, onLongClick = { open = true })
+                }, onLongClick = {
+                    open = true
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                })
                 .padding(8.dp),
             imageVector = Icons.Default.Add,
             contentDescription = "add point button",
@@ -301,22 +313,23 @@ fun TextPoint(
                 Crossfade(targetState = content) {
                     Text(
                         modifier = Modifier.padding(8.dp),
+                        style = Typography.bodyLarge.copy(fontSize = 24.sp, lineHeight = 28.sp),
                         text = if (it.isBlank() && showPlaceholders) {
                             stringResource(
-                                id = R.string.placeholder_noname
+                                id = R.string.placeholder_tap_to_edit
                             )
                         } else {
                             it
                         },
                         color = (
-                            if (main) {
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            }
-                            ).copy(
-                            alpha = if (it.isBlank()) 0.3f else 1f
-                        )
+                                if (main) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                }
+                                ).copy(
+                                alpha = if (it.isBlank()) 0.2f else 1f
+                            )
                     )
                 }
             } else {
@@ -380,6 +393,7 @@ fun TextPoint(
                         }
                     }
                     TextField(
+                        textStyle = Typography.bodyLarge.copy(fontSize = 24.sp, lineHeight = 28.sp),
                         value = currentText,
                         onValueChange = { currentText = it },
                         modifier = Modifier

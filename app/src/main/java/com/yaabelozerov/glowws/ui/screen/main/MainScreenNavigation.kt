@@ -5,14 +5,21 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
 import com.yaabelozerov.glowws.ui.common.NavDestinations
 import com.yaabelozerov.glowws.ui.common.withParam
@@ -24,6 +31,9 @@ import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreen
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreen
 import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreenViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
 
 @Composable
 fun MainScreenNavHost(
@@ -34,7 +44,8 @@ fun MainScreenNavHost(
     ivm: IdeaScreenViewModel,
     svm: SettingsScreenViewModel,
     avm: ArchiveScreenViewModel,
-    aivm: AiScreenViewModel
+    aivm: AiScreenViewModel,
+    snackbar: Pair<SnackbarHostState, CoroutineScope>
 ) {
     NavHost(
         modifier = modifier,
@@ -60,8 +71,7 @@ fun MainScreenNavHost(
                     onSelect = { id -> mvm.onSelect(id) },
                     inSelectionMode = mvm.selection.collectAsState().value.inSelectionMode,
                     selection = mvm.selection.collectAsState().value.entries,
-                    settings = svm.state.collectAsState().value,
-                    tooltipBarState = mvm.tooltipBarState.collectAsState().value
+                    settings = svm.state.collectAsState().value
                 )
             }
         }
@@ -73,10 +83,16 @@ fun MainScreenNavHost(
             },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }
         ) { backStackEntry ->
+            val discardText = stringResource(R.string.m_idea_discarded)
             IdeaScreen(
                 imageLoader = ivm.imageLoader,
                 points = ivm.points.collectAsState().value,
                 onBack = {
+                    mvm.tryDiscardEmpty(backStackEntry.arguments!!.getLong("id")) {
+                        snackbar.second.launch {
+                            snackbar.first.showSnackbar(discardText, duration = SnackbarDuration.Short)
+                        }
+                    }
                     navController.navigateUp()
                 },
                 onAdd = { type, ind ->

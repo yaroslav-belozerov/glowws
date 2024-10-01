@@ -12,9 +12,3 @@ data class MainScreenState(
     val filter: FilterModel = FilterModel(emptyMap()),
     val searchQuery: String = ""
 )
-
-data class TooltipBarState(
-    val show: Boolean = false,
-    val messageResId: List<Int> = emptyList(),
-    val onClick: () -> Unit = {}
-)
