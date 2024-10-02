@@ -52,4 +52,10 @@
     <string name="ai_status_responding">Отвечает</string>
     <string name="placeholder_tap_to_edit">Нажмите для редактирвоания</string>
     <string name="m_idea_discarded">Пустая идея удалена</string>
+    <string name="s_user_max_tokens">Макс. кол-во токенов</string>
+    <string name="very_little">Мало</string>
+    <string name="little">Немного</string>
+    <string name="medium">Умеренно</string>
+    <string name="big">Много</string>
+    <string name="very_big">Очень много</string>
 </resources>

@@ -36,9 +36,9 @@ class AiScreenViewModel @Inject constructor(
         }
     }
 
-    fun executeInto(prompt: String, callback: (String) -> Unit) {
+    fun executeInto(prompt: String, pointId: Long, callback: (String) -> Unit) {
         viewModelScope.launch {
-            inferenceManager.executeInto(prompt, callback)
+            inferenceManager.executeInto(prompt, pointId, callback)
         }
     }
 

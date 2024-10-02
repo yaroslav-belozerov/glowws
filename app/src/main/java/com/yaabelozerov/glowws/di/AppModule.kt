@@ -76,8 +76,8 @@ object AppModule {
     @Singleton
     @Provides
     fun provideInferenceManager(
-        @ApplicationContext app: Context
-    ): InferenceManager = InferenceManager(app)
+        @ApplicationContext app: Context, settingsManager: SettingsManager
+    ): InferenceManager = InferenceManager(app, settingsManager)
 
     private val Context.dataStore by preferencesDataStore("settings")
 

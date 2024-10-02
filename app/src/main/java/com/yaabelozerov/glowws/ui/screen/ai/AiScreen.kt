@@ -37,7 +37,7 @@ fun AiScreen(
     onUnload: () -> Unit,
     onAdd: () -> Unit,
     onRefresh: () -> Unit,
-    status: Pair<String?, InferenceManagerState>,
+    status: Triple<String?, InferenceManagerState, Long>,
     error: Exception?
 ) {
     LazyColumn(modifier = modifier) {

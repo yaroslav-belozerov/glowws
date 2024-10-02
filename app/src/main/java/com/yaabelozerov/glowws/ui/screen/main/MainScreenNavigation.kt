@@ -7,12 +7,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -33,7 +30,6 @@ import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreen
 import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreenViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
 
 @Composable
 fun MainScreenNavHost(
@@ -84,6 +80,7 @@ fun MainScreenNavHost(
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }
         ) { backStackEntry ->
             val discardText = stringResource(R.string.m_idea_discarded)
+            val aiStatus = aivm.inferenceManager.status.collectAsState().value
             IdeaScreen(
                 imageLoader = ivm.imageLoader,
                 points = ivm.points.collectAsState().value,
@@ -113,11 +110,11 @@ fun MainScreenNavHost(
                     ivm.removePoint(pointId)
                 },
                 onExecute = { pointId, content ->
-                    aivm.executeInto(content) { new -> ivm.modifyPoint(pointId, new) }
+                    aivm.executeInto(content, pointId) { new -> ivm.modifyPoint(pointId, new) }
                 },
                 settings = svm.state.collectAsState().value,
                 aiAvailable = aivm.inferenceManager.model.collectAsState().value != null,
-                aiBusy = aivm.inferenceManager.status.collectAsState().value.second == InferenceManagerState.RESPONDING
+                aiBusy = Pair(aiStatus.second == InferenceManagerState.RESPONDING, aiStatus.third)
             )
         }
         composable(NavDestinations.SettingsScreenRoute.route) {
