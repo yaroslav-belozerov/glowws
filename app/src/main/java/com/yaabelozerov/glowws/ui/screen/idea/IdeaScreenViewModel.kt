@@ -8,6 +8,7 @@ import com.yaabelozerov.glowws.data.local.media.MediaManager
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.data.local.room.Point
 import com.yaabelozerov.glowws.data.local.room.PointType
+import com.yaabelozerov.glowws.domain.InferenceRepository
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,8 @@ import javax.inject.Inject
 class IdeaScreenViewModel @Inject constructor(
     private val dao: IdeaDao,
     private val mediaManager: MediaManager,
-    val imageLoader: ImageLoader
+    val imageLoader: ImageLoader,
+    private val inferenceRepository: InferenceRepository
 ) : ViewModel() {
     private var _points = MutableStateFlow(emptyList<PointDomainModel>())
     val points = _points.asStateFlow()
@@ -107,6 +109,14 @@ class IdeaScreenViewModel @Inject constructor(
                     )
                 )
             }
+        }
+    }
+
+    fun generateResponse(s: String, pointId: Long, token: String = "") {
+        viewModelScope.launch {
+            inferenceRepository.generate(s, onUpdate =  {
+                modifyPoint(pointId, it)
+            }, pointId, token)
         }
     }
 }

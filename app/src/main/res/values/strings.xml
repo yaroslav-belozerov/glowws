@@ -52,4 +52,12 @@
     <string name="ai_status_responding">Responding</string>
     <string name="placeholder_tap_to_edit">Tap to Edit</string>
     <string name="m_idea_discarded">Empty idea discarded</string>
+    <string name="s_user_max_tokens">Max Tokens</string>
+    <string name="very_little">Very Little</string>
+    <string name="little">Little</string>
+    <string name="medium">Medium</string>
+    <string name="big">Big</string>
+    <string name="very_big">Very Big</string>
+    <string name="ai_local">Local</string>
+    <string name="ai_network">Network</string>
 </resources>

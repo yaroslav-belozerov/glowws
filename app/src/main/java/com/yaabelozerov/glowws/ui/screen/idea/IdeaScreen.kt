@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.ui.screen.idea
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
@@ -17,18 +18,24 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imeNestedScroll
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -55,8 +62,11 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.VerticalAlignmentLine
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -64,7 +74,10 @@ import androidx.compose.ui.unit.sp
 import coil.ImageLoader
 import coil.compose.SubcomposeAsyncImage
 import com.yaabelozerov.glowws.R
+import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
+import com.yaabelozerov.glowws.data.local.ai.notBusy
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
@@ -72,6 +85,7 @@ import com.yaabelozerov.glowws.ui.screen.main.boolean
 import com.yaabelozerov.glowws.ui.theme.Typography
 import java.io.File
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun IdeaScreen(
     modifier: Modifier = Modifier,
@@ -83,8 +97,7 @@ fun IdeaScreen(
     onRemove: (Long) -> Unit,
     onExecute: (Long, String) -> Unit,
     settings: Map<SettingsKeys, SettingDomainModel>,
-    aiAvailable: Boolean,
-    aiBusy: Boolean
+    aiStatus: Triple<Model?, InferenceManagerState, Long>
 ) {
     BackHandler {
         onBack()
@@ -116,25 +129,23 @@ fun IdeaScreen(
             when (point.type) {
                 PointType.TEXT -> TextPoint(
                     modifier = Modifier.animateItem(),
+                    id = point.id,
                     content = point.content,
                     isMain = point.isMain,
                     onSave = { newText, isMain -> onSave(point.id, newText, isMain) },
                     onRemove = { onRemove(point.id) },
                     onExecute = { onExecute(point.id, point.content) },
                     showPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean(),
-                    aiAvailable = aiAvailable,
-                    aiBusy = aiBusy
+                    status = aiStatus
                 )
 
-                PointType.IMAGE -> ImagePoint(
-                    imageLoader = imageLoader,
+                PointType.IMAGE -> ImagePoint(imageLoader = imageLoader,
                     content = point.content,
                     isMain = point.isMain,
                     onRemove = {
                         onRemove(point.id)
                     },
-                    onSave = { onSave(point.id, point.content, it) }
-                )
+                    onSave = { onSave(point.id, point.content, it) })
             }
             Spacer(modifier = Modifier.height(16.dp))
             AddPointLine(
@@ -227,8 +238,7 @@ fun ImagePoint(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .fillMaxWidth()
-                .clickable { uiShown = !uiShown },
-            contentAlignment = Alignment.BottomStart
+                .clickable { uiShown = !uiShown }, contentAlignment = Alignment.BottomStart
         ) {
             SubcomposeAsyncImage(
                 modifier = Modifier
@@ -275,37 +285,49 @@ fun ImagePoint(
 @Composable
 fun TextPoint(
     modifier: Modifier = Modifier,
+    id: Long,
     content: String,
     isMain: Boolean,
     onSave: (String, Boolean) -> Unit,
     onRemove: () -> Unit,
     onExecute: () -> Unit,
     showPlaceholders: Boolean,
-    aiAvailable: Boolean,
-    aiBusy: Boolean
+    status: Triple<Model?, InferenceManagerState, Long>
 ) {
     var isBeingModified by remember {
         mutableStateOf(false)
     }
     Crossfade(modifier = modifier, targetState = isMain) { main ->
-        Card(
-            onClick = {
-                if (!aiBusy) {
-                    isBeingModified = !isBeingModified
-                }
-            },
+        Box(
             modifier = Modifier
+                .clip(MaterialTheme.shapes.medium)
+                .clickable {
+                    if (status.third != id) {
+                        isBeingModified = !isBeingModified
+                    }
+                }
                 .fillMaxWidth()
                 .animateContentSize()
+                .background(
+                    if (main && !isBeingModified) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainer
+                    }
+                )
                 .then(modifier),
-            colors = CardDefaults.cardColors(
-                containerColor = if (main && !isBeingModified) {
-                    MaterialTheme.colorScheme.primaryContainer
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainer
-                }
-            )
         ) {
+            if (status.second == InferenceManagerState.RESPONDING && status.third == id) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.primary,
+                    backgroundColor = if (main && !isBeingModified) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainer
+                    }
+                )
+            }
             val pointFocus = remember {
                 FocusRequester()
             }
@@ -321,13 +343,11 @@ fun TextPoint(
                         } else {
                             it
                         },
-                        color = (
-                                if (main) {
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                }
-                                ).copy(
+                        color = (if (main) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }).copy(
                                 alpha = if (it.isBlank()) 0.2f else 1f
                             )
                     )
@@ -354,7 +374,8 @@ fun TextPoint(
                         }) {
                             Text(text = stringResource(id = R.string.label_cancel))
                         }
-                        if (aiAvailable) {
+                        if (status.first != null && status.second == InferenceManagerState.ACTIVE) {
+                            Log.d("status", status.toString())
                             OutlinedButton(onClick = {
                                 isBeingModified = false
                                 onSave(currentText, currentMainStatus)
