@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.domain.model.BooleanSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.ChoiceSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.DoubleSettingDomainModel
@@ -41,7 +42,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     settings: Map<SettingsKeys, SettingDomainModel>,
     onModify: (SettingsKeys, String) -> Unit,
-    aiStatus: Triple<String?, InferenceManagerState, Long>,
+    aiStatus: Triple<Model?, InferenceManagerState, Long>,
     onNavigateToAi: () -> Unit
 ) {
     val s by remember {
@@ -109,7 +110,7 @@ fun SettingsScreen(
             }
         }
         item {
-            AiSettingsEntry(status = aiStatus.second, modelName = aiStatus.first) {
+            AiSettingsEntry(status = aiStatus.second, modelName = aiStatus.first?.name) {
                 onNavigateToAi()
             }
         }

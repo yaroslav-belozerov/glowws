@@ -101,6 +101,8 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation(kotlin("reflect"))
     implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
+    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
     ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.3")
     implementation("com.google.mediapipe:tasks-genai:0.10.14")

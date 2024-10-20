@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
+import com.yaabelozerov.glowws.data.local.ai.notBusy
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.domain.model.BooleanSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.ChoiceSettingDomainModel

@@ -1,5 +1,7 @@
 package com.yaabelozerov.glowws
 
+import android.app.Activity
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -38,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
@@ -61,6 +64,20 @@ import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreenViewModel
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import android.Manifest
+import android.content.Intent
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.core.view.WindowCompat
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.yaabelozerov.glowws.data.remote.PreloadModelsService
+import com.yaabelozerov.glowws.util.Network
+import retrofit2.Retrofit
+import retrofit2.awaitResponse
+import retrofit2.converter.moshi.MoshiConverterFactory
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -77,13 +94,10 @@ class MainActivity : ComponentActivity() {
 
         val onPickModel = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
-                aivm.viewModelScope.launch {
-                    aivm.inferenceManager.importModel(uri) { aivm.setDefaultModel(uri) }
-                    aivm.refresh()
-                }
+                aivm.importLocalModel(uri)
             }
         }
-        aivm.onPickModel.value = { onPickModel.launch(arrayOf("*/*")) }
+        aivm.onPickModel.value = { onPickModel.launch(arrayOf("application/octet-stream")) }
 
         val onPickMedia =
             registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -107,7 +121,19 @@ class MainActivity : ComponentActivity() {
             val text = stringResource(R.string.app_welcome)
             LaunchedEffect(true) {
                 mvm.appFirstVisit {
-                    snackbarHostState.showSnackbar(message = text, duration = SnackbarDuration.Short)
+                    snackbarHostState.showSnackbar(
+                        message = text, duration = SnackbarDuration.Short
+                    )
+                    try {
+                        Retrofit.Builder().baseUrl(Network.MODEL_PRELOAD_BASE_URL).addConverterFactory(
+                            MoshiConverterFactory.create(
+                                Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+                            )
+                        ).build().create(PreloadModelsService::class.java).getModels().awaitResponse().also { Log.i("got", it.body().toString()) }
+                            .body()?.let {
+                                aivm.importRemoteModels(it)
+                            }
+                    } catch (_: Exception) {}
                 }
             }
             val dynamicColor =
@@ -135,9 +161,17 @@ class MainActivity : ComponentActivity() {
                                             )
                                         }
                                         SnackbarHost(snackbarHostState, snackbar = {
-                                            Snackbar(snackbarData = it, shape = MaterialTheme.shapes.medium, modifier = Modifier.height(80.dp).clickable {
-                                                it.dismiss()
-                                            }, containerColor = MaterialTheme.colorScheme.surfaceContainerHigh, contentColor = MaterialTheme.colorScheme.onBackground)
+                                            Snackbar(
+                                                snackbarData = it,
+                                                shape = MaterialTheme.shapes.medium,
+                                                modifier = Modifier
+                                                    .height(80.dp)
+                                                    .clickable {
+                                                        it.dismiss()
+                                                    },
+                                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                                contentColor = MaterialTheme.colorScheme.onBackground
+                                            )
                                         })
                                     }
                                 })
@@ -160,10 +194,7 @@ class MainActivity : ComponentActivity() {
                         },
                         floatingActionButton = {
                             FloatingActionButtons(
-                                navController,
-                                mvm,
-                                ivm,
-                                avm
+                                navController, mvm, ivm, avm
                             )
                         },
                         bottomBar = { BottomNavBar(navController) },
@@ -188,9 +219,7 @@ fun BottomNavBar(navController: NavHostController) {
             val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
             NavigationBarItem(selected = selected, onClick = {
                 navController.popBackStack(
-                    screen.route,
-                    inclusive = true,
-                    saveState = true
+                    screen.route, inclusive = true, saveState = true
                 )
                 navController.navigate(screen.route)
             }, icon = {
@@ -214,8 +243,7 @@ fun FloatingActionButtons(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     when (navBackStackEntry?.destination?.route?.toDestination()) {
-        NavDestinations.MainScreenRoute -> MainScreenFloatingButtons(
-            mvm = mvm,
+        NavDestinations.MainScreenRoute -> MainScreenFloatingButtons(mvm = mvm,
             addNewIdeaCallback = { id ->
                 navController.navigate(
                     NavDestinations.IdeaScreenRoute.withParam(
@@ -224,8 +252,7 @@ fun FloatingActionButtons(
                 )
                 ivm.addPointAtIndex(PointType.TEXT, id, 0, "")
                 ivm.refreshPoints(id)
-            }
-        )
+            })
 
         NavDestinations.ArchiveScreenRoute -> ArchiveScreenFloatingButtons(
             avm = avm

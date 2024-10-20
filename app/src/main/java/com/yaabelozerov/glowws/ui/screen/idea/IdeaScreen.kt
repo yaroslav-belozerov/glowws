@@ -74,7 +74,10 @@ import androidx.compose.ui.unit.sp
 import coil.ImageLoader
 import coil.compose.SubcomposeAsyncImage
 import com.yaabelozerov.glowws.R
+import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
+import com.yaabelozerov.glowws.data.local.ai.notBusy
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
@@ -94,8 +97,7 @@ fun IdeaScreen(
     onRemove: (Long) -> Unit,
     onExecute: (Long, String) -> Unit,
     settings: Map<SettingsKeys, SettingDomainModel>,
-    aiAvailable: Boolean,
-    aiBusy: Pair<Boolean, Long>
+    aiStatus: Triple<Model?, InferenceManagerState, Long>
 ) {
     BackHandler {
         onBack()
@@ -134,8 +136,7 @@ fun IdeaScreen(
                     onRemove = { onRemove(point.id) },
                     onExecute = { onExecute(point.id, point.content) },
                     showPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean(),
-                    aiAvailable = aiAvailable,
-                    aiBusy = aiBusy
+                    status = aiStatus
                 )
 
                 PointType.IMAGE -> ImagePoint(imageLoader = imageLoader,
@@ -291,8 +292,7 @@ fun TextPoint(
     onRemove: () -> Unit,
     onExecute: () -> Unit,
     showPlaceholders: Boolean,
-    aiAvailable: Boolean,
-    aiBusy: Pair<Boolean, Long>
+    status: Triple<Model?, InferenceManagerState, Long>
 ) {
     var isBeingModified by remember {
         mutableStateOf(false)
@@ -302,7 +302,7 @@ fun TextPoint(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .clickable {
-                    if (aiBusy.second != id) {
+                    if (status.third != id) {
                         isBeingModified = !isBeingModified
                     }
                 }
@@ -317,7 +317,7 @@ fun TextPoint(
                 )
                 .then(modifier),
         ) {
-            if (aiBusy.second == id && aiBusy.first) {
+            if (status.second == InferenceManagerState.RESPONDING && status.third == id) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.primary,
@@ -374,7 +374,8 @@ fun TextPoint(
                         }) {
                             Text(text = stringResource(id = R.string.label_cancel))
                         }
-                        if (aiAvailable && !aiBusy.first) {
+                        if (status.first != null && status.second == InferenceManagerState.ACTIVE) {
+                            Log.d("status", status.toString())
                             OutlinedButton(onClick = {
                                 isBeingModified = false
                                 onSave(currentText, currentMainStatus)

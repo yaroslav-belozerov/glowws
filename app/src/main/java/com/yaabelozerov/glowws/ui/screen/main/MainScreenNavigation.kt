@@ -43,8 +43,7 @@ fun MainScreenNavHost(
     aivm: AiScreenViewModel,
     snackbar: Pair<SnackbarHostState, CoroutineScope>
 ) {
-    NavHost(
-        modifier = modifier,
+    NavHost(modifier = modifier,
         navController = navController,
         startDestination = startDestination.route,
         enterTransition = {
@@ -52,8 +51,7 @@ fun MainScreenNavHost(
                 tween(300)
             )
         },
-        exitTransition = { fadeOut(tween(300)) }
-    ) {
+        exitTransition = { fadeOut(tween(300)) }) {
         composable(NavDestinations.MainScreenRoute.route) {
             Column {
                 MainScreen(
@@ -71,63 +69,53 @@ fun MainScreenNavHost(
                 )
             }
         }
-        composable(
-            route = NavDestinations.IdeaScreenRoute.withParam("{id}"),
+        composable(route = NavDestinations.IdeaScreenRoute.withParam("{id}"),
             arguments = listOf(navArgument("id") { type = NavType.LongType }),
             enterTransition = {
                 slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) + fadeIn()
             },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }
-        ) { backStackEntry ->
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }) { backStackEntry ->
             val discardText = stringResource(R.string.m_idea_discarded)
-            val aiStatus = aivm.inferenceManager.status.collectAsState().value
+            val aiStatus = aivm.aiStatus.collectAsState().value
             IdeaScreen(
                 imageLoader = ivm.imageLoader,
                 points = ivm.points.collectAsState().value,
                 onBack = {
                     mvm.tryDiscardEmpty(backStackEntry.arguments!!.getLong("id")) {
                         snackbar.second.launch {
-                            snackbar.first.showSnackbar(discardText, duration = SnackbarDuration.Short)
+                            snackbar.first.showSnackbar(
+                                discardText, duration = SnackbarDuration.Short
+                            )
                         }
                     }
                     navController.navigateUp()
                 },
                 onAdd = { type, ind ->
                     ivm.addPointAtIndex(
-                        type,
-                        backStackEntry.arguments!!.getLong("id"),
-                        ind
+                        type, backStackEntry.arguments!!.getLong("id"), ind
                     )
                 },
                 onSave = { pointId, newText, isMain ->
                     ivm.modifyPoint(
-                        pointId,
-                        newText,
-                        isMain
+                        pointId, newText, isMain
                     )
                 },
                 onRemove = { pointId ->
                     ivm.removePoint(pointId)
                 },
                 onExecute = { pointId, content ->
-                    aivm.executeInto(content, pointId) { new -> ivm.modifyPoint(pointId, new) }
+                    ivm.generateResponse(content, pointId, aivm.aiStatus.value.first?.token ?: "")
                 },
                 settings = svm.state.collectAsState().value,
-                aiAvailable = aivm.inferenceManager.model.collectAsState().value != null,
-                aiBusy = Pair(aiStatus.second == InferenceManagerState.RESPONDING, aiStatus.third)
+                aiStatus = aivm.aiStatus.collectAsState().value
             )
         }
         composable(NavDestinations.SettingsScreenRoute.route) {
-            SettingsScreen(
-                settings = svm.state.collectAsState().value,
-                onModify = { key, value ->
-                    svm.modifySetting(key, value) { mvm.fetchSort() }
-                },
-                aiStatus = aivm.inferenceManager.status.collectAsState().value,
-                onNavigateToAi = {
-                    navController.navigate(NavDestinations.AiScreenRoute.route)
-                }
-            )
+            SettingsScreen(settings = svm.state.collectAsState().value, onModify = { key, value ->
+                svm.modifySetting(key, value) { mvm.fetchSort() }
+            }, aiStatus = aivm.aiStatus.collectAsState().value, onNavigateToAi = {
+                navController.navigate(NavDestinations.AiScreenRoute.route)
+            })
         }
         composable(
             NavDestinations.ArchiveScreenRoute.route
@@ -146,22 +134,23 @@ fun MainScreenNavHost(
                 settings = svm.state.collectAsState().value
             )
         }
-        composable(
-            NavDestinations.AiScreenRoute.route,
+        composable(NavDestinations.AiScreenRoute.route,
             enterTransition = {
                 slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) + fadeIn()
             },
-            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }
-        ) {
-            AiScreen(
-                models = aivm.models.collectAsState().value,
-                onChoose = { name -> aivm.pickModel(name) },
-                onDelete = { name -> aivm.removeModel(name) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }) {
+            AiScreen(models = aivm.models.collectAsState().value,
+                onChoose = { aivm.pickModel(it) },
+                onDelete = { aivm.removeModel(it) },
                 onUnload = { aivm.unloadModel() },
-                onAdd = { aivm.importModel() },
+                onAdd = { aivm.openLocalModelPicker() },
                 onRefresh = { aivm.refresh() },
-                status = aivm.inferenceManager.status.collectAsState().value,
-                error = aivm.inferenceManager.error.collectAsState().value
+                onEdit = {
+                    aivm.editModel(it)
+                    aivm.refresh()
+                },
+                status = aivm.aiStatus.collectAsState().value,
+                error = null
             )
         }
     }

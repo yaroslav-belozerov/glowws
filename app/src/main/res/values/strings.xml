@@ -58,4 +58,6 @@
     <string name="medium">Medium</string>
     <string name="big">Big</string>
     <string name="very_big">Very Big</string>
+    <string name="ai_local">Local</string>
+    <string name="ai_network">Network</string>
 </resources>

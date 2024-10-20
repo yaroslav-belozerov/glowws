@@ -58,4 +58,6 @@
     <string name="medium">Умеренно</string>
     <string name="big">Много</string>
     <string name="very_big">Очень много</string>
+    <string name="ai_local">Локальные</string>
+    <string name="ai_network">Удалённые</string>
 </resources>

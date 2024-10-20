@@ -2,11 +2,14 @@ package com.yaabelozerov.glowws.ui.screen.ai
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yaabelozerov.glowws.data.local.ai.InferenceManager
+import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.di.SettingsManager
-import com.yaabelozerov.glowws.util.queryName
+import com.yaabelozerov.glowws.data.local.room.ModelDao
+import com.yaabelozerov.glowws.data.local.room.ModelType
+import com.yaabelozerov.glowws.domain.InferenceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,57 +20,75 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AiScreenViewModel @Inject constructor(
-    val inferenceManager: InferenceManager,
     private val settingsManager: SettingsManager,
-    @ApplicationContext private val app: Context
+    @ApplicationContext private val app: Context,
+    private val inferenceRepository: InferenceRepository,
+    private val modelDao: ModelDao
 ) : ViewModel() {
     val onPickModel: MutableStateFlow<(() -> Unit)?> = MutableStateFlow(null)
 
-    private val _models: MutableStateFlow<List<AiModel>> = MutableStateFlow(emptyList())
+    private val _models: MutableStateFlow<Map<ModelType, List<Model>>> = MutableStateFlow(emptyMap())
     val models = _models.asStateFlow()
+
+    val aiStatus = inferenceRepository.source
 
     init {
         viewModelScope.launch {
-            val savedName = settingsManager.getModelName()
-            if (savedName.isNotBlank()) {
-                pickModel(savedName)
+            refresh()
+            modelDao.getLastActiveModel()?.let {
+                inferenceRepository.loadModel(it) {
+                    modelDao.upsertModel(it.copy(isChosen = true))
+                }
             }
             refresh()
         }
     }
 
-    fun executeInto(prompt: String, pointId: Long, callback: (String) -> Unit) {
-        viewModelScope.launch {
-            inferenceManager.executeInto(prompt, pointId, callback)
-        }
-    }
-
-    fun importModel() {
+    fun openLocalModelPicker() {
         onPickModel.value?.invoke()
     }
 
-    fun pickModel(fileName: String) {
+    fun importLocalModel(uri: Uri) {
         viewModelScope.launch {
-            inferenceManager.activateModel(fileName) {
-                _models.update {
-                    it.map { md ->
-                        AiModel(
-                            md.name,
-                            md.fileName,
-                            md.fileName == fileName
-                        )
-                    }
-                }
-                viewModelScope.launch { settingsManager.setModelName(fileName) }
+            inferenceRepository.addLocalModel(uri) {
+                modelDao.clearChosen()
+                val mod = Model(
+                    0,
+                    ModelType.LOCAL,
+                    it.split("/").last().removeSuffix(".bin"),
+                    it,
+                    null,
+                    true
+                )
+                val id = modelDao.upsertModel(mod)
+                inferenceRepository.loadModel(model = mod.copy(id = id))
+                refresh()
             }
         }
     }
 
-    fun removeModel(name: String) {
+    fun pickModel(model: Model) {
         viewModelScope.launch {
-            inferenceManager.removeModel(name)
-            if (name == settingsManager.getModelName()) {
-                settingsManager.setModelName("")
+            inferenceRepository.loadModel(model) {
+                modelDao.clearChosen()
+                modelDao.upsertModel(model.copy(isChosen = true))
+                refresh()
+            }
+        }
+    }
+
+    fun removeModel(model: Model) {
+        viewModelScope.launch {
+            inferenceRepository.removeModel(model)
+            modelDao.deleteModel(model)
+            refresh()
+        }
+    }
+
+    fun importRemoteModels(list: List<Model>) {
+        viewModelScope.launch {
+            list.forEach {
+                modelDao.upsertModel(it)
             }
             refresh()
         }
@@ -75,21 +96,32 @@ class AiScreenViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            _models.update { inferenceManager.refreshModels() }
+            modelDao.getAllModels().collect { models ->
+                Log.d("AiScreenViewModel", models.toString())
+                _models.update { models.toTypeMap() }
+            }
         }
     }
 
     fun unloadModel() {
         viewModelScope.launch {
-            inferenceManager.unloadModel()
-            settingsManager.setModelName("")
-            refresh()
+            aiStatus.value.first?.let {
+                modelDao.upsertModel(it.copy(isChosen = false))
+                inferenceRepository.unloadModel()
+                settingsManager.setModelId(-1L)
+                refresh()
+            }
         }
     }
 
-    fun setDefaultModel(uri: Uri) {
+    fun editModel(model: Model) {
         viewModelScope.launch {
-            settingsManager.setModelName(uri.queryName(app.contentResolver))
+            modelDao.upsertModel(model)
+            refresh()
         }
     }
+}
+
+fun List<Model>.toTypeMap(): Map<ModelType, List<Model>> {
+    return groupBy { it.type }
 }
