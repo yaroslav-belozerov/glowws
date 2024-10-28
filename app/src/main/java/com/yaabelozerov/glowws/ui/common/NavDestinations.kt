@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.ui.common
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Home
@@ -7,7 +8,10 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import com.yaabelozerov.glowws.R
 
 enum class NavDestinations(
@@ -34,7 +38,8 @@ enum class NavDestinations(
         Icons.Filled.Settings,
         Icons.Outlined.Settings
     ),
-    AiScreenRoute("AiScreen", R.string.s_cat_ai)
+    AiScreenRoute("AiScreen", R.string.s_cat_ai),
+    FeedbackRoute("FeedbackScreen", R.string.s_cat_feedback)
 }
 
 fun NavDestinations.withParam(param: Any): String {

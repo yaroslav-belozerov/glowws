@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,7 +44,8 @@ fun SettingsScreen(
     settings: Map<SettingsKeys, SettingDomainModel>,
     onModify: (SettingsKeys, String) -> Unit,
     aiStatus: Triple<Model?, InferenceManagerState, Long>,
-    onNavigateToAi: () -> Unit
+    onNavigateToAi: () -> Unit,
+    onNavigateToFeedback: () -> Unit
 ) {
     val s by remember {
         mutableStateOf(settings.values.groupBy { it.key.category })
@@ -113,9 +115,6 @@ fun SettingsScreen(
             AiSettingsEntry(status = aiStatus.second, modelName = aiStatus.first?.name) {
                 onNavigateToAi()
             }
-        }
-        item {
-            FeedbackSettingsEntry()
         }
     }
 }

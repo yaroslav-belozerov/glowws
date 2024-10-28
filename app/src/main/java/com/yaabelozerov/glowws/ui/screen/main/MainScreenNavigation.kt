@@ -26,6 +26,7 @@ import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreen
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreen
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
+import com.yaabelozerov.glowws.ui.screen.settings.FeedbackScreen
 import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreen
 import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreenViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -115,7 +116,7 @@ fun MainScreenNavHost(
                 svm.modifySetting(key, value) { mvm.fetchSort() }
             }, aiStatus = aivm.aiStatus.collectAsState().value, onNavigateToAi = {
                 navController.navigate(NavDestinations.AiScreenRoute.route)
-            })
+            }, onNavigateToFeedback = { navController.navigate(NavDestinations.FeedbackRoute.route) })
         }
         composable(
             NavDestinations.ArchiveScreenRoute.route
@@ -152,6 +153,15 @@ fun MainScreenNavHost(
                 status = aivm.aiStatus.collectAsState().value,
                 error = null
             )
+        }
+        composable(NavDestinations.FeedbackRoute.route, enterTransition = {
+            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) + fadeIn()
+        },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }) {
+            FeedbackScreen {
+                svm.sendFeedback(it)
+                navController.navigateUp()
+            }
         }
     }
 }

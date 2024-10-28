@@ -20,6 +20,7 @@ import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.data.local.room.GlowwsDatabase
 import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.data.local.room.ModelType
+import com.yaabelozerov.glowws.data.remote.FeedbackService
 import com.yaabelozerov.glowws.data.remote.OpenRouterService
 import com.yaabelozerov.glowws.domain.InferenceRepository
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
@@ -32,6 +33,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Inject
@@ -107,6 +109,11 @@ object AppModule {
     fun provideOpenRoutedService(moshi: Moshi): OpenRouterService =
         Retrofit.Builder().baseUrl(Network.BASE_URL).addConverterFactory(MoshiConverterFactory.create(moshi)).build()
             .create(OpenRouterService::class.java)
+
+    @Singleton
+    @Provides
+    fun provideFeedbackService(moshi: Moshi): FeedbackService =
+        Retrofit.Builder().baseUrl(Network.FEEDBACK_BASE_URL).addConverterFactory(MoshiConverterFactory.create(moshi)).build().create(FeedbackService::class.java)
 
     private val Context.dataStore by preferencesDataStore("settings")
 

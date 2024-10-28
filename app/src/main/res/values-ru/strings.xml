@@ -60,4 +60,11 @@
     <string name="very_big">Очень много</string>
     <string name="ai_local">Локальные</string>
     <string name="ai_network">Удалённые</string>
+    <string name="s_feedback_send">Отправить</string>
+    <string name="s_feedback_header">Заголовок</string>
+    <string name="s_feedback_desc">Описание проблемы</string>
+    <string name="s_feedback_screen_name">Обратная связь</string>
+    <string name="s_feedback_error">"Пожалуйста, укажите вашу проблему "</string>
+    <string name="s_feedback_rate">Оцените опыт использования</string>
+    <string name="s_feedback_notrate">Без оценки</string>
 </resources>

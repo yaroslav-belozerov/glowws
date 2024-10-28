@@ -69,6 +69,9 @@ import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Feedback
+import androidx.compose.material3.IconButton
 import androidx.core.view.WindowCompat
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -155,24 +158,39 @@ class MainActivity : ComponentActivity() {
                                     ) {
                                         it.resId?.let { res ->
                                             Text(
+                                                modifier = Modifier.weight(1f),
                                                 text = stringResource(id = res),
                                                 fontSize = 32.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
                                         }
-                                        SnackbarHost(snackbarHostState, snackbar = {
-                                            Snackbar(
-                                                snackbarData = it,
-                                                shape = MaterialTheme.shapes.medium,
-                                                modifier = Modifier
-                                                    .height(80.dp)
-                                                    .clickable {
-                                                        it.dismiss()
-                                                    },
-                                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                                contentColor = MaterialTheme.colorScheme.onBackground
-                                            )
-                                        })
+                                        when (dest) {
+                                            NavDestinations.MainScreenRoute -> {
+                                                SnackbarHost(snackbarHostState, snackbar = {
+                                                    Snackbar(
+                                                        snackbarData = it,
+                                                        shape = MaterialTheme.shapes.medium,
+                                                        modifier = Modifier
+                                                            .height(80.dp)
+                                                            .clickable {
+                                                                it.dismiss()
+                                                            },
+                                                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                                        contentColor = MaterialTheme.colorScheme.onBackground
+                                                    )
+                                                })
+                                            }
+                                            NavDestinations.SettingsScreenRoute -> {
+                                                IconButton(onClick = {
+                                                    navController.navigate(
+                                                        NavDestinations.FeedbackRoute.route
+                                                    )
+                                                }) {
+                                                    Icon(Icons.Default.Feedback, contentDescription = stringResource(R.string.s_cat_feedback))
+                                                }
+                                            }
+                                            else -> {}
+                                        }
                                     }
                                 })
                             }
