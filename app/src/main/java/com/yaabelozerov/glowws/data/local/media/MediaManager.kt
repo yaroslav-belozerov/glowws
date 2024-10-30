@@ -3,7 +3,7 @@ package com.yaabelozerov.glowws.data.local.media
 import android.content.Context
 import android.net.Uri
 import android.util.Log
-import com.yaabelozerov.glowws.util.queryName
+import com.yaabelozerov.glowws.queryName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File

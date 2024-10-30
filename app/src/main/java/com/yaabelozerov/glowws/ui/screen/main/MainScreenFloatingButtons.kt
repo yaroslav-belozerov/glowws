@@ -2,8 +2,10 @@ package com.yaabelozerov.glowws.ui.screen.main
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardActions
@@ -40,34 +42,30 @@ import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.ui.common.ScreenDialog
 import com.yaabelozerov.glowws.ui.model.DialogEntry
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Long) -> Unit) {
+fun MainScreenFloatingButtons(
+    modifier: Modifier = Modifier, mvm: MainScreenViewModel, addNewIdeaCallback: (Long) -> Unit
+) {
     var isConfirmationOpen by remember {
         mutableStateOf(false)
     }
     if (isConfirmationOpen) {
-        ScreenDialog(
-            title = stringResource(id = R.string.dialog_archive_all),
-            entries = listOf(
-                DialogEntry(
-                    Icons.Default.CheckCircle,
-                    stringResource(id = R.string.label_confirm),
-                    { mvm.archiveSelected() }
-                ),
-                DialogEntry(
-                    null,
-                    stringResource(id = R.string.label_cancel),
-                    onClick = { isConfirmationOpen = false }
-                )
-            ),
-            onDismiss = { isConfirmationOpen = false }
-        )
+        ScreenDialog(title = stringResource(id = R.string.dialog_archive_all),
+            entries = listOf(DialogEntry(Icons.Default.CheckCircle,
+                stringResource(id = R.string.label_confirm),
+                { mvm.archiveSelected() }), DialogEntry(null,
+                stringResource(id = R.string.label_cancel),
+                onClick = { isConfirmationOpen = false })),
+            onDismiss = { isConfirmationOpen = false })
     }
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalAlignment = Alignment.End
+        horizontalAlignment = Alignment.End,
+        modifier = modifier
     ) {
-        if (mvm.selection.collectAsState().value.inSelectionMode) {
+        val inSelection = mvm.selection.collectAsState().value.inSelectionMode
+        if (inSelection) {
             FloatingActionButton(onClick = {
                 isConfirmationOpen = true
             }) {
@@ -80,34 +78,19 @@ fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Lon
                 mvm.deselectAll()
             }) {
                 Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "deselect button"
+                    imageVector = Icons.Default.Close, contentDescription = "deselect button"
                 )
             }
         } else {
             FloatingActionButton(onClick = {
-                mvm.addNewIdea(callback = addNewIdeaCallback)
-            }) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "add idea button"
-                )
-            }
-            FloatingActionButton(onClick = {
                 mvm.toggleSortFilterModal()
             }) {
                 Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = "sort filter button"
+                    imageVector = Icons.Default.MoreVert, contentDescription = "sort filter button"
                 )
             }
         }
-        var isSearchOpen by remember {
-            mutableStateOf(mvm.state.value.searchQuery.isNotEmpty())
-        }
-        val searchFocus = remember {
-            FocusRequester()
-        }
+        val isSearchOpen = mvm.searchOpen.collectAsState().value
         if (!isSearchOpen) {
             Row {
                 if (mvm.state.collectAsState().value.searchQuery.isNotBlank()) {
@@ -120,7 +103,7 @@ fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Lon
                     Spacer(modifier = Modifier.width(8.dp))
                 }
                 FloatingActionButton(onClick = {
-                    isSearchOpen = true
+                    mvm.setSearch(true)
                 }) {
                     Icon(
                         imageVector = Icons.Default.Search,
@@ -128,37 +111,12 @@ fun MainScreenFloatingButtons(mvm: MainScreenViewModel, addNewIdeaCallback: (Lon
                     )
                 }
             }
-        } else {
-            LaunchedEffect(key1 = Unit) {
-                searchFocus.requestFocus()
-            }
-            OutlinedTextField(
-                modifier = Modifier
-                    .padding(32.dp, 0.dp, 0.dp, 0.dp)
-                    .focusRequester(searchFocus),
-                singleLine = true,
-                shape = MaterialTheme.shapes.large,
-                value = mvm.state.collectAsState().value.searchQuery,
-                onValueChange = { mvm.updateSearchQuery(it) },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                ),
-                trailingIcon = {
-                    IconButton(onClick = {
-                        mvm.updateSearchQuery("")
-                        isSearchOpen = false
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = "clear search icon",
-                        )
-                    }
-                },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = {
-                    isSearchOpen = false
-                })
+        }
+        if (!inSelection) FloatingActionButton(onClick = {
+            mvm.addNewIdea(callback = addNewIdeaCallback)
+        }) {
+            Icon(
+                imageVector = Icons.Default.Add, contentDescription = "add idea button"
             )
         }
     }

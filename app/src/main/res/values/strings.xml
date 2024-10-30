@@ -60,4 +60,11 @@
     <string name="very_big">Very Big</string>
     <string name="ai_local">Local</string>
     <string name="ai_network">Network</string>
+    <string name="s_feedback_send">Send</string>
+    <string name="s_feedback_header">Title</string>
+    <string name="s_feedback_desc">Full Description</string>
+    <string name="s_feedback_screen_name">Share Feedback</string>
+    <string name="s_feedback_error">Please provide at least a brief problem title</string>
+    <string name="s_feedback_rate">Rate your experience</string>
+    <string name="s_feedback_notrate">No Rating</string>
 </resources>

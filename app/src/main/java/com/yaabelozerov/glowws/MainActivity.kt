@@ -1,7 +1,5 @@
 package com.yaabelozerov.glowws
 
-import android.app.Activity
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -40,7 +38,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
@@ -48,7 +45,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.room.PointType
-import com.yaabelozerov.glowws.ui.common.NavDestinations
+import com.yaabelozerov.glowws.ui.common.Nav
 import com.yaabelozerov.glowws.ui.common.toDestination
 import com.yaabelozerov.glowws.ui.common.withParam
 import com.yaabelozerov.glowws.ui.screen.ai.AiScreenViewModel
@@ -64,16 +61,34 @@ import com.yaabelozerov.glowws.ui.screen.settings.SettingsScreenViewModel
 import com.yaabelozerov.glowws.ui.theme.GlowwsTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import android.Manifest
-import android.content.Intent
 import android.util.Log
-import android.widget.Toast
-import androidx.activity.result.ActivityResultLauncher
-import androidx.core.view.WindowCompat
+import android.view.WindowManager
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imeAnimationSource
+import androidx.compose.foundation.layout.imeAnimationTarget
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Feedback
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.core.view.WindowCompat.setDecorFitsSystemWindows
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.yaabelozerov.glowws.data.remote.PreloadModelsService
-import com.yaabelozerov.glowws.util.Network
 import retrofit2.Retrofit
 import retrofit2.awaitResponse
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -81,10 +96,10 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        setDecorFitsSystemWindows(window, false)
 
         val mvm: MainScreenViewModel by viewModels()
         val ivm: IdeaScreenViewModel by viewModels()
@@ -125,7 +140,7 @@ class MainActivity : ComponentActivity() {
                         message = text, duration = SnackbarDuration.Short
                     )
                     try {
-                        Retrofit.Builder().baseUrl(Network.MODEL_PRELOAD_BASE_URL).addConverterFactory(
+                        Retrofit.Builder().baseUrl(Const.Net.MODEL_PRELOAD_BASE_URL).addConverterFactory(
                             MoshiConverterFactory.create(
                                 Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
                             )
@@ -144,44 +159,12 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
-                        topBar = {
-                            val navBackStackEntry by navController.currentBackStackEntryAsState()
-                            val dest = navBackStackEntry?.destination?.route?.toDestination()
-                            dest?.let {
-                                TopAppBar(title = {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                    ) {
-                                        it.resId?.let { res ->
-                                            Text(
-                                                text = stringResource(id = res),
-                                                fontSize = 32.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                        SnackbarHost(snackbarHostState, snackbar = {
-                                            Snackbar(
-                                                snackbarData = it,
-                                                shape = MaterialTheme.shapes.medium,
-                                                modifier = Modifier
-                                                    .height(80.dp)
-                                                    .clickable {
-                                                        it.dismiss()
-                                                    },
-                                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                                contentColor = MaterialTheme.colorScheme.onBackground
-                                            )
-                                        })
-                                    }
-                                })
-                            }
-                        },
                         content = { innerPadding ->
                             MainScreenNavHost(
                                 modifier = Modifier.padding(innerPadding),
+                                innerPaddingValues = innerPadding,
                                 navController = navController,
-                                startDestination = NavDestinations.MainScreenRoute,
+                                startDestination = Nav.MainScreenRoute,
                                 mvm = mvm,
                                 ivm = ivm,
                                 svm = svm,
@@ -208,9 +191,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun BottomNavBar(navController: NavHostController) {
     val items = listOf(
-        NavDestinations.SettingsScreenRoute,
-        NavDestinations.MainScreenRoute,
-        NavDestinations.ArchiveScreenRoute,
+        Nav.SettingsScreenRoute,
+        Nav.MainScreenRoute,
+        Nav.ArchiveScreenRoute,
     )
     NavigationBar {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -243,10 +226,10 @@ fun FloatingActionButtons(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     when (navBackStackEntry?.destination?.route?.toDestination()) {
-        NavDestinations.MainScreenRoute -> MainScreenFloatingButtons(mvm = mvm,
+        Nav.MainScreenRoute -> MainScreenFloatingButtons(modifier = Modifier, mvm = mvm,
             addNewIdeaCallback = { id ->
                 navController.navigate(
-                    NavDestinations.IdeaScreenRoute.withParam(
+                    Nav.IdeaScreenRoute.withParam(
                         id
                     )
                 )
@@ -254,7 +237,7 @@ fun FloatingActionButtons(
                 ivm.refreshPoints(id)
             })
 
-        NavDestinations.ArchiveScreenRoute -> ArchiveScreenFloatingButtons(
+        Nav.ArchiveScreenRoute -> ArchiveScreenFloatingButtons(
             avm = avm
         )
 

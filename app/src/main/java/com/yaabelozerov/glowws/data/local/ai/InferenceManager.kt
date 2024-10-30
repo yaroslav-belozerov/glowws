@@ -7,7 +7,7 @@ import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import com.google.mediapipe.tasks.genai.llminference.LlmInference.LlmInferenceOptions
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.di.SettingsManager
-import com.yaabelozerov.glowws.util.queryName
+import com.yaabelozerov.glowws.queryName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

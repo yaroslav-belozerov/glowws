@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
-import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.di.SettingsManager
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
@@ -42,6 +41,9 @@ class MainScreenViewModel @Inject constructor(
     private var _isSortFilterOpen = MutableStateFlow(false)
     val sortFilterOpen = _isSortFilterOpen.asStateFlow()
 
+    private var _searchOpen = MutableStateFlow(false)
+    val searchOpen = _searchOpen.asStateFlow()
+
     init {
         fetchSort()
     }
@@ -50,6 +52,7 @@ class MainScreenViewModel @Inject constructor(
         viewModelScope.launch {
             when (settingsManager.getAppVisits().also { Log.i("App visits", it.toString()) }) {
                 0L -> callback()
+                else -> {}
             }
             settingsManager.visitApp()
         }
@@ -85,7 +88,7 @@ class MainScreenViewModel @Inject constructor(
                     }
                 }
             } else {
-                dao.getAllIdeasSearch("%${_state.value.searchQuery}%").collect { ideas ->
+                dao.getAllIdeasSearch("%${_state.value.searchQuery.replace(" ", "")}%").collect { ideas ->
                     _state.update {
                         it.copy(
                             ideas = ideaMapper.toDomainModel(
@@ -142,6 +145,8 @@ class MainScreenViewModel @Inject constructor(
         _state.update { it.copy(searchQuery = newQuery) }
         fetchMainScreen()
     }
+
+    fun setSearch(open: Boolean) = _searchOpen.update { open }
 
     fun tryDiscardEmpty(ideaId: Long, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {

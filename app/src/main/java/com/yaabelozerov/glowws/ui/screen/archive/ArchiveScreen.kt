@@ -43,7 +43,6 @@ import com.yaabelozerov.glowws.ui.common.ScreenDialog
 import com.yaabelozerov.glowws.ui.model.DialogEntry
 import com.yaabelozerov.glowws.ui.model.SelectionState
 import com.yaabelozerov.glowws.ui.screen.main.boolean
-import com.yaabelozerov.glowws.ui.theme.Typography
 import java.io.File
 
 @Composable
@@ -64,7 +63,6 @@ fun ArchiveScreen(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalItemSpacing = 16.dp,
         contentPadding = PaddingValues(16.dp)
-//        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(ideas, key = { it.id }) {
             ArchiveIdea(
@@ -132,7 +130,7 @@ fun ArchiveIdea(
                 maxLines = 5,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(16.dp),
-                style = Typography.bodyLarge,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface.copy(
                     alpha = if (previewPoint.content.isBlank()) 0.3f else 1f
                 )

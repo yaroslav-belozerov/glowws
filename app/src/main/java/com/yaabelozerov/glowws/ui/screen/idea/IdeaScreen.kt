@@ -13,40 +13,35 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imeNestedScroll
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarOutline
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -62,27 +57,21 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.VerticalAlignmentLine
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.ImageLoader
 import coil.compose.SubcomposeAsyncImage
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
-import com.yaabelozerov.glowws.data.local.ai.notBusy
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.ui.screen.main.boolean
-import com.yaabelozerov.glowws.ui.theme.Typography
 import java.io.File
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -102,12 +91,15 @@ fun IdeaScreen(
     BackHandler {
         onBack()
     }
+
+    var modifiedId by remember { mutableStateOf<Long?>(null) }
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .imePadding()
             .background(MaterialTheme.colorScheme.background),
         verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(16.dp)
     ) {
         item(-1) {
             Row {
@@ -129,18 +121,22 @@ fun IdeaScreen(
             when (point.type) {
                 PointType.TEXT -> TextPoint(
                     modifier = Modifier.animateItem(),
+                    isBeingModified = modifiedId == point.id,
+                    onModify = { if (it) modifiedId = point.id else modifiedId = null },
                     id = point.id,
                     content = point.content,
                     isMain = point.isMain,
                     onSave = { newText, isMain -> onSave(point.id, newText, isMain) },
                     onRemove = { onRemove(point.id) },
-                    onExecute = { onExecute(point.id, point.content) },
+                    onExecute = { onExecute(point.id, it) },
                     showPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean(),
                     status = aiStatus
                 )
 
                 PointType.IMAGE -> ImagePoint(imageLoader = imageLoader,
                     content = point.content,
+                    isBeingModified = modifiedId == point.id,
+                    onModify = { if (it) modifiedId = point.id else modifiedId = null },
                     isMain = point.isMain,
                     onRemove = {
                         onRemove(point.id)
@@ -226,19 +222,20 @@ fun AddPointLine(onAdd: (PointType) -> Unit, holdForType: Boolean) {
 @Composable
 fun ImagePoint(
     modifier: Modifier = Modifier,
+    isBeingModified: Boolean,
+    onModify: (Boolean) -> Unit,
     imageLoader: ImageLoader,
     content: String,
     isMain: Boolean,
     onSave: (Boolean) -> Unit,
     onRemove: () -> Unit
 ) {
-    var uiShown by remember { mutableStateOf(false) }
-    Crossfade(modifier = modifier, targetState = uiShown) { showUi ->
+    Crossfade(modifier = modifier, targetState = isBeingModified) { showUi ->
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .fillMaxWidth()
-                .clickable { uiShown = !uiShown }, contentAlignment = Alignment.BottomStart
+                .clickable { onModify(!showUi) }, contentAlignment = Alignment.BottomStart
         ) {
             SubcomposeAsyncImage(
                 modifier = Modifier
@@ -254,26 +251,17 @@ fun ImagePoint(
             )
             if (showUi) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    FilledIconButton(onClick = {
+                    OutlinedIconButton(onClick = {
                         onRemove()
-                        uiShown = false
+                        onModify(false)
                     }) {
                         Icon(Icons.Default.Delete, contentDescription = null)
                     }
-                    if (isMain) {
-                        FilledIconButton(onClick = {
-                            onSave(false)
-                            uiShown = false
-                        }) {
-                            Icon(Icons.Default.Star, contentDescription = null)
-                        }
-                    } else {
-                        OutlinedIconButton(onClick = {
-                            onSave(true)
-                            uiShown = false
-                        }) {
-                            Icon(Icons.Default.StarOutline, contentDescription = null)
-                        }
+                    OutlinedIconToggleButton(checked = isMain, onCheckedChange = {
+                        onSave(it)
+                        onModify(false)
+                    }) {
+                        Icon(Icons.Default.Star, contentDescription = null)
                     }
                 }
             }
@@ -285,25 +273,24 @@ fun ImagePoint(
 @Composable
 fun TextPoint(
     modifier: Modifier = Modifier,
+    isBeingModified: Boolean,
+    onModify: (Boolean) -> Unit,
     id: Long,
     content: String,
     isMain: Boolean,
     onSave: (String, Boolean) -> Unit,
     onRemove: () -> Unit,
-    onExecute: () -> Unit,
+    onExecute: (String) -> Unit,
     showPlaceholders: Boolean,
     status: Triple<Model?, InferenceManagerState, Long>
 ) {
-    var isBeingModified by remember {
-        mutableStateOf(false)
-    }
     Crossfade(modifier = modifier, targetState = isMain) { main ->
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .clickable {
                     if (status.third != id) {
-                        isBeingModified = !isBeingModified
+                        onModify(true)
                     }
                 }
                 .fillMaxWidth()
@@ -321,7 +308,7 @@ fun TextPoint(
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.primary,
-                    backgroundColor = if (main && !isBeingModified) {
+                    trackColor = if (main && !isBeingModified) {
                         MaterialTheme.colorScheme.primaryContainer
                     } else {
                         MaterialTheme.colorScheme.surfaceContainer
@@ -335,7 +322,7 @@ fun TextPoint(
                 Crossfade(targetState = content) {
                     Text(
                         modifier = Modifier.padding(8.dp),
-                        style = Typography.bodyLarge.copy(fontSize = 24.sp, lineHeight = 28.sp),
+                        style = MaterialTheme.typography.headlineSmall,
                         text = if (it.isBlank() && showPlaceholders) {
                             stringResource(
                                 id = R.string.placeholder_tap_to_edit
@@ -348,8 +335,8 @@ fun TextPoint(
                         } else {
                             MaterialTheme.colorScheme.onSurface
                         }).copy(
-                                alpha = if (it.isBlank()) 0.2f else 1f
-                            )
+                            alpha = if (it.isBlank()) 0.2f else 1f
+                        )
                     )
                 }
             } else {
@@ -370,56 +357,47 @@ fun TextPoint(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedButton(onClick = {
-                            isBeingModified = false
+                            onModify(false)
                         }) {
                             Text(text = stringResource(id = R.string.label_cancel))
                         }
                         if (status.first != null && status.second == InferenceManagerState.ACTIVE) {
-                            Log.d("status", status.toString())
                             OutlinedButton(onClick = {
-                                isBeingModified = false
+                                onModify(false)
                                 onSave(currentText, currentMainStatus)
-                                onExecute()
+                                onExecute(currentText)
                             }) {
                                 Text(text = "Rephrase")
                             }
                         }
-                        OutlinedButton(onClick = {
-                            isBeingModified = false
+                        OutlinedIconButton(onClick = {
+                            onModify(false)
                             onRemove()
                         }) {
-                            Text(text = stringResource(id = R.string.label_remove))
-                        }
-                        OutlinedButton(onClick = {
-                            onSave(currentText, !currentMainStatus)
-                            isBeingModified = false
-                        }) {
-                            Text(
-                                text = if (currentMainStatus) {
-                                    stringResource(
-                                        id = R.string.i_unset_key
-                                    )
-                                } else {
-                                    stringResource(
-                                        id = R.string.i_set_key
-                                    )
-                                }
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.a_remove_idea)
                             )
                         }
+                        OutlinedIconToggleButton(currentMainStatus, onCheckedChange = {
+                            onSave(currentText, it)
+                            onModify(false)
+                        }) { Icon(Icons.Default.Key, contentDescription = stringResource(R.string.i_set_key)) }
                         Button(onClick = {
                             onSave(currentText, currentMainStatus)
-                            isBeingModified = false
+                            onModify(false)
                         }) {
                             Text(text = stringResource(id = R.string.label_save))
                         }
                     }
                     TextField(
-                        textStyle = Typography.bodyLarge.copy(fontSize = 24.sp, lineHeight = 28.sp),
+                        textStyle = MaterialTheme.typography.headlineSmall,
                         value = currentText,
                         onValueChange = { currentText = it },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .focusRequester(pointFocus)
+                            .focusRequester(pointFocus),
+                        shape = MaterialTheme.shapes.medium
                     )
                 }
             }

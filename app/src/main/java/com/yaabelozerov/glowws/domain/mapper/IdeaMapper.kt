@@ -23,7 +23,7 @@ class IdeaMapper @Inject constructor(private val dao: IdeaDao) {
         sortModel: SortModel = SortModel(SortOrder.DESCENDING, SortType.TIMESTAMP_MODIFIED)
     ): List<IdeaDomainModel> {
         var out: MutableList<IdeaDomainModel> = mutableListOf()
-        val pattern = "yyyy-MM-dd HH:mm:ss"
+        val pattern = "HH:mm dd.MM.yyyy"
 
         for (idea in ideas) {
             val pt = if (idea.mainPointId != -1L) dao.getPoint(idea.mainPointId).first() else null
