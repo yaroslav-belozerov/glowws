@@ -23,7 +23,7 @@ import com.yaabelozerov.glowws.data.remote.StreamResponse
 import com.yaabelozerov.glowws.data.remote.StreamingChoice
 import com.yaabelozerov.glowws.data.remote.getResponse
 import com.yaabelozerov.glowws.domain.InferenceRepository
-import com.yaabelozerov.glowws.util.queryName
+import com.yaabelozerov.glowws.queryName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -55,10 +55,10 @@ class InferenceRepositoryImpl(
     private val app: Context,
     private val moshi: Moshi
 ): InferenceRepository {
-    val _source = MutableStateFlow<Triple<Model?, InferenceManagerState, Long>>(Triple(null, InferenceManagerState.IDLE, -1L))
+    private val _source = MutableStateFlow<Triple<Model?, InferenceManagerState, Long>>(Triple(null, InferenceManagerState.IDLE, -1L))
     override val source = _source.asStateFlow()
 
-    val _response = MutableStateFlow("")
+    private val _response = MutableStateFlow("")
     val ad = Moshi.Builder().add(KotlinJsonAdapterFactory()).build().adapter(OpenRouterResponse::class.java)
 
     override suspend fun generate(prompt: String, onUpdate: (String) -> Unit, pointId: Long, token: String) {
@@ -119,7 +119,6 @@ class InferenceRepositoryImpl(
             ModelType.OPENROUTER -> _source.update { it.copy(second =  InferenceManagerState.ACTIVE) }
         }
         callback()
-        Log.i("loaded", model.toString())
     }
 
     override suspend fun removeModel(model: Model) {

@@ -12,6 +12,7 @@ import coil.imageLoader
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.EnumJsonAdapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.yaabelozerov.glowws.Const
 import com.yaabelozerov.glowws.data.InferenceRepositoryImpl
 import com.yaabelozerov.glowws.data.local.ai.InferenceManager
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
@@ -25,7 +26,6 @@ import com.yaabelozerov.glowws.data.remote.OpenRouterService
 import com.yaabelozerov.glowws.domain.InferenceRepository
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
 import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
-import com.yaabelozerov.glowws.util.Network
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -107,13 +107,13 @@ object AppModule {
     @Singleton
     @Provides
     fun provideOpenRoutedService(moshi: Moshi): OpenRouterService =
-        Retrofit.Builder().baseUrl(Network.BASE_URL).addConverterFactory(MoshiConverterFactory.create(moshi)).build()
+        Retrofit.Builder().baseUrl(Const.Net.BASE_URL).addConverterFactory(MoshiConverterFactory.create(moshi)).build()
             .create(OpenRouterService::class.java)
 
     @Singleton
     @Provides
     fun provideFeedbackService(moshi: Moshi): FeedbackService =
-        Retrofit.Builder().baseUrl(Network.FEEDBACK_BASE_URL).addConverterFactory(MoshiConverterFactory.create(moshi)).build().create(FeedbackService::class.java)
+        Retrofit.Builder().baseUrl(Const.Net.FEEDBACK_BASE_URL).addConverterFactory(MoshiConverterFactory.create(moshi)).build().create(FeedbackService::class.java)
 
     private val Context.dataStore by preferencesDataStore("settings")
 

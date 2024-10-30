@@ -23,7 +23,7 @@ enum class SettingsKeys(
     MONET_THEME(
         SettingsCategories.DISPLAY,
         SettingsTypes.BOOLEAN,
-        "true",
+        "false",
         emptyList(),
         R.string.s_display_monet_theme
     ),

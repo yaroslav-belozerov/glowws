@@ -14,6 +14,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,7 +35,6 @@ class AiScreenViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            refresh()
             modelDao.getLastActiveModel()?.let {
                 inferenceRepository.loadModel(it) {
                     modelDao.upsertModel(it.copy(isChosen = true))
@@ -72,7 +72,6 @@ class AiScreenViewModel @Inject constructor(
             inferenceRepository.loadModel(model) {
                 modelDao.clearChosen()
                 modelDao.upsertModel(model.copy(isChosen = true))
-                refresh()
             }
         }
     }
@@ -97,7 +96,6 @@ class AiScreenViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             modelDao.getAllModels().collect { models ->
-                Log.d("AiScreenViewModel", models.toString())
                 _models.update { models.toTypeMap() }
             }
         }
@@ -117,6 +115,13 @@ class AiScreenViewModel @Inject constructor(
     fun editModel(model: Model) {
         viewModelScope.launch {
             modelDao.upsertModel(model)
+            if (model.type != ModelType.LOCAL) {
+                modelDao.getLastActiveModel()?.let {
+                    inferenceRepository.loadModel(it) {
+                        modelDao.upsertModel(it.copy(isChosen = true))
+                    }
+                }
+            }
             refresh()
         }
     }

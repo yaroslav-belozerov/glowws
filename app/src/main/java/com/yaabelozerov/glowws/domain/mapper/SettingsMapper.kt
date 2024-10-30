@@ -2,6 +2,7 @@ package com.yaabelozerov.glowws.domain.mapper
 
 import android.util.Log
 import androidx.compose.ui.util.fastJoinToString
+import com.yaabelozerov.glowws.Const.String.JSON_DELIMITER
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsModel
@@ -16,7 +17,6 @@ import com.yaabelozerov.glowws.ui.model.FilterFlag
 import com.yaabelozerov.glowws.ui.model.SortModel
 import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
-import com.yaabelozerov.glowws.util.JSON_DELIMITER
 
 class SettingsMapper {
     fun toDomainModel(settings: SettingsList): Map<SettingsKeys, SettingDomainModel> {

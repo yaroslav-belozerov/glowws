@@ -2,6 +2,8 @@ package com.yaabelozerov.glowws.ui.screen.ai
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -16,12 +18,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -52,6 +56,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
@@ -72,16 +78,15 @@ fun AiScreen(
     status: Triple<Model?, InferenceManagerState, Long>,
     error: Exception?
 ) {
-    LazyColumn(modifier = modifier.animateContentSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        modifier = modifier.animateContentSize().fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         error?.let {
-            item {
-                Text(
-                    modifier = Modifier.padding(16.dp),
-                    text = it.localizedMessage ?: "Unknown error"
-                )
-            }
+            Text(
+                modifier = Modifier.padding(16.dp), text = it.localizedMessage ?: "Unknown error"
+            )
         }
-        items(models.keys.toList()) { type ->
+        models.keys.forEach { type ->
             Text(
                 text = stringResource(type.resId),
                 modifier = Modifier.padding(16.dp),
@@ -89,10 +94,13 @@ fun AiScreen(
                 fontSize = 20.sp
             )
             models[type]?.forEach { model ->
-                Column(modifier = Modifier.fillParentMaxWidth().animateContentSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
                     var open by remember { mutableStateOf(false) }
                     Row(modifier = Modifier
-                        .fillParentMaxWidth()
+                        .fillMaxWidth()
                         .background(
                             if (model.isChosen) MaterialTheme.colorScheme.surfaceContainer
                             else MaterialTheme.colorScheme.background
@@ -126,7 +134,8 @@ fun AiScreen(
                             }
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        IconButton(enabled = status.second.notBusy(),
+                        IconButton(
+                            enabled = status.second.notBusy(),
                             onClick = { onDelete(model) }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
@@ -134,34 +143,49 @@ fun AiScreen(
                             )
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        IconButton(enabled = status.second.notBusy(),
-                            onClick = { open = !open }) {
+                        IconButton(enabled = status.second.notBusy(), onClick = { open = !open }) {
                             Icon(
                                 imageVector = if (!open) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
                                 contentDescription = "delete model button"
                             )
                         }
                     }
-                    AnimatedVisibility(open, enter = slideInVertically() + fadeIn() + expandVertically(), exit = slideOutVertically() + fadeOut() + shrinkVertically()) {
-                        Column(modifier = Modifier.padding(16.dp).fillParentMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AnimatedVisibility(
+                        open,
+                        enter = slideInVertically() + fadeIn() + expandVertically(),
+                        exit = slideOutVertically() + fadeOut() + shrinkVertically()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             var newName by remember { mutableStateOf(model.name ?: "") }
-                            var nameChanged by rememberSaveable { mutableStateOf(false) }
+                            var nameChanged by remember { mutableStateOf(false) }
                             val focus = remember { FocusRequester() }
                             val focusManager = LocalFocusManager.current
 
-                            OutlinedTextField(trailingIcon = {
+                            OutlinedTextField(shape = MaterialTheme.shapes.medium, trailingIcon = {
                                 if (nameChanged) IconButton(onClick = {
                                     onEdit(model.copy(name = newName))
                                     focusManager.clearFocus()
+                                    nameChanged = false
                                 }) {
                                     Icon(
                                         Icons.Default.Check, "OK"
                                     )
                                 }
                             },
-                                prefix = { Text("Name", modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)) },
+                                prefix = {
+                                    Text(
+                                        "Name", modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)
+                                    )
+                                },
                                 singleLine = true,
-                                modifier = Modifier.fillParentMaxWidth().padding(16.dp, 0.dp).focusRequester(focus),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focus),
                                 value = newName,
                                 onValueChange = {
                                     newName = it
@@ -171,64 +195,71 @@ fun AiScreen(
                             if (type.needsToken) {
                                 var token by remember { mutableStateOf(model.token ?: "") }
                                 var changed by remember { mutableStateOf(false) }
-                                OutlinedTextField(trailingIcon = {
+                                OutlinedTextField(shape = MaterialTheme.shapes.medium, trailingIcon = {
                                     if (changed) IconButton(onClick = {
                                         onEdit(model.copy(token = token))
                                         focusManager.clearFocus()
+                                        changed = false
                                     }) {
                                         Icon(
                                             Icons.Default.Check, "OK"
                                         )
                                     }
                                 },
-                                    prefix = { Text("Token", modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)) },
+                                    prefix = {
+                                        Text(
+                                            "Token",
+                                            modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)
+                                        )
+                                    },
                                     singleLine = true,
-                                    modifier = Modifier.fillParentMaxWidth().padding(16.dp, 0.dp).focusRequester(focus),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .focusRequester(focus),
                                     value = token,
                                     onValueChange = {
                                         token = it
                                         changed = token != model.token
-                                    }, visualTransformation = PasswordVisualTransformation())
+                                    },
+                                    visualTransformation = PasswordVisualTransformation()
+                                )
                             }
                         }
                     }
                 }
             }
         }
-        item {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            IconButton(enabled = status.second.notBusy(), onClick = { onRefresh() }) {
+                Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
+            }
+            OutlinedButton(
+                enabled = status.second.notBusy(),
+                onClick = { onAdd() },
+                modifier = Modifier.weight(1f)
             ) {
-                IconButton(enabled = status.second.notBusy(), onClick = { onRefresh() }) {
-                    Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
-                }
-                OutlinedButton(
-                    enabled = status.second.notBusy(),
-                    onClick = { onAdd() },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if (status.second.notBusy()) {
-                        Text(
-                            text = "Import model"
-                        )
-                    } else {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            if (!status.second.notBusy()) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
-                                    strokeCap = StrokeCap.Round,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                            Text(
-                                text = stringResource(id = status.second.resId) + " " + (status.first?.name
-                                    ?: "")
+                if (status.second.notBusy()) {
+                    Text(
+                        text = "Import model"
+                    )
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (!status.second.notBusy()) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeCap = StrokeCap.Round,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
+                        Text(
+                            text = stringResource(id = status.second.resId) + " " + (status.first?.name
+                                ?: "")
+                        )
                     }
                 }
             }

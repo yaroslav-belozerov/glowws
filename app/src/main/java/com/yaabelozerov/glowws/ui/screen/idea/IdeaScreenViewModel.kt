@@ -1,6 +1,7 @@
 package com.yaabelozerov.glowws.ui.screen.idea
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import coil.ImageLoader
@@ -12,6 +13,7 @@ import com.yaabelozerov.glowws.domain.InferenceRepository
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -66,7 +68,7 @@ class IdeaScreenViewModel @Inject constructor(
         }
     }
 
-    fun modifyPoint(pointId: Long, content: String? = null, isMain: Boolean? = null) {
+    fun modifyPoint(pointId: Long, content: String? = null, isMain: Boolean? = null, callback: () -> Unit = {}) {
         viewModelScope.launch {
             val point = dao.getPoint(pointId).first()
             dao.upsertPointUpdateIdea(
@@ -75,18 +77,19 @@ class IdeaScreenViewModel @Inject constructor(
                     isMain = isMain ?: point.isMain
                 )
             )
+            callback()
         }
     }
 
     fun removePoint(pointId: Long) {
         viewModelScope.launch {
             val pt = dao.getPoint(pointId).first()
-            if (pt.type == PointType.IMAGE) {
-                mediaManager.removeMedia(pt.pointContent)
-            }
             val ideaId = pt.ideaParentId
             dao.deletePointAndIndex(pointId)
             dao.updateIdeaContentFromPoints(ideaId)
+            if (pt.type == PointType.IMAGE) {
+                mediaManager.removeMedia(pt.pointContent)
+            }
         }
     }
 

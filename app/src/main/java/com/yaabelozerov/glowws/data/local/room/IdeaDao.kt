@@ -14,11 +14,12 @@ interface IdeaDao {
 
     @Query(
         "SELECT * from `idea` WHERE isArchived = :archived AND EXISTS " +
-            "(SELECT * FROM point WHERE pointContent LIKE :query AND ideaParentId = ideaId)"
+            "(SELECT * FROM point WHERE pointContent LIKE :query AND ideaParentId = ideaId AND type = :pointType)"
     )
     fun getAllIdeasSearch(
         query: String,
-        archived: Boolean = false
+        archived: Boolean = false,
+        pointType: PointType = PointType.TEXT
     ): Flow<List<Idea>>
 
     @Query("SELECT * FROM idea WHERE ideaId = :ideaId")
