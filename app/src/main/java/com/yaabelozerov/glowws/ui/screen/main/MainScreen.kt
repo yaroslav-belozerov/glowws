@@ -164,8 +164,8 @@ fun MainScreen(
                         snackbarData = it,
                         shape = MaterialTheme.shapes.medium,
                         modifier = Modifier.clickable {
-                                it.dismiss()
-                            },
+                            it.dismiss()
+                        },
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         contentColor = MaterialTheme.colorScheme.onBackground
                     )
@@ -308,17 +308,24 @@ fun Idea(
                 )
             }
             Crossfade(priority != 0L) { show ->
-                if (show) Column(modifier = Modifier.fillMaxHeight().padding(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)) {
-                    for (it in 1..priority) {
-                        Box(modifier = Modifier.clip(MaterialTheme.shapes.small).width(8.dp).height(12.dp).background(MaterialTheme.colorScheme.primary))
+                if (show) Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
+                ) {
+                    for (it in 1..3) {
+                        Crossfade(it <= priority) { active ->
+                            Box(
+                                modifier = Modifier
+                                    .clip(MaterialTheme.shapes.small)
+                                    .width(8.dp)
+                                    .height(12.dp)
+                                    .background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+                            )
+                        }
                     }
-                    for (it in 1..(3 - priority)) {
-                        Box(modifier = Modifier.clip(MaterialTheme.shapes.small).width(8.dp).height(12.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh))
-                    }
-                }
-                else {
-                    Spacer(Modifier.width(16.dp))
-                }
+                } else Spacer(Modifier.width(16.dp))
             }
         }
         Box(

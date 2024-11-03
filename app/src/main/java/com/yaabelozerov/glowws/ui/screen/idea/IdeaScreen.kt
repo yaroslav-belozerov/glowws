@@ -308,11 +308,11 @@ fun TextPoint(
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .clickable {
-                    if (status.third != id) {
-                        onModify(true)
-                    }
-                }
+                .then(
+                    if (status.third != id && !isBeingModified) {
+                        Modifier.clickable { onModify(true) }
+                    } else Modifier
+                )
                 .fillMaxWidth()
                 .animateContentSize()
                 .background(

@@ -233,6 +233,7 @@ fun FloatingActionButtons(
                         id
                     )
                 )
+                ivm.refreshPoints(id)
             })
 
         Nav.ArchiveScreenRoute -> ArchiveScreenFloatingButtons(
