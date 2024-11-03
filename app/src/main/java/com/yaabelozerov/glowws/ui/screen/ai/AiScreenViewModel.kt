@@ -31,7 +31,7 @@ class AiScreenViewModel @Inject constructor(
     private val _models: MutableStateFlow<Map<ModelType, List<Model>>> = MutableStateFlow(emptyMap())
     val models = _models.asStateFlow()
 
-    val aiStatus = inferenceRepository.source
+    val aiStatus = inferenceRepository.source.also { Log.i("source", it.toString()) }
 
     init {
         viewModelScope.launch {
@@ -78,7 +78,11 @@ class AiScreenViewModel @Inject constructor(
 
     fun removeModel(model: Model) {
         viewModelScope.launch {
-            inferenceRepository.removeModel(model)
+            if (model == aiStatus.value.first) {
+                inferenceRepository.removeModel(model)
+            } else {
+                inferenceRepository.removeModel(model, aiStatus.value.second)
+            }
             modelDao.deleteModel(model)
             refresh()
         }

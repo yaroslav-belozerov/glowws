@@ -11,6 +11,7 @@ import com.yaabelozerov.glowws.R
 @Entity
 data class Idea(
     @PrimaryKey(autoGenerate = true) val ideaId: Long,
+    val priority: Long,
     val isArchived: Boolean,
     val timestampCreated: Long,
     val timestampModified: Long,

@@ -121,10 +121,10 @@ class InferenceRepositoryImpl(
         callback()
     }
 
-    override suspend fun removeModel(model: Model) {
+    override suspend fun removeModel(model: Model, stateAfter: InferenceManagerState) {
         _source.update { it.copy(second = InferenceManagerState.REMOVING) }
         when (model.type) {
-            ModelType.LOCAL -> localInferenceManager.removeModel(model.name!!) { _source.update { it.copy(null, InferenceManagerState.IDLE, -1L) } }
+            ModelType.LOCAL -> localInferenceManager.removeModel(model.name!!) { _source.update { if (it.first != model) it.copy(second = stateAfter) else it.copy(null, InferenceManagerState.IDLE) } }
             ModelType.OPENROUTER -> TODO()
         }
     }
@@ -138,56 +138,6 @@ class InferenceRepositoryImpl(
         _source.update { it.copy(null, InferenceManagerState.IDLE, -1L) }
         localInferenceManager.unloadModel()
     }
-
-    fun getData(inputStream: BufferedInputStream, onGet: (String) -> Unit) {
-        Thread {
-            val buffer =
-                ByteArray(1024)
-            var bytesRead: Int
-            try {
-                while ((inputStream.read(buffer).also { bytesRead = it }) != -1) {
-                    val data = String(
-                        buffer,
-                        0,
-                        bytesRead,
-                        StandardCharsets.UTF_8
-                    ).split("data:".toRegex()).dropLastWhile { it.isEmpty() }
-                        .toTypedArray()
-                    Log.i("tramResponseArray", Arrays.stream(data).toArray().contentToString());
-                    for (responseString in data) {
-                        val tramResponse = responseString.trim { it <= ' ' }
-                        if (tramResponse.isNotEmpty()) {
-                            if (!tramResponse.equals("[DONE]", ignoreCase = true)) {
-                                var openAIChatResponseModel: OpenRouterResponse? = null
-                                try {
-                                    openAIChatResponseModel = moshi.adapter(OpenRouterResponse::class.java).fromJson(tramResponse)
-                                    openAIChatResponseModel?.choices?.let {
-                                        if (it[0].delta.content != null
-                                        ) {
-                                            it[0].delta.content?.let(onGet)
-                                        }
-                                    } ?: Log.e("getData", "Error parsing JSON response: $tramResponse")
-                                } catch (e: JsonDataException) {
-                                    e.localizedMessage?.let { Log.e("getData", it) };
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (e: IOException) {
-                // Handle any IOException that may occur during the reading process
-                e.printStackTrace()
-            } finally {
-                // Close the InputStream to release system resources
-                try {
-                    inputStream.close()
-                } catch (e: IOException) {
-                    // Handle any IOException that may occur during the closing process
-                    e.printStackTrace()
-                }
-            }
-        }.start()
-    }
 }
 
-fun Uri.toStrippedFileName(app: Context): String = queryName(app.contentResolver).split("/")?.last()?.removeSuffix(".bin") ?: ""
+fun Uri.toStrippedFileName(app: Context): String = queryName(app.contentResolver).split("/").last().removeSuffix(".bin")

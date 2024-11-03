@@ -39,7 +39,8 @@ fun ScreenDialog(
     title: String,
     info: List<Pair<ImageVector, String>> = emptyList(),
     entries: List<DialogEntry>,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    extras: @Composable () -> Unit = {}
 ) {
     Dialog(onDismissRequest = onDismiss) {
         var confirm by remember {
@@ -72,6 +73,7 @@ fun ScreenDialog(
                         Text(text = text)
                     }
                 }
+                extras()
                 entries.forEachIndexed { ind, entry ->
                     if (!entry.needsConfirmation) {
                         DialogButton(

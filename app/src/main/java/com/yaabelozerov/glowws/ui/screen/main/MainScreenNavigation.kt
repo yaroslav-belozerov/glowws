@@ -53,7 +53,6 @@ fun MainScreenNavHost(
         composable(Nav.MainScreenRoute.route) {
             MainScreen(
                 modifier = Modifier,
-                imageLoader = mvm.imageLoader,
                 mvm = mvm,
                 ideas = mvm.state.collectAsState().value.ideas,
                 onClickIdea = { id ->
@@ -62,6 +61,7 @@ fun MainScreenNavHost(
                 },
                 onArchiveIdea = { id -> mvm.archiveIdea(id) },
                 onSelect = { id -> mvm.onSelect(id) },
+                onSetPriority = { id, priority -> mvm.setPriority(id, priority) },
                 inSelectionMode = mvm.selection.collectAsState().value.inSelectionMode,
                 selection = mvm.selection.collectAsState().value.entries,
                 settings = svm.state.collectAsState().value,
@@ -78,7 +78,6 @@ fun MainScreenNavHost(
             val discardText = stringResource(R.string.m_idea_discarded)
             IdeaScreen(
                 modifier = Modifier.consumeWindowInsets(innerPaddingValues),
-                imageLoader = ivm.imageLoader,
                 points = ivm.points.collectAsState().value,
                 onBack = {
                     mvm.tryDiscardEmpty(backStackEntry.arguments!!.getLong("id")) {
@@ -121,7 +120,6 @@ fun MainScreenNavHost(
             Nav.ArchiveScreenRoute.route
         ) {
             ArchiveScreen(
-                imageLoader = avm.imageLoader,
                 ideas = avm.state.collectAsState().value,
                 onClick = { id ->
                     navController.navigate(Nav.IdeaScreenRoute.withParam(id))

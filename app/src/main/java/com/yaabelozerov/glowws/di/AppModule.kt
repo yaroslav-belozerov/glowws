@@ -1,14 +1,13 @@
 package com.yaabelozerov.glowws.di
 
 import android.content.Context
+import android.os.Build.VERSION.SDK_INT
 import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
-import coil.ImageLoader
-import coil.imageLoader
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.EnumJsonAdapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -84,13 +83,6 @@ object AppModule {
     @Singleton
     @Provides
     fun provideMediaManager(@ApplicationContext app: Context) = MediaManager(app)
-
-    @Singleton
-    @Provides
-    fun provideCoilImageLoader(@ApplicationContext app: Context): ImageLoader =
-        app.imageLoader.newBuilder().crossfade(
-            true
-        ).build()
 
     @Singleton
     @Provides

@@ -134,7 +134,7 @@ fun AiScreen(
                             }
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        IconButton(
+                        if (model.type == ModelType.LOCAL) IconButton(
                             enabled = status.second.notBusy(),
                             onClick = { onDelete(model) }) {
                             Icon(

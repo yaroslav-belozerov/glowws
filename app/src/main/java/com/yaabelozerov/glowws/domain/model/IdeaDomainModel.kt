@@ -7,6 +7,7 @@ data class JoinedTimestamp(
 
 data class IdeaDomainModel(
     val id: Long,
+    val priority: Long,
     val created: JoinedTimestamp,
     val modified: JoinedTimestamp,
     val mainPoint: PointDomainModel

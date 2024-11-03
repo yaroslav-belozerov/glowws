@@ -25,7 +25,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainScreenViewModel @Inject constructor(
-    val imageLoader: ImageLoader,
     private val dao: IdeaDao,
     private val ideaMapper: IdeaMapper,
     private val settingsMapper: SettingsMapper,
@@ -118,6 +117,13 @@ class MainScreenViewModel @Inject constructor(
     fun archiveIdea(ideaId: Long) {
         viewModelScope.launch {
             dao.setArchiveIdea(ideaId)
+            fetchMainScreen()
+        }
+    }
+
+    fun setPriority(ideaId: Long, priority: Long) {
+        viewModelScope.launch {
+            dao.setPriorityIdea(ideaId, priority)
             fetchMainScreen()
         }
     }

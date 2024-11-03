@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Key
@@ -42,10 +43,12 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedIconToggleButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +64,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import coil.ImageLoader
 import coil.compose.SubcomposeAsyncImage
@@ -78,7 +83,6 @@ import java.io.File
 @Composable
 fun IdeaScreen(
     modifier: Modifier = Modifier,
-    imageLoader: ImageLoader,
     points: List<PointDomainModel>,
     onBack: () -> Unit,
     onAdd: (PointType, Long) -> Unit,
@@ -101,7 +105,7 @@ fun IdeaScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(16.dp)
     ) {
-        item(-1) {
+        item(-2) {
             Row {
                 IconButton(onClick = onBack) {
                     Icon(
@@ -114,6 +118,21 @@ fun IdeaScreen(
                     onAdd = { onAdd(it, 0) },
                     holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean()
                 )
+            }
+        }
+
+        item(-1) {
+            if (points.isEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Text(stringResource(R.string.i_add_point_placeholder))
+                    Icon(Icons.Default.ArrowUpward, contentDescription = null)
+                }
             }
         }
 
@@ -133,7 +152,7 @@ fun IdeaScreen(
                     status = aiStatus
                 )
 
-                PointType.IMAGE -> ImagePoint(imageLoader = imageLoader,
+                PointType.IMAGE -> ImagePoint(
                     content = point.content,
                     isBeingModified = modifiedId == point.id,
                     onModify = { if (it) modifiedId = point.id else modifiedId = null },
@@ -224,7 +243,6 @@ fun ImagePoint(
     modifier: Modifier = Modifier,
     isBeingModified: Boolean,
     onModify: (Boolean) -> Unit,
-    imageLoader: ImageLoader,
     content: String,
     isMain: Boolean,
     onSave: (Boolean) -> Unit,
@@ -235,7 +253,7 @@ fun ImagePoint(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .fillMaxWidth()
-                .clickable { onModify(!showUi) }, contentAlignment = Alignment.BottomStart
+                .clickable { onModify(!showUi) }, contentAlignment = Alignment.BottomEnd
         ) {
             SubcomposeAsyncImage(
                 modifier = Modifier
@@ -246,11 +264,10 @@ fun ImagePoint(
                     },
                 contentScale = ContentScale.FillWidth,
                 model = File(content),
-                contentDescription = null,
-                imageLoader = imageLoader
+                contentDescription = null
             )
             if (showUi) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Row(modifier = Modifier.padding(16.dp)) {
                     OutlinedIconButton(onClick = {
                         onRemove()
                         onModify(false)
@@ -288,11 +305,11 @@ fun TextPoint(
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .clickable {
-                    if (status.third != id) {
-                        onModify(true)
-                    }
-                }
+                .then(
+                    if (status.third != id && !isBeingModified) {
+                        Modifier.clickable { onModify(true) }
+                    } else Modifier
+                )
                 .fillMaxWidth()
                 .animateContentSize()
                 .background(
@@ -321,7 +338,7 @@ fun TextPoint(
             if (!isBeingModified) {
                 Crossfade(targetState = content) {
                     Text(
-                        modifier = Modifier.padding(8.dp),
+                        modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.headlineSmall,
                         text = if (it.isBlank() && showPlaceholders) {
                             stringResource(
@@ -341,15 +358,25 @@ fun TextPoint(
                 }
             } else {
                 Column(Modifier.fillMaxWidth()) {
-                    var currentText by remember {
-                        mutableStateOf(content)
+                    var currentText by remember(content) {
+                        mutableStateOf(TextFieldValue(content))
                     }
                     var currentMainStatus by remember {
                         mutableStateOf(isMain)
                     }
                     LaunchedEffect(key1 = Unit) {
                         pointFocus.requestFocus()
+                        currentText = currentText.copy(selection = TextRange(currentText.text.length))
                     }
+                    OutlinedTextField(
+                        textStyle = MaterialTheme.typography.headlineSmall,
+                        value = currentText,
+                        onValueChange = { currentText = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(pointFocus),
+                        shape = MaterialTheme.shapes.medium
+                    )
                     FlowRow(
                         Modifier
                             .fillMaxWidth()
@@ -364,8 +391,8 @@ fun TextPoint(
                         if (status.first != null && status.second == InferenceManagerState.ACTIVE) {
                             OutlinedButton(onClick = {
                                 onModify(false)
-                                onSave(currentText, currentMainStatus)
-                                onExecute(currentText)
+                                onSave(currentText.text, currentMainStatus)
+                                onExecute(currentText.text)
                             }) {
                                 Text(text = "Rephrase")
                             }
@@ -380,25 +407,21 @@ fun TextPoint(
                             )
                         }
                         OutlinedIconToggleButton(currentMainStatus, onCheckedChange = {
-                            onSave(currentText, it)
+                            onSave(currentText.text, it)
                             onModify(false)
-                        }) { Icon(Icons.Default.Key, contentDescription = stringResource(R.string.i_set_key)) }
+                        }) {
+                            Icon(
+                                Icons.Default.Key,
+                                contentDescription = stringResource(R.string.i_set_key)
+                            )
+                        }
                         Button(onClick = {
-                            onSave(currentText, currentMainStatus)
+                            onSave(currentText.text, currentMainStatus)
                             onModify(false)
                         }) {
                             Text(text = stringResource(id = R.string.label_save))
                         }
                     }
-                    TextField(
-                        textStyle = MaterialTheme.typography.headlineSmall,
-                        value = currentText,
-                        onValueChange = { currentText = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(pointFocus),
-                        shape = MaterialTheme.shapes.medium
-                    )
                 }
             }
         }
