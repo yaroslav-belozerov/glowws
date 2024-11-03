@@ -10,7 +10,7 @@ interface InferenceRepository {
 
     suspend fun generate(prompt: String, onUpdate: (String) -> Unit = {}, pointId: Long, token: String)
     suspend fun loadModel(model: Model, callback: suspend () -> Unit = {})
-    suspend fun removeModel(model: Model)
+    suspend fun removeModel(model: Model, stateAfter: InferenceManagerState = InferenceManagerState.IDLE)
     fun unloadModel()
     suspend fun addLocalModel(uri: Uri, callback: suspend (String) -> Unit)
 }

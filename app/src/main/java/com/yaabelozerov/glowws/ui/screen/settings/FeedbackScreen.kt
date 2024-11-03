@@ -37,6 +37,7 @@ import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.data.remote.FeedbackDTO
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
+import kotlin.math.roundToLong
 
 @Composable
 fun FeedbackScreen(
@@ -60,7 +61,7 @@ fun FeedbackScreen(
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Slider(
                 form.rating.toFloat(),
-                onValueChange = { form = form.copy(rating = it.toLong()) },
+                onValueChange = { form = form.copy(rating = it.roundToLong()) },
                 modifier = Modifier.fillMaxWidth(),
                 valueRange = 0f..5f,
                 steps = 4

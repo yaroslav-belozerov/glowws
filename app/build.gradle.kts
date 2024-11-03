@@ -38,11 +38,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "21"
     }
     buildFeatures {
         compose = true
@@ -96,19 +96,17 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.navigation.compose)
 
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    ksp("com.google.dagger:hilt-compiler:2.51.1")
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.datastore.preferences)
     implementation(kotlin("reflect"))
-    implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
-    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")
-    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.23.3")
-    implementation("com.google.mediapipe:tasks-genai:0.10.14")
-    implementation("androidx.compose.material:material:1.6.8")
-    implementation("androidx.compose.material:material-icons-extended:1.6.8")
-    implementation("io.coil-kt:coil:2.7.0")
-    implementation("io.coil-kt:coil-compose:2.7.0")
-    implementation("com.squareup.moshi:moshi-adapters:1.15.1")
+    implementation(libs.moshi.kotlin)
+    implementation(libs.converter.moshi)
+    implementation(libs.moshi.adapters)
+    implementation(libs.retrofit)
+    implementation(libs.tasks.genai)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.coil)
+    implementation(libs.coil.compose)
+    detektPlugins(libs.detekt.formatting)
 }
