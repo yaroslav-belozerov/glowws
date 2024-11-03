@@ -62,6 +62,7 @@ fun MainScreenNavHost(
                 },
                 onArchiveIdea = { id -> mvm.archiveIdea(id) },
                 onSelect = { id -> mvm.onSelect(id) },
+                onSetPriority = { id, priority -> mvm.setPriority(id, priority) },
                 inSelectionMode = mvm.selection.collectAsState().value.inSelectionMode,
                 selection = mvm.selection.collectAsState().value.entries,
                 settings = svm.state.collectAsState().value,

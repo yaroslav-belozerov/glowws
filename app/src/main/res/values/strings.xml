@@ -67,4 +67,6 @@
     <string name="s_feedback_error">Please provide at least a brief problem title</string>
     <string name="s_feedback_rate">Rate your experience</string>
     <string name="s_feedback_notrate">No Rating</string>
+    <string name="label_no_priority">Unset</string>
+    <string name="sort_priority">Priority</string>
 </resources>

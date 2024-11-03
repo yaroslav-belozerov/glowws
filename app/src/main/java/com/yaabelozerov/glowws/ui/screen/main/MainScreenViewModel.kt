@@ -122,6 +122,13 @@ class MainScreenViewModel @Inject constructor(
         }
     }
 
+    fun setPriority(ideaId: Long, priority: Long) {
+        viewModelScope.launch {
+            dao.setPriorityIdea(ideaId, priority)
+            fetchMainScreen()
+        }
+    }
+
     fun addNewIdea(callback: ((Long) -> Unit)? = null) {
         viewModelScope.launch {
             val id = dao.createIdea()

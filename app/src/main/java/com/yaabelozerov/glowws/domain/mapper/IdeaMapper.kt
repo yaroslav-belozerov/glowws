@@ -40,6 +40,7 @@ class IdeaMapper @Inject constructor(private val dao: IdeaDao) {
             out.add(
                 IdeaDomainModel(
                     idea.ideaId,
+                    idea.priority,
                     JoinedTimestamp(
                         idea.timestampCreated,
                         SimpleDateFormat(pattern, Locale.ROOT).format(created)
@@ -61,7 +62,8 @@ class IdeaMapper @Inject constructor(private val dao: IdeaDao) {
                     .thenBy { it.modified.timestamp }
 
                 SortType.TIMESTAMP_MODIFIED -> compareBy { it.modified.timestamp }
-            }
+                SortType.PRIORITY -> compareBy { it.priority }
+            }.thenBy { it.modified.timestamp }
         ).toMutableList()
         if (sortModel.order == SortOrder.DESCENDING) out.reverse()
         return out

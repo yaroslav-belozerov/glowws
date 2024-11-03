@@ -67,4 +67,6 @@
     <string name="s_feedback_error">"Пожалуйста, укажите вашу проблему "</string>
     <string name="s_feedback_rate">Оцените опыт использования</string>
     <string name="s_feedback_notrate">Без оценки</string>
+    <string name="label_no_priority">Нет</string>
+    <string name="sort_priority">Приоритет</string>
 </resources>

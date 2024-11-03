@@ -42,6 +42,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedIconToggleButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -235,7 +236,7 @@ fun ImagePoint(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .fillMaxWidth()
-                .clickable { onModify(!showUi) }, contentAlignment = Alignment.BottomStart
+                .clickable { onModify(!showUi) }, contentAlignment = Alignment.BottomEnd
         ) {
             SubcomposeAsyncImage(
                 modifier = Modifier
@@ -250,7 +251,7 @@ fun ImagePoint(
                 imageLoader = imageLoader
             )
             if (showUi) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Row(modifier = Modifier.padding(16.dp)) {
                     OutlinedIconButton(onClick = {
                         onRemove()
                         onModify(false)
@@ -321,7 +322,7 @@ fun TextPoint(
             if (!isBeingModified) {
                 Crossfade(targetState = content) {
                     Text(
-                        modifier = Modifier.padding(8.dp),
+                        modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.headlineSmall,
                         text = if (it.isBlank() && showPlaceholders) {
                             stringResource(
@@ -350,6 +351,15 @@ fun TextPoint(
                     LaunchedEffect(key1 = Unit) {
                         pointFocus.requestFocus()
                     }
+                    OutlinedTextField(
+                        textStyle = MaterialTheme.typography.headlineSmall,
+                        value = currentText,
+                        onValueChange = { currentText = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(pointFocus),
+                        shape = MaterialTheme.shapes.medium
+                    )
                     FlowRow(
                         Modifier
                             .fillMaxWidth()
@@ -390,15 +400,6 @@ fun TextPoint(
                             Text(text = stringResource(id = R.string.label_save))
                         }
                     }
-                    TextField(
-                        textStyle = MaterialTheme.typography.headlineSmall,
-                        value = currentText,
-                        onValueChange = { currentText = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(pointFocus),
-                        shape = MaterialTheme.shapes.medium
-                    )
                 }
             }
         }

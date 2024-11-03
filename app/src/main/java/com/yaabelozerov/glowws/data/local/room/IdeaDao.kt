@@ -119,7 +119,7 @@ interface IdeaDao {
 
     suspend fun createIdea(): Long {
         val m = System.currentTimeMillis()
-        return insertIdea(Idea(0, false, m, m, -1L))
+        return insertIdea(Idea(0, 0, false, m, m, -1L))
     }
 
     suspend fun deleteIdeaAndPoints(ideaId: Long) {
@@ -132,4 +132,7 @@ interface IdeaDao {
 
     @Query("UPDATE `idea` SET isArchived = 0 WHERE ideaId = :ideaId AND isArchived = 1")
     suspend fun setNotArchivedIdea(ideaId: Long)
+
+    @Query("UPDATE idea SET priority = :priority WHERE ideaId = :ideaId")
+    suspend fun setPriorityIdea(ideaId: Long, priority: Long)
 }

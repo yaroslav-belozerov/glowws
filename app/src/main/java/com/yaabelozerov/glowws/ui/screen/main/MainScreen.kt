@@ -2,7 +2,9 @@ package com.yaabelozerov.glowws.ui.screen.main
 
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandHorizontally
@@ -11,7 +13,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -24,9 +28,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -48,6 +54,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -104,6 +111,7 @@ fun MainScreen(
     onClickIdea: (Long) -> Unit,
     onArchiveIdea: (Long) -> Unit,
     onSelect: (Long) -> Unit,
+    onSetPriority: (Long, Long) -> Unit,
     inSelectionMode: Boolean,
     selection: List<Long>,
     settings: Map<SettingsKeys, SettingDomainModel>,
@@ -121,7 +129,10 @@ fun MainScreen(
                 modifier = Modifier
                     .fillParentMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .padding(bottom = if (snackbar.first.currentSnackbarData == null) 12.dp else 0.dp, top = 4.dp),
+                    .padding(
+                        bottom = if (snackbar.first.currentSnackbarData == null) 12.dp else 0.dp,
+                        top = 4.dp
+                    ),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -144,14 +155,15 @@ fun MainScreen(
         }
         item {
             AnimatedVisibility(
-                snackbar.first.currentSnackbarData != null, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()
+                snackbar.first.currentSnackbarData != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
             ) {
                 SnackbarHost(snackbar.first, snackbar = {
                     Snackbar(
                         snackbarData = it,
                         shape = MaterialTheme.shapes.medium,
-                        modifier = Modifier
-                            .clickable {
+                        modifier = Modifier.clickable {
                                 it.dismiss()
                             },
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -166,7 +178,9 @@ fun MainScreen(
             val specFade = spring<Float>(stiffness = Spring.StiffnessHigh)
             val specExpand = spring<IntSize>(stiffness = Spring.StiffnessHigh)
             AnimatedVisibility(
-                isSearchOpen, enter = fadeIn(specFade) + expandVertically(specExpand), exit = fadeOut(specFade) + shrinkVertically(specExpand)
+                isSearchOpen,
+                enter = fadeIn(specFade) + expandVertically(specExpand),
+                exit = fadeOut(specFade) + shrinkVertically(specExpand)
             ) {
                 LaunchedEffect(key1 = Unit) {
                     searchFocus.requestFocus()
@@ -213,6 +227,8 @@ fun MainScreen(
                 { onClickIdea(idea.id) },
                 { onArchiveIdea(idea.id) },
                 { onSelect(idea.id) },
+                idea.priority,
+                { onSetPriority(idea.id, it) },
                 inSelectionMode,
                 selection.contains(idea.id),
                 displayPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].also {
@@ -235,6 +251,8 @@ fun Idea(
     onClick: () -> Unit,
     onArchive: () -> Unit,
     onSelect: () -> Unit,
+    priority: Long,
+    onSetPriority: (Long) -> Unit,
     inSelectionMode: Boolean,
     isSelected: Boolean,
     displayPlaceholders: Boolean,
@@ -265,7 +283,8 @@ fun Idea(
                     maxLines = 10,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(vertical = 16.dp)
+                        .padding(start = 16.dp)
                         .weight(1f),
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontSize = 24.sp, lineHeight = 28.sp
@@ -277,17 +296,30 @@ fun Idea(
 
                 PointType.IMAGE -> SubcomposeAsyncImage(
                     modifier = Modifier
-                        .padding(16.dp)
-                        .then(if (fullImage) Modifier else Modifier.height(128.dp))
+                        .padding(vertical = 16.dp)
+                        .padding(start = 16.dp)
+                        .then(if (fullImage) Modifier else Modifier.heightIn(0.dp, 128.dp))
                         .clip(MaterialTheme.shapes.medium)
-                        .fillMaxWidth(),
+                        .weight(1f),
                     contentScale = ContentScale.FillWidth,
                     model = File(previewPoint.content),
                     contentDescription = null,
                     imageLoader = imageLoader
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            Crossfade(priority != 0L) { show ->
+                if (show) Column(modifier = Modifier.fillMaxHeight().padding(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)) {
+                    for (it in 1..priority) {
+                        Box(modifier = Modifier.clip(MaterialTheme.shapes.small).width(8.dp).height(12.dp).background(MaterialTheme.colorScheme.primary))
+                    }
+                    for (it in 1..(3 - priority)) {
+                        Box(modifier = Modifier.clip(MaterialTheme.shapes.small).width(8.dp).height(12.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh))
+                    }
+                }
+                else {
+                    Spacer(Modifier.width(16.dp))
+                }
+            }
         }
         Box(
             modifier = Modifier
@@ -312,7 +344,19 @@ fun Idea(
                     needsConfirmation = true
                 )
             ),
-            onDismiss = { isDialogOpen = false })
+            onDismiss = { isDialogOpen = false },
+            extras = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    (0L..3L).forEach {
+                        InputChip(selected = it == priority,
+                            onClick = { onSetPriority(it) },
+                            label = { Text(text = if (it != 0L) it.toString() else stringResource(id = R.string.label_no_priority)) })
+                    }
+                }
+            })
     }
 }
 
