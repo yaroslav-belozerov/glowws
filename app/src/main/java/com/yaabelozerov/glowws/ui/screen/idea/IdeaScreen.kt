@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Key
@@ -47,6 +48,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +64,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import coil.ImageLoader
 import coil.compose.SubcomposeAsyncImage
@@ -102,7 +106,7 @@ fun IdeaScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(16.dp)
     ) {
-        item(-1) {
+        item(-2) {
             Row {
                 IconButton(onClick = onBack) {
                     Icon(
@@ -115,6 +119,21 @@ fun IdeaScreen(
                     onAdd = { onAdd(it, 0) },
                     holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean()
                 )
+            }
+        }
+
+        item(-1) {
+            if (points.isEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Text(stringResource(R.string.i_add_point_placeholder))
+                    Icon(Icons.Default.ArrowUpward, contentDescription = null)
+                }
             }
         }
 
@@ -342,14 +361,15 @@ fun TextPoint(
                 }
             } else {
                 Column(Modifier.fillMaxWidth()) {
-                    var currentText by remember {
-                        mutableStateOf(content)
+                    var currentText by remember(content) {
+                        mutableStateOf(TextFieldValue(content))
                     }
                     var currentMainStatus by remember {
                         mutableStateOf(isMain)
                     }
                     LaunchedEffect(key1 = Unit) {
                         pointFocus.requestFocus()
+                        currentText = currentText.copy(selection = TextRange(currentText.text.length))
                     }
                     OutlinedTextField(
                         textStyle = MaterialTheme.typography.headlineSmall,
@@ -374,8 +394,8 @@ fun TextPoint(
                         if (status.first != null && status.second == InferenceManagerState.ACTIVE) {
                             OutlinedButton(onClick = {
                                 onModify(false)
-                                onSave(currentText, currentMainStatus)
-                                onExecute(currentText)
+                                onSave(currentText.text, currentMainStatus)
+                                onExecute(currentText.text)
                             }) {
                                 Text(text = "Rephrase")
                             }
@@ -390,11 +410,16 @@ fun TextPoint(
                             )
                         }
                         OutlinedIconToggleButton(currentMainStatus, onCheckedChange = {
-                            onSave(currentText, it)
+                            onSave(currentText.text, it)
                             onModify(false)
-                        }) { Icon(Icons.Default.Key, contentDescription = stringResource(R.string.i_set_key)) }
+                        }) {
+                            Icon(
+                                Icons.Default.Key,
+                                contentDescription = stringResource(R.string.i_set_key)
+                            )
+                        }
                         Button(onClick = {
-                            onSave(currentText, currentMainStatus)
+                            onSave(currentText.text, currentMainStatus)
                             onModify(false)
                         }) {
                             Text(text = stringResource(id = R.string.label_save))

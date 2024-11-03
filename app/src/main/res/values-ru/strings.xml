@@ -69,4 +69,5 @@
     <string name="s_feedback_notrate">Без оценки</string>
     <string name="label_no_priority">Нет</string>
     <string name="sort_priority">Приоритет</string>
+    <string name="i_add_point_placeholder">Нажмите, чтобы создать пункт</string>
 </resources>
