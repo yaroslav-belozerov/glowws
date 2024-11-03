@@ -25,7 +25,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainScreenViewModel @Inject constructor(
-    val imageLoader: ImageLoader,
     private val dao: IdeaDao,
     private val ideaMapper: IdeaMapper,
     private val settingsMapper: SettingsMapper,

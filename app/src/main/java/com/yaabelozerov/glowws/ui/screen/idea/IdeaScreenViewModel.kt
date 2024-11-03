@@ -28,7 +28,6 @@ import javax.inject.Inject
 class IdeaScreenViewModel @Inject constructor(
     private val dao: IdeaDao,
     private val mediaManager: MediaManager,
-    val imageLoader: ImageLoader,
     private val inferenceRepository: InferenceRepository
 ) : ViewModel() {
     private var _points = MutableStateFlow(emptyList<PointDomainModel>())

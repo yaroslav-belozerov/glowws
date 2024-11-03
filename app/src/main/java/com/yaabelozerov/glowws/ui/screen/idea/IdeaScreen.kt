@@ -83,7 +83,6 @@ import java.io.File
 @Composable
 fun IdeaScreen(
     modifier: Modifier = Modifier,
-    imageLoader: ImageLoader,
     points: List<PointDomainModel>,
     onBack: () -> Unit,
     onAdd: (PointType, Long) -> Unit,
@@ -153,7 +152,7 @@ fun IdeaScreen(
                     status = aiStatus
                 )
 
-                PointType.IMAGE -> ImagePoint(imageLoader = imageLoader,
+                PointType.IMAGE -> ImagePoint(
                     content = point.content,
                     isBeingModified = modifiedId == point.id,
                     onModify = { if (it) modifiedId = point.id else modifiedId = null },
@@ -244,7 +243,6 @@ fun ImagePoint(
     modifier: Modifier = Modifier,
     isBeingModified: Boolean,
     onModify: (Boolean) -> Unit,
-    imageLoader: ImageLoader,
     content: String,
     isMain: Boolean,
     onSave: (Boolean) -> Unit,
@@ -266,8 +264,7 @@ fun ImagePoint(
                     },
                 contentScale = ContentScale.FillWidth,
                 model = File(content),
-                contentDescription = null,
-                imageLoader = imageLoader
+                contentDescription = null
             )
             if (showUi) {
                 Row(modifier = Modifier.padding(16.dp)) {

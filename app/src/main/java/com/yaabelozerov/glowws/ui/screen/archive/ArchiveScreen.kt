@@ -48,7 +48,6 @@ import java.io.File
 @Composable
 fun ArchiveScreen(
     modifier: Modifier = Modifier,
-    imageLoader: ImageLoader,
     ideas: List<IdeaDomainModel> = emptyList(),
     onClick: (Long) -> Unit,
     onRemove: (Long) -> Unit,
@@ -67,7 +66,6 @@ fun ArchiveScreen(
         items(ideas, key = { it.id }) {
             ArchiveIdea(
                 modifier = Modifier.animateItem(),
-                imageLoader = imageLoader,
                 previewPoint = it.mainPoint,
                 onClick = { onClick(it.id) },
                 onRemove = { onRemove(it.id) },
@@ -88,7 +86,6 @@ fun ArchiveScreen(
 @Composable
 fun ArchiveIdea(
     modifier: Modifier = Modifier,
-    imageLoader: ImageLoader,
     previewPoint: PointDomainModel,
     onClick: () -> Unit,
     onRemove: () -> Unit,
@@ -144,8 +141,7 @@ fun ArchiveIdea(
                     .clip(MaterialTheme.shapes.medium),
                 contentScale = ContentScale.Crop,
                 model = File(previewPoint.content),
-                contentDescription = null,
-                imageLoader = imageLoader
+                contentDescription = null
             )
         }
         Spacer(modifier = Modifier.width(16.dp))

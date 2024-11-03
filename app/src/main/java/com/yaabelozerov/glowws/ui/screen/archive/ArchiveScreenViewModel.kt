@@ -23,7 +23,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ArchiveScreenViewModel @Inject constructor(
-    val imageLoader: ImageLoader,
     private val dao: IdeaDao,
     private val mapper: IdeaMapper,
     private val mediaManager: MediaManager

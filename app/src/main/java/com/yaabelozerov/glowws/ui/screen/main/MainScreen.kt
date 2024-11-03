@@ -106,7 +106,6 @@ fun SettingDomainModel?.booleanOrNull() = this?.let { value.toString() == "true"
 fun MainScreen(
     modifier: Modifier = Modifier,
     mvm: MainScreenViewModel,
-    imageLoader: ImageLoader,
     ideas: List<IdeaDomainModel> = emptyList(),
     onClickIdea: (Long) -> Unit,
     onArchiveIdea: (Long) -> Unit,
@@ -220,7 +219,6 @@ fun MainScreen(
         items(ideas, key = { it.id }) { idea ->
             Idea(
                 modifier = Modifier.animateItem(),
-                imageLoader,
                 idea.mainPoint,
                 idea.modified.string,
                 idea.created.string,
@@ -244,7 +242,6 @@ fun MainScreen(
 @Composable
 fun Idea(
     modifier: Modifier = Modifier,
-    imageLoader: ImageLoader,
     previewPoint: PointDomainModel,
     modified: String,
     created: String,
@@ -303,8 +300,7 @@ fun Idea(
                         .weight(1f),
                     contentScale = ContentScale.FillWidth,
                     model = File(previewPoint.content),
-                    contentDescription = null,
-                    imageLoader = imageLoader
+                    contentDescription = null
                 )
             }
             Crossfade(priority != 0L) { show ->
