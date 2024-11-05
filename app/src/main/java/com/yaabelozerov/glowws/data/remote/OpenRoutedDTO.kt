@@ -8,7 +8,7 @@ import retrofit2.http.POST
 
 
 data class OpenRouterRequest(
-    val model: String = "meta-llama/llama-3.2-11b-vision-instruct:free",
+    val model: String = "meta-llama/llama-3.2-90b-vision-instruct:free",
     val messages: List<Message>,
     val stream: Boolean = true
 )
