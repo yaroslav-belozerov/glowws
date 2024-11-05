@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.nio.file.Files
 import javax.inject.Inject
 
 enum class InferenceManagerState(val resId: Int) {
@@ -78,11 +79,7 @@ class InferenceManager @Inject constructor(
         error.reset()
         withContext(Dispatchers.IO) {
             try {
-                val dir = File(app.filesDir, "Models")
-                val file = File(dir, name)
-                if (file.exists()) {
-                    file.delete()
-                }
+                Files.delete(app.filesDir.resolve("Models").resolve(name).toPath())
                 callback()
             } catch (e: Exception) {
                 error.update { e }
