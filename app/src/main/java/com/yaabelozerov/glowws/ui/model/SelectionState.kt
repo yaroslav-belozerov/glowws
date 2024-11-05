@@ -7,9 +7,10 @@ data class SelectionState<T>(
 
 fun <T> SelectionState<T>.select(value: T): SelectionState<T> =
     if (entries.contains(value)) {
-        SelectionState((entries - value).isNotEmpty(), entries - value)
+      SelectionState((entries - value).isNotEmpty(), entries - value)
     } else {
-        SelectionState(true, entries + value)
+      SelectionState(true, entries + value)
     }
 
-fun <T> SelectionState<T>.selectAll(list: List<T>): SelectionState<T> = SelectionState(true, this.entries + list)
+fun <T> SelectionState<T>.selectAll(list: List<T>): SelectionState<T> =
+    SelectionState(true, this.entries + list)

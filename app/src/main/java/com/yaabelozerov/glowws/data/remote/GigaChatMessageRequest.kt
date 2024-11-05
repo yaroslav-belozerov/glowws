@@ -2,14 +2,13 @@ package com.yaabelozerov.glowws.data.remote
 
 import com.squareup.moshi.Json
 
-
 data class GigaChatAuthResponse(
     @Json(name = "access_token") val accessToken: String,
     @Json(name = "expires_at") val expiresAt: Long
 )
 
 enum class GigaChatScope {
-    GIGACHAT_API_PERS
+  GIGACHAT_API_PERS
 }
 
 data class GigaChatMessageRequest(
@@ -23,27 +22,21 @@ data class GigaChatMessageResponse(
     @Json(name = "choices") val gigaChatChoices: List<GigaChatChoice>,
     val created: Long,
     val model: String,
-    @Json(name = "object")
-    val object_field: String,
+    @Json(name = "object") val objectField: String,
     val usage: Usage,
 )
 
 data class GigaChatChoice(
     val message: GigaChatMessage,
     val index: Long,
-    @Json(name = "finish_reason")
-    val finishReason: String,
+    @Json(name = "finish_reason") val finishReason: String,
 )
 
 data class Usage(
-    @Json(name = "prompt_tokens")
-    val promptTokens: Long,
-    @Json(name = "completion_tokens")
-    val completionTokens: Long,
-    @Json(name = "total_tokens")
-    val totalTokens: Long,
+    @Json(name = "prompt_tokens") val promptTokens: Long,
+    @Json(name = "completion_tokens") val completionTokens: Long,
+    @Json(name = "total_tokens") val totalTokens: Long,
 )
-
 
 data class GigaChatMessage(
     val role: String = "user",

@@ -1,8 +1,5 @@
 package com.yaabelozerov.glowws.data.remote
 
-
-import okhttp3.ResponseBody
-import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -13,6 +10,5 @@ data class FeedbackDTO(
 )
 
 interface FeedbackService {
-    @POST("feedback")
-    suspend fun sendFeedback(@Body feedback: FeedbackDTO)
+  @POST("feedback") suspend fun sendFeedback(@Body feedback: FeedbackDTO)
 }

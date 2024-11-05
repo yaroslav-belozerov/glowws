@@ -31,7 +31,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil.ImageLoader
 import coil.compose.SubcomposeAsyncImage
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
@@ -49,37 +48,30 @@ import java.io.File
 fun ArchiveScreen(
     modifier: Modifier = Modifier,
     ideas: List<IdeaDomainModel> = emptyList(),
-    onClick: (Long) -> Unit,
-    onRemove: (Long) -> Unit,
-    onUnarchive: (Long) -> Unit,
-    onSelect: (Long) -> Unit,
+    onEvent: (ArchiveScreenEvent) -> Unit,
     selectionState: SelectionState<Long>,
     settings: Map<SettingsKeys, SettingDomainModel>
 ) {
-    LazyVerticalStaggeredGrid(
-        modifier = modifier,
-        columns = StaggeredGridCells.Fixed(2),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalItemSpacing = 16.dp,
-        contentPadding = PaddingValues(16.dp)
-    ) {
+  LazyVerticalStaggeredGrid(
+      modifier = modifier,
+      columns = StaggeredGridCells.Fixed(2),
+      horizontalArrangement = Arrangement.spacedBy(16.dp),
+      verticalItemSpacing = 16.dp,
+      contentPadding = PaddingValues(16.dp)) {
         items(ideas, key = { it.id }) {
-            ArchiveIdea(
-                modifier = Modifier.animateItem(),
-                previewPoint = it.mainPoint,
-                onClick = { onClick(it.id) },
-                onRemove = { onRemove(it.id) },
-                onUnarchive = { onUnarchive(it.id) },
-                onSelect = {
-                    onSelect(it.id)
-                },
-                inSelectionMode = selectionState.inSelectionMode,
-                isSelected = selectionState.entries.contains(it.id),
-                fullImage = settings[SettingsKeys.IMAGE_FULL_HEIGHT].boolean(),
-                displayPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean()
-            )
+          ArchiveIdea(
+              modifier = Modifier.animateItem(),
+              previewPoint = it.mainPoint,
+              onClick = { onEvent(ArchiveScreenEvent.Open(it.id)) },
+              onRemove = { onEvent(ArchiveScreenEvent.Remove(it.id)) },
+              onUnarchive = { onEvent(ArchiveScreenEvent.Unarchive(it.id)) },
+              onSelect = { onEvent(ArchiveScreenEvent.Select(it.id)) },
+              inSelectionMode = selectionState.inSelectionMode,
+              isSelected = selectionState.entries.contains(it.id),
+              fullImage = settings[SettingsKeys.IMAGE_FULL_HEIGHT].boolean(),
+              displayPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean())
         }
-    }
+      }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -96,79 +88,76 @@ fun ArchiveIdea(
     fullImage: Boolean,
     displayPlaceholders: Boolean
 ) {
-    var isDialogOpen by remember { mutableStateOf(false) }
+  var isDialogOpen by remember { mutableStateOf(false) }
 
-    Card(
-        modifier
-            .clip(MaterialTheme.shapes.medium)
-            .then(
-                if (isSelected) {
-                    Modifier.border(
-                        2.dp,
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.shapes.medium
-                    )
-                } else {
-                    Modifier
-                }
-            )
-            .combinedClickable(
-                onClick = if (inSelectionMode) onSelect else onClick,
-                onLongClick = { if (!inSelectionMode) isDialogOpen = true }
-            )
-    ) {
+  Card(
+      modifier
+          .clip(MaterialTheme.shapes.medium)
+          .then(
+              if (isSelected) {
+                Modifier.border(
+                    2.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.medium)
+              } else {
+                Modifier
+              })
+          .combinedClickable(
+              onClick = if (inSelectionMode) onSelect else onClick,
+              onLongClick = { if (!inSelectionMode) isDialogOpen = true })) {
         when (previewPoint.type) {
-            PointType.TEXT -> Text(
-                text = if (previewPoint.content.isBlank() && displayPlaceholders) {
-                    stringResource(id = R.string.placeholder_noname)
-                } else {
-                    previewPoint.content
-                },
-                maxLines = 5,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(
-                    alpha = if (previewPoint.content.isBlank()) 0.3f else 1f
-                )
-            )
+          PointType.TEXT ->
+              Text(
+                  text =
+                      if (previewPoint.content.isBlank() && displayPlaceholders) {
+                        stringResource(id = R.string.placeholder_noname)
+                      } else {
+                        previewPoint.content
+                      },
+                  maxLines = 5,
+                  overflow = TextOverflow.Ellipsis,
+                  modifier = Modifier.padding(16.dp),
+                  style = MaterialTheme.typography.bodyLarge,
+                  color =
+                      MaterialTheme.colorScheme.onSurface.copy(
+                          alpha = if (previewPoint.content.isBlank()) 0.3f else 1f))
 
-            PointType.IMAGE -> SubcomposeAsyncImage(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .then(if (fullImage) Modifier else Modifier.height(128.dp))
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.medium),
-                contentScale = ContentScale.Crop,
-                model = File(previewPoint.content),
-                contentDescription = null
-            )
+          PointType.IMAGE ->
+              SubcomposeAsyncImage(
+                  modifier =
+                      Modifier.padding(16.dp)
+                          .then(if (fullImage) Modifier else Modifier.height(128.dp))
+                          .fillMaxWidth()
+                          .clip(MaterialTheme.shapes.medium),
+                  contentScale = ContentScale.Crop,
+                  model = File(previewPoint.content),
+                  contentDescription = null)
         }
         Spacer(modifier = Modifier.width(16.dp))
-    }
+      }
 
-    if (isDialogOpen) {
-        ScreenDialog(
-            title = if (previewPoint.type == PointType.TEXT) previewPoint.content else "",
-            entries = listOf(
+  if (isDialogOpen) {
+    ScreenDialog(
+        title = if (previewPoint.type == PointType.TEXT) previewPoint.content else "",
+        entries =
+            listOf(
                 DialogEntry(
-                    Icons.Default.Menu,
-                    stringResource(id = R.string.label_select),
-                    onSelect
-                ),
+                    Icons.Default.Menu, stringResource(id = R.string.label_select), onSelect),
                 DialogEntry(
-                    Icons.Default.Refresh,
-                    stringResource(id = R.string.a_unarchive),
-                    onUnarchive
-                ),
+                    Icons.Default.Refresh, stringResource(id = R.string.a_unarchive), onUnarchive),
                 DialogEntry(
                     Icons.Default.Delete,
                     stringResource(id = R.string.a_remove_idea),
                     onRemove,
-                    needsConfirmation = true
-                )
-            ),
-            onDismiss = { isDialogOpen = false }
-        )
-    }
+                    needsConfirmation = true)),
+        onDismiss = { isDialogOpen = false })
+  }
+}
+
+sealed class ArchiveScreenEvent {
+  data class Open(val id: Long) : ArchiveScreenEvent()
+
+  data class Remove(val id: Long) : ArchiveScreenEvent()
+
+  data class Unarchive(val id: Long) : ArchiveScreenEvent()
+
+  data class Select(val id: Long) : ArchiveScreenEvent()
 }
