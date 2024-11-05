@@ -71,4 +71,5 @@
     <string name="sort_priority">Priority</string>
     <string name="i_add_point_placeholder">Click to Add Point</string>
     <string name="ai_no_token">No Token</string>
+    <string name="s_reset">Reset to Default</string>
 </resources>

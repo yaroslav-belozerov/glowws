@@ -1,7 +1,6 @@
 package com.yaabelozerov.glowws.di
 
 import android.content.Context
-import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -17,7 +16,6 @@ import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.media.MediaManager
 import com.yaabelozerov.glowws.data.local.room.GlowwsDatabase
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
-import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.data.local.room.ModelVariant
 import com.yaabelozerov.glowws.data.remote.FeedbackService
 import com.yaabelozerov.glowws.data.remote.GigaChatService
@@ -55,20 +53,13 @@ object AppModule {
 
   @Singleton
   @Provides
-  fun provideMoshi(): Moshi {
-    val m =
-        Moshi.Builder()
-            .add(
-                SettingsKeys::class.java,
-                EnumJsonAdapter.create(SettingsKeys::class.java).withUnknownFallback(null))
-            .add(KotlinJsonAdapterFactory())
-            .build()
-    Log.i(
-        "moshi",
-        m.adapter(Model::class.java)
-            .toJson(Model(-1L, ModelVariant.OPENROUTER, "test", "test", null, true)))
-    return m
-  }
+  fun provideMoshi(): Moshi =
+      Moshi.Builder()
+          .add(
+              SettingsKeys::class.java,
+              EnumJsonAdapter.create(SettingsKeys::class.java).withUnknownFallback(null))
+          .add(KotlinJsonAdapterFactory())
+          .build()
 
   @Singleton
   @Provides

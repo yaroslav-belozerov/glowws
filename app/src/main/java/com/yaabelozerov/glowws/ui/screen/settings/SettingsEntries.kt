@@ -47,14 +47,10 @@ fun BooleanSettingsEntry(
     entry: BooleanSettingDomainModel,
     onModify: (SettingsKeys, String) -> Unit
 ) {
-  var checked by remember { mutableStateOf(entry.value) }
   Row(
       modifier =
           modifier
-              .clickable {
-                checked = !checked
-                onModify(entry.key, checked.toString())
-              }
+              .clickable { onModify(entry.key, (!entry.value).toString()) }
               .padding(16.dp, 4.dp),
       verticalAlignment = Alignment.CenterVertically) {
         Text(
@@ -63,11 +59,8 @@ fun BooleanSettingsEntry(
             modifier = Modifier.weight(1f))
         Spacer(modifier = Modifier.width(8.dp))
         Switch(
-            checked = checked,
-            onCheckedChange = {
-              checked = !checked
-              onModify(entry.key, checked.toString())
-            },
+            checked = entry.value,
+            onCheckedChange = { onModify(entry.key, (!entry.value).toString()) },
             modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp))
       }
 }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +26,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.common.collect.ImmutableMap
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
@@ -40,12 +42,17 @@ import com.yaabelozerov.glowws.domain.model.StringSettingDomainModel
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
-    settings: Map<SettingsKeys, SettingDomainModel>,
+    settings: ImmutableMap<SettingsKeys, SettingDomainModel>,
     onModify: (SettingsKeys, String) -> Unit,
+    changed: Boolean,
+    onReset: () -> Unit,
     aiStatus: Triple<Model?, InferenceManagerState, Long>,
     onNavigateToAi: () -> Unit
 ) {
-  val s by remember(settings.values) { mutableStateOf(settings.values.groupBy { it.key.category }) }
+  val s by
+      remember(settings.values, changed) {
+        mutableStateOf(settings.values.groupBy { it.key.category })
+      }
   LazyColumn(modifier = modifier) {
     s.forEach { (k, v) ->
       stickyHeader { SettingsHeader(icon = k.icon, name = stringResource(id = k.resId)) }
@@ -100,6 +107,13 @@ fun SettingsScreen(
     item {
       AiSettingsEntry(status = aiStatus.second, modelName = aiStatus.first?.name) {
         onNavigateToAi()
+      }
+    }
+    if (changed) {
+      item {
+        Row(modifier = Modifier.fillParentMaxWidth(), horizontalArrangement = Arrangement.Center) {
+          ElevatedButton(onClick = onReset) { Text(stringResource(R.string.s_reset)) }
+        }
       }
     }
   }
