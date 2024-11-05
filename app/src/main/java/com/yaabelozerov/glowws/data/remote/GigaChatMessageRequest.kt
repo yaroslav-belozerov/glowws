@@ -13,7 +13,7 @@ enum class GigaChatScope {
 }
 
 data class GigaChatMessageRequest(
-    val model: String = "GigaChat",
+    val model: String,
     val messages: List<GigaChatMessage>,
     val stream: Boolean = false,
     @Json(name = "update_interval") val updateInterval: Long = 0,

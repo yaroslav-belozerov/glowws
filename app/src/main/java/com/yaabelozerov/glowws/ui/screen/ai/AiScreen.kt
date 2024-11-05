@@ -48,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
 import com.yaabelozerov.glowws.data.local.ai.notBusy
 import com.yaabelozerov.glowws.data.local.room.Model
@@ -68,7 +69,10 @@ fun AiScreen(
     error: Exception?
 ) {
     Column(
-        modifier = modifier.animateContentSize().fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = modifier
+            .animateContentSize()
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         error?.let {
             Text(
@@ -84,8 +88,7 @@ fun AiScreen(
             )
             models[type]?.forEach { model ->
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     var open by remember { mutableStateOf(false) }
                     Row(modifier = Modifier
@@ -123,8 +126,7 @@ fun AiScreen(
                             }
                         }
                         Spacer(modifier = Modifier.width(8.dp))
-                        if (model.type == ModelVariant.ONDEVICE) IconButton(
-                            enabled = status.second.notBusy(),
+                        if (model.type == ModelVariant.ONDEVICE) IconButton(enabled = status.second.notBusy(),
                             onClick = { onDelete(model) }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
@@ -132,10 +134,13 @@ fun AiScreen(
                             )
                         }
                         Spacer(modifier = Modifier.width(8.dp))
+                        if (model.type.needsToken && (model.token ?: "").isBlank()) {
+                            Text(stringResource(R.string.ai_no_token), color = MaterialTheme.colorScheme.error)
+                        }
                         IconButton(enabled = status.second.notBusy(), onClick = { open = !open }) {
                             Icon(
                                 imageVector = if (!open) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowUp,
-                                contentDescription = "delete model button"
+                                contentDescription = "expand model settings"
                             )
                         }
                     }
@@ -155,17 +160,18 @@ fun AiScreen(
                             val focus = remember { FocusRequester() }
                             val focusManager = LocalFocusManager.current
 
-                            OutlinedTextField(shape = MaterialTheme.shapes.medium, trailingIcon = {
-                                if (nameChanged) IconButton(onClick = {
-                                    onEdit(model.copy(name = newName))
-                                    focusManager.clearFocus()
-                                    nameChanged = false
-                                }) {
-                                    Icon(
-                                        Icons.Default.Check, "OK"
-                                    )
-                                }
-                            },
+                            OutlinedTextField(shape = MaterialTheme.shapes.medium,
+                                trailingIcon = {
+                                    if (nameChanged) IconButton(onClick = {
+                                        onEdit(model.copy(name = newName))
+                                        focusManager.clearFocus()
+                                        nameChanged = false
+                                    }) {
+                                        Icon(
+                                            Icons.Default.Check, "OK"
+                                        )
+                                    }
+                                },
                                 prefix = {
                                     Text(
                                         "Name", modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)
@@ -184,17 +190,18 @@ fun AiScreen(
                             if (model.type.needsToken) {
                                 var token by remember { mutableStateOf(model.token ?: "") }
                                 var changed by remember { mutableStateOf(false) }
-                                OutlinedTextField(shape = MaterialTheme.shapes.medium, trailingIcon = {
-                                    if (changed) IconButton(onClick = {
-                                        onEdit(model.copy(token = token))
-                                        focusManager.clearFocus()
-                                        changed = false
-                                    }) {
-                                        Icon(
-                                            Icons.Default.Check, "OK"
-                                        )
-                                    }
-                                },
+                                OutlinedTextField(shape = MaterialTheme.shapes.medium,
+                                    trailingIcon = {
+                                        if (changed) IconButton(onClick = {
+                                            onEdit(model.copy(token = token))
+                                            focusManager.clearFocus()
+                                            changed = false
+                                        }) {
+                                            Icon(
+                                                Icons.Default.Check, "OK"
+                                            )
+                                        }
+                                    },
                                     prefix = {
                                         Text(
                                             "Token",

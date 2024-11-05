@@ -114,11 +114,11 @@ class IdeaScreenViewModel @Inject constructor(
         }
     }
 
-    fun generateResponse(s: String, pointId: Long, token: String = "") {
+    fun generateResponse(s: String, pointId: Long) {
         viewModelScope.launch {
             inferenceRepository.generate(s, onUpdate =  {
                 modifyPoint(pointId, it)
-            }, pointId, token)
+            }, pointId)
         }
     }
 }

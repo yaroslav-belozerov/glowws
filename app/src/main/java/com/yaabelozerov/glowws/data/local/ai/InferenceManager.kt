@@ -8,10 +8,13 @@ import com.google.mediapipe.tasks.genai.llminference.LlmInference.LlmInferenceOp
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.di.SettingsManager
 import com.yaabelozerov.glowws.queryName
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.nio.file.Files
@@ -140,10 +143,10 @@ class InferenceManager @Inject constructor(
     private fun setCallback(onUpdate: (String) -> Unit, onEnd: () -> Unit) =
         _callback.update { Pair(onUpdate, onEnd) }
 
-    suspend fun execute(prompt: String, onUpdate: (String) -> Unit = {}, onEnd: () -> Unit = {}) {
-        withContext(Dispatchers.IO) {
+    fun execute(prompt: String, onUpdate: (String) -> Unit = {}, onEnd: () -> Unit = {}): Job {
+        val scope = CoroutineScope(Dispatchers.IO)
+        return scope.launch {
             setCallback(onUpdate, onEnd)
-
             _model.value?.generateResponseAsync(prompt)
         }
     }
