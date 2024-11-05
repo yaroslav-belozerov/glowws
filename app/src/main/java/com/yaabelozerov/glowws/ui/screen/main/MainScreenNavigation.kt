@@ -103,10 +103,10 @@ fun MainScreenNavHost(
                     ivm.removePoint(pointId)
                 },
                 onExecute = { pointId, content ->
-                    ivm.generateResponse(content, pointId, aivm.aiStatus.value.first?.token ?: "")
+                    ivm.generateResponse(content, pointId)
                 },
                 settings = svm.state.collectAsState().value,
-                aiStatus = aivm.aiStatus.collectAsState().value
+                aiStatus = aivm.aiStatus.collectAsState().value,
             )
         }
         composable(Nav.SettingsScreenRoute.route) {

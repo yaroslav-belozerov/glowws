@@ -13,7 +13,6 @@ sealed class Const {
         const val JSON_DELIMITER = ", "
     }
     object Net {
-        const val BASE_URL = "https://openrouter.ai/api/v1/"
         const val MODEL_PRELOAD_BASE_URL = "https://tarakoshka.tech/glowws/"
         const val FEEDBACK_BASE_URL = "https://tarakoshka.tech/api/"
     }
