@@ -1,7 +1,6 @@
 package com.yaabelozerov.glowws.di
 
 import android.content.Context
-import android.os.Build.VERSION.SDK_INT
 import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -19,8 +18,9 @@ import com.yaabelozerov.glowws.data.local.media.MediaManager
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.data.local.room.GlowwsDatabase
 import com.yaabelozerov.glowws.data.local.room.Model
-import com.yaabelozerov.glowws.data.local.room.ModelType
+import com.yaabelozerov.glowws.data.local.room.ModelVariant
 import com.yaabelozerov.glowws.data.remote.FeedbackService
+import com.yaabelozerov.glowws.data.remote.GigaChatService
 import com.yaabelozerov.glowws.data.remote.OpenRouterService
 import com.yaabelozerov.glowws.domain.InferenceRepository
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
@@ -32,7 +32,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Inject
@@ -70,7 +69,7 @@ object AppModule {
             SettingsKeys::class.java,
             EnumJsonAdapter.create(SettingsKeys::class.java).withUnknownFallback(null)
         ).add(KotlinJsonAdapterFactory()).build()
-        Log.i("moshi", m.adapter(Model::class.java).toJson(Model(-1L, ModelType.OPENROUTER, "test", "test", null, true)))
+        Log.i("moshi", m.adapter(Model::class.java).toJson(Model(-1L, ModelVariant.OPENROUTER, "test", "test", null, true)))
         return m
     }
 
@@ -93,14 +92,21 @@ object AppModule {
     @Singleton
     @Provides
     fun provideInferenceRepository(
-        infm: InferenceManager, ors: OpenRouterService, @ApplicationContext app: Context, moshi: Moshi
-    ): InferenceRepository = InferenceRepositoryImpl(infm, ors, app, moshi)
+        infm: InferenceManager, ors: OpenRouterService, gcs: GigaChatService, @ApplicationContext app: Context, dataStoreManager: DataStoreManager
+    ): InferenceRepository = InferenceRepositoryImpl(infm, ors, gcs, app, dataStoreManager)
 
     @Singleton
     @Provides
     fun provideOpenRoutedService(moshi: Moshi): OpenRouterService =
-        Retrofit.Builder().baseUrl(Const.Net.BASE_URL).addConverterFactory(MoshiConverterFactory.create(moshi)).build()
+        Retrofit.Builder().baseUrl(ModelVariant.OPENROUTER.baseUrl!!).addConverterFactory(MoshiConverterFactory.create(moshi)).build()
             .create(OpenRouterService::class.java)
+
+    @Singleton
+    @Provides
+    fun provideGigaChatService(moshi: Moshi): GigaChatService =
+        Retrofit.Builder().baseUrl("https://ngw.devices.sberbank.ru:9443/api/v2/oauth/").addConverterFactory(MoshiConverterFactory.create(moshi)).build()
+            .create(GigaChatService::class.java)
+
 
     @Singleton
     @Provides
@@ -119,14 +125,24 @@ object AppModule {
             settingsDataStore.edit { it[settingsKey] = settings }
 
         private val timesOpenedKey = longPreferencesKey("times_opened")
-        fun getTimesOpened(): Flow<Long> = settingsDataStore.data.map { it[timesOpenedKey] ?: 0 }
+        fun getTimesOpened(): Flow<Long> = settingsDataStore.data.map { it[tempTokenExpiryKey] ?: 0 }
         suspend fun setTimesOpened(timesOpened: Long) =
-            settingsDataStore.edit { it[timesOpenedKey] = timesOpened }
+            settingsDataStore.edit { it[tempTokenExpiryKey] = timesOpened }
 
         private val currentModelId = longPreferencesKey("current_model_name")
         fun getCurrentModelId(): Flow<Long> =
             settingsDataStore.data.map { it[currentModelId] ?: -1L }
 
         suspend fun setCurrentModelId(id: Long) = settingsDataStore.edit { it[currentModelId] = id }
+
+        private val tempTokenKey = stringPreferencesKey("temp_token")
+        fun getTempToken(): Flow<String> = settingsDataStore.data.map { it[tempTokenKey] ?: "" }
+        suspend fun setTempToken(token: String) =
+            settingsDataStore.edit { it[tempTokenKey] = token }
+
+        private val tempTokenExpiryKey = longPreferencesKey("temp_token_expiry")
+        fun getTempTokenExpiry(): Flow<Long> = settingsDataStore.data.map { it[tempTokenExpiryKey] ?: 0 }
+        suspend fun setTempTokenExpiry(expiresAt: Long) =
+            settingsDataStore.edit { it[tempTokenExpiryKey] = expiresAt }
     }
 }

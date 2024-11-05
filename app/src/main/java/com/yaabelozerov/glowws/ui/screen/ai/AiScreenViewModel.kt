@@ -9,12 +9,12 @@ import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.di.SettingsManager
 import com.yaabelozerov.glowws.data.local.room.ModelDao
 import com.yaabelozerov.glowws.data.local.room.ModelType
+import com.yaabelozerov.glowws.data.local.room.ModelVariant
 import com.yaabelozerov.glowws.domain.InferenceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -54,7 +54,7 @@ class AiScreenViewModel @Inject constructor(
                 modelDao.clearChosen()
                 val mod = Model(
                     0,
-                    ModelType.LOCAL,
+                    ModelVariant.ONDEVICE,
                     it.split("/").last().removeSuffix(".bin"),
                     it,
                     null,
@@ -119,7 +119,7 @@ class AiScreenViewModel @Inject constructor(
     fun editModel(model: Model) {
         viewModelScope.launch {
             modelDao.upsertModel(model)
-            if (model.type != ModelType.LOCAL) {
+            if (model.type != ModelVariant.ONDEVICE) {
                 modelDao.getLastActiveModel()?.let {
                     inferenceRepository.loadModel(it) {
                         modelDao.upsertModel(it.copy(isChosen = true))
@@ -132,5 +132,10 @@ class AiScreenViewModel @Inject constructor(
 }
 
 fun List<Model>.toTypeMap(): Map<ModelType, List<Model>> {
-    return groupBy { it.type }
+    val mp = mutableMapOf<ModelType, List<Model>>()
+    forEach { model ->
+        val key = ModelType.entries.find { it.variants.contains(model.type) }!!
+        mp[key] = listOf(model) + (mp[key] ?: emptyList())
+    }
+    return mp
 }

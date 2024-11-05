@@ -148,7 +148,9 @@ class MainActivity : ComponentActivity() {
                             .body()?.let {
                                 aivm.importRemoteModels(it)
                             }
-                    } catch (_: Exception) {}
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
                 }
             }
             val dynamicColor =
