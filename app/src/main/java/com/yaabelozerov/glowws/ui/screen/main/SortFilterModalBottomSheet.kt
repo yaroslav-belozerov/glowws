@@ -40,29 +40,24 @@ import com.yaabelozerov.glowws.ui.model.SortType
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SortFilterModalBottomSheet(mvm: MainScreenViewModel) {
-    if (mvm.sortFilterOpen.collectAsState().value) {
-        ModalBottomSheet(onDismissRequest = { mvm.toggleSortFilterModal() }) {
-            Column(
-                Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                val flags = mvm.state.collectAsState().value.filter.flags
-                if (flags.isNotEmpty()) {
-                    FilterColumn(
-                        flags = flags,
-                        setFilterFlag = { f, v -> mvm.setFilterFlag(f, v) },
-                        resetFilter = { mvm.resetFilter() }
-                    )
-                }
-                SortColumn(
-                    sortModel = mvm.state.collectAsState().value.sort,
-                    setSortType = { mvm.setSortType(it) },
-                    reverseOrder = { mvm.reverseSortOrder() },
-                    resetSort = { mvm.fetchSort() }
-                )
-            }
+  if (mvm.sortFilterOpen.collectAsState().value) {
+    ModalBottomSheet(onDismissRequest = { mvm.toggleSortFilterModal() }) {
+      Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        val flags = mvm.state.collectAsState().value.filter.flags
+        if (flags.isNotEmpty()) {
+          FilterColumn(
+              flags = flags,
+              setFilterFlag = { f, v -> mvm.setFilterFlag(f, v) },
+              resetFilter = { mvm.resetFilter() })
         }
+        SortColumn(
+            sortModel = mvm.state.collectAsState().value.sort,
+            setSortType = { mvm.setSortType(it) },
+            reverseOrder = { mvm.reverseSortOrder() },
+            resetSort = { mvm.fetchSort() })
+      }
     }
+  }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -72,68 +67,54 @@ fun FilterColumn(
     setFilterFlag: (FilterFlag, Boolean) -> Unit,
     resetFilter: () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(id = R.string.m_filter),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            TextButton(onClick = { resetFilter() }) {
-                Text(
-                    text = stringResource(id = R.string.m_reset_sortfilter),
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-        }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            flags.forEach {
-                if (it.value) {
-                    Button(onClick = {
-                        setFilterFlag(
-                            it.key,
-                            !it.value
-                        )
-                    }) {
-                        if (it.value) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "filter applied icon",
-                                modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
-                            )
-                        }
-                        Text(
-                            text = stringResource(id = it.key.resId),
-//                            fontSize = 16.sp,
-                        )
-                    }
-                } else {
-                    OutlinedButton(onClick = {
-                        setFilterFlag(
-                            it.key,
-                            !it.value
-                        )
-                    }) {
-                        if (it.value) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "filter applied icon",
-                                modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
-                            )
-                        }
-                        Text(
-                            text = stringResource(id = it.key.resId),
-//                            fontSize = 16.sp,
-                        )
-                    }
-                }
-            }
-        }
+  Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      Text(
+          text = stringResource(id = R.string.m_filter),
+          fontSize = 24.sp,
+          fontWeight = FontWeight.Bold)
+      Spacer(modifier = Modifier.weight(1f))
+      TextButton(onClick = { resetFilter() }) {
+        Text(
+            text = stringResource(id = R.string.m_reset_sortfilter),
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+            fontWeight = FontWeight.Bold)
+      }
+      Spacer(modifier = Modifier.width(4.dp))
     }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      flags.forEach {
+        if (it.value) {
+          Button(onClick = { setFilterFlag(it.key, !it.value) }) {
+            if (it.value) {
+              Icon(
+                  imageVector = Icons.Default.Check,
+                  contentDescription = "filter applied icon",
+                  modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp))
+            }
+            Text(
+                text = stringResource(id = it.key.resId),
+                //                            fontSize = 16.sp,
+            )
+          }
+        } else {
+          OutlinedButton(onClick = { setFilterFlag(it.key, !it.value) }) {
+            if (it.value) {
+              Icon(
+                  imageVector = Icons.Default.Check,
+                  contentDescription = "filter applied icon",
+                  modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp))
+            }
+            Text(
+                text = stringResource(id = it.key.resId),
+                //                            fontSize = 16.sp,
+            )
+          }
+        }
+      }
+    }
+  }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -144,64 +125,57 @@ fun SortColumn(
     reverseOrder: () -> Unit,
     resetSort: () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(id = R.string.m_sort),
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.clickable { reverseOrder() }
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            OutlinedIconButton(onClick = { reverseOrder() }, modifier = Modifier.height(24.dp)) {
-                Icon(
-                    imageVector = if (sortModel.order == SortOrder.ASCENDING) {
-                        Icons.Default.KeyboardArrowUp
-                    } else {
-                        Icons.Default.KeyboardArrowDown
-                    },
-                    contentDescription = null,
-                    modifier = Modifier.padding(4.dp, 0.dp)
-                )
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            TextButton(onClick = { resetSort() }) {
-                Text(
-                    text = stringResource(id = R.string.m_reset_sortfilter),
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Spacer(modifier = Modifier.width(4.dp))
-        }
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            SortType.entries.forEach {
-                if (sortModel.type == it) {
-                    Button(onClick = {
-                        resetSort()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "filter applied icon",
-                            modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp)
-                        )
-                        Text(
-                            text = stringResource(it.resId),
-//                            fontSize = 16.sp,
-                        )
-                    }
+  Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      Text(
+          text = stringResource(id = R.string.m_sort),
+          fontSize = 24.sp,
+          fontWeight = FontWeight.Bold,
+          modifier = Modifier.clickable { reverseOrder() })
+      Spacer(modifier = Modifier.width(8.dp))
+      OutlinedIconButton(onClick = { reverseOrder() }, modifier = Modifier.height(24.dp)) {
+        Icon(
+            imageVector =
+                if (sortModel.order == SortOrder.ASCENDING) {
+                  Icons.Default.KeyboardArrowUp
                 } else {
-                    OutlinedButton(onClick = {
-                        setSortType(it)
-                    }) {
-                        Text(
-                            text = stringResource(it.resId),
-//                            fontSize = 16.sp,
-                        )
-                    }
-                }
-            }
-        }
+                  Icons.Default.KeyboardArrowDown
+                },
+            contentDescription = null,
+            modifier = Modifier.padding(4.dp, 0.dp))
+      }
+      Spacer(modifier = Modifier.weight(1f))
+      TextButton(onClick = { resetSort() }) {
+        Text(
+            text = stringResource(id = R.string.m_reset_sortfilter),
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+            fontWeight = FontWeight.Bold)
+      }
+      Spacer(modifier = Modifier.width(4.dp))
     }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      SortType.entries.forEach {
+        if (sortModel.type == it) {
+          Button(onClick = { resetSort() }) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "filter applied icon",
+                modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp))
+            Text(
+                text = stringResource(it.resId),
+                //                            fontSize = 16.sp,
+            )
+          }
+        } else {
+          OutlinedButton(onClick = { setSortType(it) }) {
+            Text(
+                text = stringResource(it.resId),
+                //                            fontSize = 16.sp,
+            )
+          }
+        }
+      }
+    }
+  }
 }

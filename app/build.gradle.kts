@@ -6,6 +6,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("io.gitlab.arturbosch.detekt")
+    id("com.ncorti.ktfmt.gradle")
 }
 
 tasks.withType(JavaCompile::class.java) {

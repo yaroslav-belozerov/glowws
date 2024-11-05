@@ -1,7 +1,5 @@
 package com.yaabelozerov.glowws.ui.screen.settings
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,9 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -31,7 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -52,27 +47,29 @@ fun BooleanSettingsEntry(
     entry: BooleanSettingDomainModel,
     onModify: (SettingsKeys, String) -> Unit
 ) {
-    var checked by remember { mutableStateOf(entry.value) }
-    Row(
-        modifier = modifier
-            .clickable {
+  var checked by remember { mutableStateOf(entry.value) }
+  Row(
+      modifier =
+          modifier
+              .clickable {
                 checked = !checked
                 onModify(entry.key, checked.toString())
-            }
-            .padding(16.dp, 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+              }
+              .padding(16.dp, 4.dp),
+      verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(entry.key.resId),
             fontSize = 20.sp,
-            modifier = Modifier.weight(1f)
-        )
+            modifier = Modifier.weight(1f))
         Spacer(modifier = Modifier.width(8.dp))
-        Switch(checked = checked, onCheckedChange = {
-            checked = !checked
-            onModify(entry.key, checked.toString())
-        }, modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp))
-    }
+        Switch(
+            checked = checked,
+            onCheckedChange = {
+              checked = !checked
+              onModify(entry.key, checked.toString())
+            },
+            modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp))
+      }
 }
 
 @Composable
@@ -81,52 +78,37 @@ fun ChoiceSettingDomainEntry(
     entry: ChoiceSettingDomainModel,
     onModify: (SettingsKeys, String) -> Unit
 ) {
-    var expanded by remember {
-        mutableStateOf(false)
-    }
-    Column(
-        modifier = modifier
-            .clickable { expanded = true }
-            .padding(16.dp, 16.dp)
-    ) {
-        Text(text = stringResource(entry.key.resId), fontSize = 24.sp)
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            entry.choices.forEachIndexed { index, value ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onModify(
-                                entry.key,
-                                value
-                            )
-                            expanded = false
-                        }
-                ) {
-                    val local = entry.localChoicesIds.getOrNull(index)
-                    if (entry.value == value) {
-                        Icon(
-                            modifier = Modifier.padding(16.dp, 0.dp, 0.dp, 0.dp),
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null
-                        )
-                    }
-                    Text(
-                        text = if (local != null) stringResource(id = local) else value.toReadableKey(),
-                        fontWeight = if (value == entry.value) FontWeight.Bold else FontWeight.Normal,
-                        modifier = Modifier.padding(if (entry.value != value) 16.dp else 8.dp, 8.dp, 16.dp, 8.dp)
-                    )
-                }
+  var expanded by remember { mutableStateOf(false) }
+  Column(modifier = modifier.clickable { expanded = true }.padding(16.dp, 16.dp)) {
+    Text(text = stringResource(entry.key.resId), fontSize = 24.sp)
+    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+      entry.choices.forEachIndexed { index, value ->
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier =
+                Modifier.fillMaxWidth().clickable {
+                  onModify(entry.key, value)
+                  expanded = false
+                }) {
+              val local = entry.localChoicesIds.getOrNull(index)
+              if (entry.value == value) {
+                Icon(
+                    modifier = Modifier.padding(16.dp, 0.dp, 0.dp, 0.dp),
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null)
+              }
+              Text(
+                  text = if (local != null) stringResource(id = local) else value.toReadableKey(),
+                  fontWeight = if (value == entry.value) FontWeight.Bold else FontWeight.Normal,
+                  modifier =
+                      Modifier.padding(
+                          if (entry.value != value) 16.dp else 8.dp, 8.dp, 16.dp, 8.dp))
             }
-        }
-        val local = entry.localChoicesIds.getOrNull(
-            entry.choices.indexOf(entry.value)
-        )
-        Text(
-            text = if (local != null) stringResource(id = local) else entry.value.toReadableKey()
-        )
+      }
     }
+    val local = entry.localChoicesIds.getOrNull(entry.choices.indexOf(entry.value))
+    Text(text = if (local != null) stringResource(id = local) else entry.value.toReadableKey())
+  }
 }
 
 @Composable
@@ -135,66 +117,52 @@ fun MultipleChoiceSettingsEntry(
     entry: MultipleChoiceSettingDomainModel,
     onModify: (SettingsKeys, String) -> Unit
 ) {
-    var expanded by remember {
-        mutableStateOf(false)
-    }
-    Column(
-        modifier = modifier
-            .clickable { expanded = true }
-            .padding(16.dp, 16.dp)
-    ) {
-        Text(text = stringResource(entry.key.resId), fontSize = 24.sp)
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            entry.choices.forEachIndexed { index, elem ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onModify(
-                                entry.key,
-                                entry.value
-                                    .mapIndexed { i, value ->
-                                        if (i == index) !value else value
-                                    }
-                                    .joinToString(
-                                        JSON_DELIMITER
-                                    )
-                            )
-                        }
-                ) {
-                    if (entry.value[index]) {
-                        Icon(
-                            modifier = Modifier.padding(16.dp, 0.dp, 0.dp, 0.dp),
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null
-                        )
-                    }
-                    val local = entry.localChoicesIds.getOrNull(index)
-                    Text(
-                        text = if (local != null) {
-                            stringResource(
-                                id = local
-                            )
-                        } else {
-                            elem.toReadableKey()
-                        },
-                        modifier = Modifier.padding(16.dp, 8.dp)
-                    )
-                }
+  var expanded by remember { mutableStateOf(false) }
+  Column(modifier = modifier.clickable { expanded = true }.padding(16.dp, 16.dp)) {
+    Text(text = stringResource(entry.key.resId), fontSize = 24.sp)
+    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+      entry.choices.forEachIndexed { index, elem ->
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier =
+                Modifier.fillMaxWidth().clickable {
+                  onModify(
+                      entry.key,
+                      entry.value
+                          .mapIndexed { i, value -> if (i == index) !value else value }
+                          .joinToString(JSON_DELIMITER))
+                }) {
+              if (entry.value[index]) {
+                Icon(
+                    modifier = Modifier.padding(16.dp, 0.dp, 0.dp, 0.dp),
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null)
+              }
+              val local = entry.localChoicesIds.getOrNull(index)
+              Text(
+                  text =
+                      if (local != null) {
+                        stringResource(id = local)
+                      } else {
+                        elem.toReadableKey()
+                      },
+                  modifier = Modifier.padding(16.dp, 8.dp))
             }
-        }
-        Text(
-            text = if (entry.value.all { !it }) {
-                stringResource(id = R.string.placeholder_null)
+      }
+    }
+    Text(
+        text =
+            if (entry.value.all { !it }) {
+              stringResource(id = R.string.placeholder_null)
             } else {
-                entry.choices.mapIndexed { index, s ->
+              entry.choices
+                  .mapIndexed { index, s ->
                     val local = entry.localChoicesIds.getOrNull(index)
                     if (local != null) stringResource(id = local) else s.toReadableKey()
-                }.joinToString(", ")
-            }
-        )
-    }
+                  }
+                  .joinToString(", ")
+            })
+  }
 }
 
 @Composable
@@ -204,64 +172,50 @@ fun AiSettingsEntry(
     modelName: String?,
     onNavigate: () -> Unit
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        SettingsHeader(icon = Icons.Default.AutoAwesome, name = stringResource(id = R.string.s_cat_ai))
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .clickable { onNavigate() }
-                .padding(16.dp, 8.dp)
-        ) {
-            Column(Modifier.weight(1f)) {
-                if (!modelName.isNullOrBlank()) {
-                    Text(text = modelName, fontSize = 20.sp)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = stringResource(id = status.resId) + if (status.notBusy()) "" else "...",
-                        fontSize = if (!modelName.isNullOrBlank()) 16.sp else 20.sp
-                    )
-                    if (status == InferenceManagerState.ACTIVE) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+  Column(modifier = modifier.fillMaxWidth()) {
+    SettingsHeader(icon = Icons.Default.AutoAwesome, name = stringResource(id = R.string.s_cat_ai))
+    Spacer(modifier = Modifier.height(8.dp))
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.clickable { onNavigate() }.padding(16.dp, 8.dp)) {
+          Column(Modifier.weight(1f)) {
+            if (!modelName.isNullOrBlank()) {
+              Text(text = modelName, fontSize = 20.sp)
             }
-            OutlinedButton(onClick = { onNavigate() }) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = stringResource(id = R.string.label_edit))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
-                        contentDescription = null
-                    )
-                }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Text(
+                  text = stringResource(id = status.resId) + if (status.notBusy()) "" else "...",
+                  fontSize = if (!modelName.isNullOrBlank()) 16.sp else 20.sp)
+              if (status == InferenceManagerState.ACTIVE) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary)
+              }
             }
+          }
+          OutlinedButton(onClick = { onNavigate() }) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Text(text = stringResource(id = R.string.label_edit))
+              Icon(
+                  imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
+                  contentDescription = null)
+            }
+          }
         }
-    }
+  }
 }
 
 @Composable
 fun SettingsHeader(icon: ImageVector, name: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 16.dp)
-    ) {
+  Row(
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 16.dp)) {
         Icon(
             imageVector = icon,
             contentDescription = "$name icon",
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Text(
-            text = name,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
+            tint = MaterialTheme.colorScheme.primary)
+        Text(text = name, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+      }
 }

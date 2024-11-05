@@ -5,6 +5,5 @@ import retrofit2.Call
 import retrofit2.http.GET
 
 interface PreloadModelsService {
-    @GET("models")
-    fun getModels(): Call<List<Model>>
+  @GET("models") fun getModels(): Call<List<Model>>
 }

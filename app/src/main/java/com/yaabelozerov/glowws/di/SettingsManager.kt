@@ -12,42 +12,42 @@ class SettingsManager(
     private val moshi: Moshi,
     private val settingsMapper: SettingsMapper
 ) {
-    private val ad = moshi.adapter(SettingsList::class.java)
+  private val ad = moshi.adapter(SettingsList::class.java)
 
-    suspend fun fetchSettings(): SettingsList {
-        val settingsData = dataStoreManager.getSettings().first()
+  suspend fun fetchSettings(): SettingsList {
+    val settingsData = dataStoreManager.getSettings().first()
 
-        val s = settingsMapper.matchSettingsSchema(
+    val s =
+        settingsMapper.matchSettingsSchema(
             if (settingsData.isNotBlank()) {
-                ad.fromJson(settingsData)!!
+              ad.fromJson(settingsData)!!
             } else {
-                SettingsList(
-                    emptyList()
-                )
-            }
-        )
+              SettingsList(emptyList())
+            })
 
-        setSettings(s)
-        return s
-    }
+    setSettings(s)
+    return s
+  }
 
-    private suspend fun setSettings(settings: SettingsList) {
-        dataStoreManager.setSettings(ad.toJson(settings))
-    }
+  private suspend fun setSettings(settings: SettingsList) {
+    dataStoreManager.setSettings(ad.toJson(settings))
+  }
 
-    suspend fun modifySetting(key: SettingsKeys, value: String) {
-        Log.i("modifySetting", "$key $value")
-        val settings = ad.fromJson(
-            dataStoreManager.getSettings().first()
-        )!!.list!!.map { if (it.key!! == key) it.copy(value = value) else it }
-        setSettings(SettingsList(settings))
-    }
+  suspend fun modifySetting(key: SettingsKeys, value: String) {
+    Log.i("modifySetting", "$key $value")
+    val settings =
+        ad.fromJson(dataStoreManager.getSettings().first())!!.list!!.map {
+          if (it.key!! == key) it.copy(value = value) else it
+        }
+    setSettings(SettingsList(settings))
+  }
 
-    suspend fun visitApp() =
-        dataStoreManager.setTimesOpened(dataStoreManager.getTimesOpened().first() + 1)
+  suspend fun visitApp() =
+      dataStoreManager.setTimesOpened(dataStoreManager.getTimesOpened().first() + 1)
 
-    suspend fun getAppVisits() = dataStoreManager.getTimesOpened().first()
+  suspend fun getAppVisits() = dataStoreManager.getTimesOpened().first()
 
-    suspend fun setModelId(id: Long) = dataStoreManager.setCurrentModelId(id)
-    suspend fun getModelId() = dataStoreManager.getCurrentModelId().first()
+  suspend fun setModelId(id: Long) = dataStoreManager.setCurrentModelId(id)
+
+  suspend fun getModelId() = dataStoreManager.getCurrentModelId().first()
 }

@@ -29,17 +29,19 @@ data class Point(
 )
 
 enum class PointType(val title: String, val icon: ImageVector) {
-    TEXT("Text", Icons.Default.FormatColorText), IMAGE("Image", Icons.Default.Image)
+  TEXT("Text", Icons.Default.FormatColorText),
+  IMAGE("Image", Icons.Default.Image)
 }
 
 enum class ModelType(val resId: Int, vararg val variants: ModelVariant) {
-    LOCAL(R.string.ai_local, ModelVariant.ONDEVICE), NETWORK(
-        R.string.ai_network, ModelVariant.OPENROUTER, ModelVariant.GIGACHAT
-    )
+  LOCAL(R.string.ai_local, ModelVariant.ONDEVICE),
+  NETWORK(R.string.ai_network, ModelVariant.OPENROUTER, ModelVariant.GIGACHAT)
 }
 
 enum class ModelVariant(val needsToken: Boolean = false, val baseUrl: String? = null) {
-    ONDEVICE, OPENROUTER(true, "https://openrouter.ai/api/v1/"), GIGACHAT(true, "")
+  ONDEVICE,
+  OPENROUTER(true, "https://openrouter.ai/api/v1/"),
+  GIGACHAT(true, "")
 }
 
 @Entity
