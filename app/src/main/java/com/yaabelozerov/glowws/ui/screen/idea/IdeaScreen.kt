@@ -75,18 +75,6 @@ import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.ui.screen.main.boolean
 import java.io.File
 
-sealed class IdeaScreenEvent {
-  data object GoBack : IdeaScreenEvent()
-
-  data class AddPoint(val type: PointType, val index: Long) : IdeaScreenEvent()
-
-  data class SavePoint(val id: Long, val text: String, val isMain: Boolean) : IdeaScreenEvent()
-
-  data class RemovePoint(val id: Long) : IdeaScreenEvent()
-
-  data class ExecutePoint(val id: Long, val text: String) : IdeaScreenEvent()
-}
-
 @Composable
 fun IdeaScreen(
     modifier: Modifier = Modifier,
@@ -103,7 +91,7 @@ fun IdeaScreen(
           modifier.fillMaxSize().imePadding().background(MaterialTheme.colorScheme.background),
       verticalArrangement = Arrangement.spacedBy(8.dp),
       contentPadding = PaddingValues(16.dp)) {
-        item(-2) {
+        item {
           Row {
             IconButton(onClick = { onEvent(IdeaScreenEvent.GoBack) }) {
               Icon(
@@ -117,7 +105,7 @@ fun IdeaScreen(
           }
         }
 
-        item(-1) {
+        item {
           if (points.isEmpty()) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -298,7 +286,9 @@ fun TextPoint(
                 .then(
                     if (status.third != id && !isBeingModified) {
                       Modifier.clickable { onModify(true) }
-                    } else Modifier)
+                    } else {
+                      Modifier
+                    })
                 .fillMaxWidth()
                 .animateContentSize()
                 .background(
@@ -343,7 +333,7 @@ fun TextPoint(
       } else {
         Column(Modifier.fillMaxWidth()) {
           var currentText by remember(content) { mutableStateOf(TextFieldValue(content)) }
-          var currentMainStatus by remember { mutableStateOf(isMain) }
+          val currentMainStatus by remember { mutableStateOf(isMain) }
           LaunchedEffect(key1 = Unit) {
             pointFocus.requestFocus()
             currentText = currentText.copy(selection = TextRange(currentText.text.length))
@@ -401,4 +391,16 @@ fun TextPoint(
       }
     }
   }
+}
+
+sealed class IdeaScreenEvent {
+  data object GoBack : IdeaScreenEvent()
+
+  data class AddPoint(val type: PointType, val index: Long) : IdeaScreenEvent()
+
+  data class SavePoint(val id: Long, val text: String, val isMain: Boolean) : IdeaScreenEvent()
+
+  data class RemovePoint(val id: Long) : IdeaScreenEvent()
+
+  data class ExecutePoint(val id: Long, val text: String) : IdeaScreenEvent()
 }

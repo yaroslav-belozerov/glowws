@@ -45,7 +45,7 @@ fun SettingsScreen(
     aiStatus: Triple<Model?, InferenceManagerState, Long>,
     onNavigateToAi: () -> Unit
 ) {
-  val s by remember { mutableStateOf(settings.values.groupBy { it.key.category }) }
+  val s by remember(settings.values) { mutableStateOf(settings.values.groupBy { it.key.category }) }
   LazyColumn(modifier = modifier) {
     s.forEach { (k, v) ->
       stickyHeader { SettingsHeader(icon = k.icon, name = stringResource(id = k.resId)) }
@@ -66,13 +66,13 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween) {
                   var newValue by remember { mutableStateOf(entry.value.toInt()) }
                   Text(stringResource(entry.key.resId), fontSize = 20.sp)
-                  if (!isBeingModifier)
-                      Text(
-                          newValue.toString(),
-                          modifier = Modifier.clickable { isBeingModifier = true },
-                          fontSize = 20.sp,
-                          fontWeight = FontWeight.Bold)
-                  else {
+                  if (!isBeingModifier) {
+                    Text(
+                        newValue.toString(),
+                        modifier = Modifier.clickable { isBeingModifier = true },
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold)
+                  } else {
                     OutlinedTextField(
                         value = newValue.toString(),
                         onValueChange = { newValue = it.toInt() },

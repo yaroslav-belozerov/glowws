@@ -20,45 +20,74 @@ import com.yaabelozerov.glowws.ui.model.SortType
 
 class SettingsMapper {
   fun toDomainModel(settings: SettingsList): Map<SettingsKeys, SettingDomainModel> {
-    return settings.list!!.mapNotNull { it.key?.let { k -> k to asDomainModel(it) } }.toMap()
+    return settings.list
+        ?.mapNotNull { it.key?.let { k -> k to asDomainModel(it) } }
+        ?.toMap()
+        ?.filterValues { it != null }
+        ?.mapValues { it.value as SettingDomainModel }
+        .orEmpty()
   }
 
-  fun asDomainModel(k: SettingsModel): SettingDomainModel {
-    return when (k.key!!.type) {
-      SettingsTypes.BOOLEAN -> BooleanSettingDomainModel(k.key, k.value == "true")
+  private fun asDomainModel(k: SettingsModel): SettingDomainModel? {
+    return try {
+      when (k.key?.type) {
+        SettingsTypes.BOOLEAN -> BooleanSettingDomainModel(k.key, k.value == "true")
 
-      SettingsTypes.DOUBLE ->
-          DoubleSettingDomainModel(
-              k.key, k.limits!![0].toDouble(), k.limits[1].toDouble(), k.value!!.toDouble())
+        SettingsTypes.DOUBLE ->
+            if (k.limits != null && k.value != null) {
+              DoubleSettingDomainModel(
+                  k.key, k.limits[0].toDouble(), k.limits[1].toDouble(), k.value.toDouble())
+            } else {
+              null
+            }
 
-      SettingsTypes.STRING -> StringSettingDomainModel(k.key, k.value!!)
+        SettingsTypes.STRING -> k.value?.let { StringSettingDomainModel(k.key, k.value) }
 
-      SettingsTypes.CHOICE ->
-          ChoiceSettingDomainModel(
-              key = k.key,
-              choices = k.limits!!,
-              localChoicesIds = k.limits.map { s -> getLocalChoice(s) },
-              value = k.value!!)
+        SettingsTypes.CHOICE ->
+            if (k.limits != null && k.value != null) {
+              ChoiceSettingDomainModel(
+                  key = k.key,
+                  choices = k.limits,
+                  localChoicesIds = k.limits.map { s -> getLocalChoice(s) },
+                  value = k.value)
+            } else {
+              null
+            }
 
-      SettingsTypes.MULTIPLE_CHOICE ->
-          MultipleChoiceSettingDomainModel(
-              key = k.key,
-              choices = k.limits!!,
-              localChoicesIds = k.limits.map { s -> getLocalChoice(s) },
-              value = k.value!!.split(JSON_DELIMITER).map { s -> s == "true" })
+        SettingsTypes.MULTIPLE_CHOICE ->
+            if (k.limits != null && k.value != null) {
+              MultipleChoiceSettingDomainModel(
+                  key = k.key,
+                  choices = k.limits,
+                  localChoicesIds = k.limits.map { s -> getLocalChoice(s) },
+                  value = k.value.split(JSON_DELIMITER).map { s -> s == "true" })
+            } else {
+              null
+            }
+        null -> null
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      null
     }
   }
 
   fun getSorting(settings: SettingsList): SortModel {
     val order =
         try {
-          SortOrder.valueOf(settings.list?.findLast { it.key == SettingsKeys.SORT_ORDER }?.value!!)
+          settings.list
+              ?.findLast { it.key == SettingsKeys.SORT_ORDER }
+              ?.value
+              ?.let { SortOrder.valueOf(it) } ?: SortOrder.ASCENDING
         } catch (_: Exception) {
           SortOrder.ASCENDING
         }
     val type =
         try {
-          SortType.valueOf(settings.list?.findLast { it.key == SettingsKeys.SORT_TYPE }?.value!!)
+          settings.list
+              ?.findLast { it.key == SettingsKeys.SORT_TYPE }
+              ?.value
+              ?.let { SortType.valueOf(it) } ?: SortType.TIMESTAMP_MODIFIED
         } catch (_: Exception) {
           SortType.TIMESTAMP_MODIFIED
         }
@@ -95,8 +124,8 @@ class SettingsMapper {
     val allKeys = SettingsKeys.entries.toSet()
     val hasKeys = newList.map { it.key }.toSet()
     val new = allKeys - hasKeys
-    for (i in new) {
-      newList.add(SettingsModel(i!!, i.default, i.limits))
+    for (i in new.filterNotNull()) {
+      newList.add(SettingsModel(i, i.default, i.limits))
     }
     return SettingsList(newList)
   }

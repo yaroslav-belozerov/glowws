@@ -84,8 +84,7 @@ object AppModule {
   @Provides
   fun provideInferenceManager(
       @ApplicationContext app: Context,
-      settingsManager: SettingsManager
-  ): InferenceManager = InferenceManager(app, settingsManager)
+  ): InferenceManager = InferenceManager(app)
 
   @Singleton
   @Provides
@@ -101,7 +100,7 @@ object AppModule {
   @Provides
   fun provideOpenRoutedService(moshi: Moshi): OpenRouterService =
       Retrofit.Builder()
-          .baseUrl(ModelVariant.OPENROUTER.baseUrl!!)
+          .baseUrl(ModelVariant.OPENROUTER.baseUrl)
           .addConverterFactory(MoshiConverterFactory.create(moshi))
           .build()
           .create(OpenRouterService::class.java)
@@ -132,27 +131,21 @@ object AppModule {
 
     private val settingsKey = stringPreferencesKey("settings")
 
-    fun getSettings(): Flow<String> = settingsDataStore.data.map { it[settingsKey] ?: "" }
+    fun getSettings(): Flow<String> = settingsDataStore.data.map { it[settingsKey].orEmpty() }
 
     suspend fun setSettings(settings: String) =
         settingsDataStore.edit { it[settingsKey] = settings }
 
     private val timesOpenedKey = longPreferencesKey("times_opened")
 
-    fun getTimesOpened(): Flow<Long> = settingsDataStore.data.map { it[tempTokenExpiryKey] ?: 0 }
+    fun getTimesOpened(): Flow<Long> = settingsDataStore.data.map { it[timesOpenedKey] ?: 0 }
 
     suspend fun setTimesOpened(timesOpened: Long) =
-        settingsDataStore.edit { it[tempTokenExpiryKey] = timesOpened }
-
-    private val currentModelId = longPreferencesKey("current_model_name")
-
-    fun getCurrentModelId(): Flow<Long> = settingsDataStore.data.map { it[currentModelId] ?: -1L }
-
-    suspend fun setCurrentModelId(id: Long) = settingsDataStore.edit { it[currentModelId] = id }
+        settingsDataStore.edit { it[timesOpenedKey] = timesOpened }
 
     private val tempTokenKey = stringPreferencesKey("temp_token")
 
-    fun getTempToken(): Flow<String> = settingsDataStore.data.map { it[tempTokenKey] ?: "" }
+    fun getTempToken(): Flow<String> = settingsDataStore.data.map { it[tempTokenKey].orEmpty() }
 
     suspend fun setTempToken(token: String) = settingsDataStore.edit { it[tempTokenKey] = token }
 

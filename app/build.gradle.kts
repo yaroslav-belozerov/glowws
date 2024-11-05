@@ -1,11 +1,8 @@
-import io.gitlab.arturbosch.detekt.Detekt
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
-    id("io.gitlab.arturbosch.detekt")
     id("com.ncorti.ktfmt.gradle")
 }
 
@@ -39,11 +36,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "21"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -55,22 +52,6 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
-    }
-    detekt {
-        toolVersion = "1.23.3"
-        config.setFrom(file("config/detekt/detekt.yml"))
-        buildUponDefaultConfig = true
-        autoCorrect = true
-    }
-}
-
-tasks.withType<Detekt>().configureEach {
-    reports {
-        xml.required.set(false)
-        html.required.set(true)
-        txt.required.set(true)
-        sarif.required.set(false)
-        md.required.set(false)
     }
 }
 
@@ -109,5 +90,4 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.coil)
     implementation(libs.coil.compose)
-    detektPlugins(libs.detekt.formatting)
 }

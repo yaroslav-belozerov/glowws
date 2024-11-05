@@ -35,17 +35,17 @@ constructor(
     private val settingsMapper: SettingsMapper,
     private val settingsManager: SettingsManager
 ) : ViewModel() {
-  private var _state: MutableStateFlow<MainScreenState> = MutableStateFlow(MainScreenState())
+  private val _state: MutableStateFlow<MainScreenState> = MutableStateFlow(MainScreenState())
   val state = _state.asStateFlow()
 
-  private var _selectionState: MutableStateFlow<SelectionState<Long>> =
+  private val _selectionState: MutableStateFlow<SelectionState<Long>> =
       MutableStateFlow(SelectionState())
   val selection = _selectionState.asStateFlow()
 
-  private var _isSortFilterOpen = MutableStateFlow(false)
+  private val _isSortFilterOpen = MutableStateFlow(false)
   val sortFilterOpen = _isSortFilterOpen.asStateFlow()
 
-  private var _searchOpen = MutableStateFlow(false)
+  private val _searchOpen = MutableStateFlow(false)
   val searchOpen = _searchOpen.asStateFlow()
 
   init {

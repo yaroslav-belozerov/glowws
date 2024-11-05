@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.yaabelozerov.glowws.data.local.ai.InferenceManager
@@ -49,7 +50,7 @@ class InferenceRepositoryImpl(
   override val source = _source.asStateFlow()
 
   private val _response = MutableStateFlow("")
-  val ad =
+  val ad: JsonAdapter<OpenRouterResponse> =
       Moshi.Builder()
           .add(KotlinJsonAdapterFactory())
           .build()
@@ -59,7 +60,7 @@ class InferenceRepositoryImpl(
 
   override suspend fun generate(prompt: String, onUpdate: (String) -> Unit, pointId: Long) {
     _source.update { it.copy(second = InferenceManagerState.RESPONDING, third = pointId) }
-    val token = _source.value.first?.token ?: ""
+    val token = _source.value.first?.token.orEmpty()
     try {
       when (_source.value.first?.type) {
         ModelVariant.ONDEVICE -> {
@@ -74,7 +75,8 @@ class InferenceRepositoryImpl(
               .generate(
                   OpenRouterRequest(
                       messages = listOf(Message(content = listOf(Content(text = prompt)))),
-                      model = _source.value.first!!.path!!),
+                      model = _source.value.first?.path ?: error("No model path in OpenRouter"),
+                  ),
                   token)
               .enqueue(
                   object : Callback<ResponseBody> {
@@ -94,7 +96,9 @@ class InferenceRepositoryImpl(
                               }
                             }
                             .collect { resp ->
-                              _response.update { it + resp!!.choices!![0].delta.content!! }
+                              _response.update {
+                                it + resp?.choices?.get(0)?.delta?.content.orEmpty()
+                              }
                               onUpdate(_response.value)
                             }
                       }
@@ -120,7 +124,8 @@ class InferenceRepositoryImpl(
                       token = "Bearer $tempToken",
                       request =
                           GigaChatMessageRequest(
-                              model = _source.value.first!!.path!!,
+                              model =
+                                  _source.value.first?.path ?: error("No model path in GigaChat"),
                               messages = listOf(GigaChatMessage(content = prompt))))
               _response.update { generated.gigaChatChoices[0].message.content }
               onUpdate(_response.value)
@@ -145,8 +150,10 @@ class InferenceRepositoryImpl(
     _source.update { it.copy(model, InferenceManagerState.ACTIVATING) }
     when (model.type) {
       ModelVariant.ONDEVICE ->
-          localInferenceManager.activateModel(model.path!!) {
-            _source.update { it.copy(model, InferenceManagerState.ACTIVE) }
+          model.path?.let {
+            localInferenceManager.activateModel(model.path) {
+              _source.update { src -> src.copy(model, InferenceManagerState.ACTIVE) }
+            }
           }
 
       else -> _source.update { it.copy(second = InferenceManagerState.ACTIVE) }
@@ -158,10 +165,15 @@ class InferenceRepositoryImpl(
     _source.update { it.copy(second = InferenceManagerState.REMOVING) }
     when (model.type) {
       ModelVariant.ONDEVICE ->
-          localInferenceManager.removeModel(model.path!!) {
-            _source.update {
-              if (it.first != model) it.copy(second = stateAfter)
-              else it.copy(null, InferenceManagerState.IDLE)
+          model.path?.let {
+            localInferenceManager.removeModel(model.path) {
+              _source.update {
+                if (it.first != model) {
+                  it.copy(second = stateAfter)
+                } else {
+                  it.copy(null, InferenceManagerState.IDLE)
+                }
+              }
             }
           }
 

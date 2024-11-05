@@ -63,15 +63,19 @@ fun FeedbackScreen(modifier: Modifier = Modifier, onSendFeedback: (FeedbackDTO) 
           Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.s_feedback_rate), modifier = Modifier.weight(1f))
             Text(
-                if (form.rating == 0L) stringResource(R.string.s_feedback_notrate)
-                else form.rating.toString(),
+                if (form.rating == 0L) {
+                  stringResource(R.string.s_feedback_notrate)
+                } else {
+                  form.rating.toString()
+                },
                 color = MaterialTheme.colorScheme.tertiary)
-            if (form.rating != 0L)
-                Icon(
-                    Icons.Default.Star,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(20.dp))
+            if (form.rating != 0L) {
+              Icon(
+                  Icons.Default.Star,
+                  contentDescription = null,
+                  tint = MaterialTheme.colorScheme.tertiary,
+                  modifier = Modifier.size(20.dp))
+            }
           }
         }
         OutlinedTextField(

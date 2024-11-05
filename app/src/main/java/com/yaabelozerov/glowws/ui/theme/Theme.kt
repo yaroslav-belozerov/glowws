@@ -1,3 +1,5 @@
+@file:Suppress("UnusedPrivateProperty")
+
 package com.yaabelozerov.glowws.ui.theme
 
 import android.os.Build
@@ -244,7 +246,6 @@ private val highContrastDarkColorScheme =
         surfaceContainerLow = surfaceContainerLowDarkHighContrast,
         surfaceContainer = surfaceContainerDarkHighContrast,
         surfaceContainerHigh = surfaceContainerHighDarkHighContrast,
-        surfaceContainerHighest = surfaceContainerHighestDarkHighContrast,
     )
 
 @Immutable

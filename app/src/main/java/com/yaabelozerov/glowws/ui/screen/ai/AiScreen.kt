@@ -55,20 +55,6 @@ import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.data.local.room.ModelType
 import com.yaabelozerov.glowws.data.local.room.ModelVariant
 
-sealed class AiScreenEvent {
-  data class Choose(val model: Model) : AiScreenEvent()
-
-  data class Delete(val model: Model) : AiScreenEvent()
-
-  object Unload : AiScreenEvent()
-
-  object Add : AiScreenEvent()
-
-  object Refresh : AiScreenEvent()
-
-  data class Edit(val model: Model) : AiScreenEvent()
-}
-
 @Composable
 fun AiScreen(
     modifier: Modifier = Modifier,
@@ -96,8 +82,11 @@ fun AiScreen(
                   modifier =
                       Modifier.fillMaxWidth()
                           .background(
-                              if (model.isChosen) MaterialTheme.colorScheme.surfaceContainer
-                              else MaterialTheme.colorScheme.background)
+                              if (model.isChosen) {
+                                MaterialTheme.colorScheme.surfaceContainer
+                              } else {
+                                MaterialTheme.colorScheme.background
+                              })
                           .then(
                               if (status.second == InferenceManagerState.ACTIVE ||
                                   status.second == InferenceManagerState.IDLE) {
@@ -127,16 +116,17 @@ fun AiScreen(
                           }
                         }
                     Spacer(modifier = Modifier.width(8.dp))
-                    if (model.type == ModelVariant.ONDEVICE)
-                        IconButton(
-                            enabled = status.second.notBusy(),
-                            onClick = { onEvent(AiScreenEvent.Delete(model)) }) {
-                              Icon(
-                                  imageVector = Icons.Default.Delete,
-                                  contentDescription = "delete model button")
-                            }
+                    if (model.type == ModelVariant.ONDEVICE) {
+                      IconButton(
+                          enabled = status.second.notBusy(),
+                          onClick = { onEvent(AiScreenEvent.Delete(model)) }) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "delete model button")
+                          }
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
-                    if (model.type.needsToken && (model.token ?: "").isBlank()) {
+                    if (model.type.needsToken && (model.token.orEmpty()).isBlank()) {
                       Text(
                           stringResource(R.string.ai_no_token),
                           color = MaterialTheme.colorScheme.error)
@@ -144,8 +134,11 @@ fun AiScreen(
                     IconButton(enabled = status.second.notBusy(), onClick = { open = !open }) {
                       Icon(
                           imageVector =
-                              if (!open) Icons.Default.KeyboardArrowDown
-                              else Icons.Default.KeyboardArrowUp,
+                              if (!open) {
+                                Icons.Default.KeyboardArrowDown
+                              } else {
+                                Icons.Default.KeyboardArrowUp
+                              },
                           contentDescription = "expand model settings")
                     }
                   }
@@ -156,7 +149,7 @@ fun AiScreen(
                     Column(
                         modifier = Modifier.padding(16.dp).fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                          var newName by remember { mutableStateOf(model.name ?: "") }
+                          var newName by remember { mutableStateOf(model.name.orEmpty()) }
                           var nameChanged by remember { mutableStateOf(false) }
                           val focus = remember { FocusRequester() }
                           val focusManager = LocalFocusManager.current
@@ -164,15 +157,16 @@ fun AiScreen(
                           OutlinedTextField(
                               shape = MaterialTheme.shapes.medium,
                               trailingIcon = {
-                                if (nameChanged)
-                                    IconButton(
-                                        onClick = {
-                                          onEvent(AiScreenEvent.Edit(model.copy(name = newName)))
-                                          focusManager.clearFocus()
-                                          nameChanged = false
-                                        }) {
-                                          Icon(Icons.Default.Check, "OK")
-                                        }
+                                if (nameChanged) {
+                                  IconButton(
+                                      onClick = {
+                                        onEvent(AiScreenEvent.Edit(model.copy(name = newName)))
+                                        focusManager.clearFocus()
+                                        nameChanged = false
+                                      }) {
+                                        Icon(Icons.Default.Check, "OK")
+                                      }
+                                }
                               },
                               prefix = {
                                 Text("Name", modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp))
@@ -186,20 +180,21 @@ fun AiScreen(
                               })
 
                           if (model.type.needsToken) {
-                            var token by remember { mutableStateOf(model.token ?: "") }
+                            var token by remember { mutableStateOf(model.token.orEmpty()) }
                             var changed by remember { mutableStateOf(false) }
                             OutlinedTextField(
                                 shape = MaterialTheme.shapes.medium,
                                 trailingIcon = {
-                                  if (changed)
-                                      IconButton(
-                                          onClick = {
-                                            onEvent(AiScreenEvent.Edit(model.copy(token = token)))
-                                            focusManager.clearFocus()
-                                            changed = false
-                                          }) {
-                                            Icon(Icons.Default.Check, "OK")
-                                          }
+                                  if (changed) {
+                                    IconButton(
+                                        onClick = {
+                                          onEvent(AiScreenEvent.Edit(model.copy(token = token)))
+                                          focusManager.clearFocus()
+                                          changed = false
+                                        }) {
+                                          Icon(Icons.Default.Check, "OK")
+                                        }
+                                  }
                                 },
                                 prefix = {
                                   Text("Token", modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp))
@@ -245,10 +240,24 @@ fun AiScreen(
                                 text =
                                     stringResource(id = status.second.resId) +
                                         " " +
-                                        (status.first?.name ?: ""))
+                                        (status.first?.name.orEmpty()))
                           }
                     }
                   }
             }
       }
+}
+
+sealed class AiScreenEvent {
+  data class Choose(val model: Model) : AiScreenEvent()
+
+  data class Delete(val model: Model) : AiScreenEvent()
+
+  object Unload : AiScreenEvent()
+
+  object Add : AiScreenEvent()
+
+  object Refresh : AiScreenEvent()
+
+  data class Edit(val model: Model) : AiScreenEvent()
 }

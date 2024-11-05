@@ -3,6 +3,7 @@ package com.yaabelozerov.glowws.data.local.media
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import com.yaabelozerov.glowws.Const
 import com.yaabelozerov.glowws.queryName
 import java.io.File
 import kotlinx.coroutines.Dispatchers
@@ -24,8 +25,8 @@ class MediaManager(private val app: Context) {
         val outStream = outFile.outputStream()
 
         try {
-          val buf = ByteArray(512)
-          var read: Int = inStream!!.read(buf)
+          val buf = ByteArray(Const.File.MODEL_CHUNK_SIZE)
+          var read: Int = inStream?.read(buf) ?: throw NullPointerException("inStream is  null")
           while (read != -1) {
             outStream.write(buf)
             read = inStream.read(buf)

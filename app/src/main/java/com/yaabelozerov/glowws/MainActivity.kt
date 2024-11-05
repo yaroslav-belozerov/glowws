@@ -18,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.core.view.WindowCompat.setDecorFitsSystemWindows
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.compose.rememberNavController
 import com.squareup.moshi.Moshi
@@ -48,7 +47,6 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
-    setDecorFitsSystemWindows(window, false)
 
     val mvm: MainScreenViewModel by viewModels()
     val ivm: IdeaScreenViewModel by viewModels()

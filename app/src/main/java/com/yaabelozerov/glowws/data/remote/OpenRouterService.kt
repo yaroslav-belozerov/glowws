@@ -1,6 +1,7 @@
 package com.yaabelozerov.glowws.data.remote
 
 import com.squareup.moshi.JsonAdapter
+import com.yaabelozerov.glowws.Const
 import java.io.BufferedReader
 import java.io.IOException
 import kotlinx.coroutines.currentCoroutineContext
@@ -29,16 +30,19 @@ fun getResponse(input: BufferedReader, ad: JsonAdapter<OpenRouterResponse>, onEr
       try {
         while (currentCoroutineContext().isActive) {
           val line = input.readLine()
-          if (line != null && line.startsWith("data:")) {
+          if (line != null && line.startsWith(Const.Net.OPENROUTER_STREAMING_PREFIX)) {
             try {
-              val answerDetailInfo = ad.fromJson(line.substring(5).trim())
+              val answerDetailInfo =
+                  ad.fromJson(line.substring(Const.Net.OPENROUTER_STREAMING_PREFIX.length).trim())
               emit(answerDetailInfo)
             } catch (e: Exception) {
+              e.printStackTrace()
               onErr()
             }
           }
         }
       } catch (e: IOException) {
+        e.printStackTrace()
         onErr()
       } finally {
         input.close()

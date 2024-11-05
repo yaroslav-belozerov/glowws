@@ -38,7 +38,7 @@ enum class ModelType(val resId: Int, vararg val variants: ModelVariant) {
   NETWORK(R.string.ai_network, ModelVariant.OPENROUTER, ModelVariant.GIGACHAT)
 }
 
-enum class ModelVariant(val needsToken: Boolean = false, val baseUrl: String? = null) {
+enum class ModelVariant(val needsToken: Boolean = false, val baseUrl: String = "") {
   ONDEVICE,
   OPENROUTER(true, "https://openrouter.ai/api/v1/"),
   GIGACHAT(true, "")

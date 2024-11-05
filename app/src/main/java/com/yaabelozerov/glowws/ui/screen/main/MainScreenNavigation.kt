@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
+import android.util.Log
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -55,7 +56,7 @@ fun App(
               modifier = Modifier,
               mvm = mvm,
               ideas = mvm.state.collectAsState().value.ideas,
-              onEvent = { mvm.onEvent(it, navCtrl, ivm) },
+              onEvent = { event -> mvm.onEvent(event, navCtrl, ivm) },
               selection = mvm.selection.collectAsState().value,
               settings = svm.state.collectAsState().value,
               snackbar = snackbar)
@@ -74,18 +75,20 @@ fun App(
                   modifier = Modifier.consumeWindowInsets(innerPadding),
                   points = ivm.points.collectAsState().value,
                   onEvent = {
-                    ivm.onEvent(
-                        event = it,
-                        ideaId = backStackEntry.arguments!!.getLong("id"),
-                        onBack = {
-                          mvm.tryDiscardEmpty(backStackEntry.arguments!!.getLong("id")) {
-                            snackbar.second.launch {
-                              snackbar.first.showSnackbar(
-                                  discardText, duration = SnackbarDuration.Short)
+                    backStackEntry.arguments?.getLong("id")?.let { id ->
+                      ivm.onEvent(
+                          event = it,
+                          ideaId = id,
+                          onBack = {
+                            mvm.tryDiscardEmpty(id) {
+                              snackbar.second.launch {
+                                snackbar.first.showSnackbar(
+                                    discardText, duration = SnackbarDuration.Short)
+                              }
                             }
-                          }
-                          navCtrl.navigateUp()
-                        })
+                            navCtrl.navigateUp()
+                          })
+                    } ?: Log.e("IdeaScreen", "No idea id in backstack entry")
                   },
                   settings = svm.state.collectAsState().value,
                   aiStatus = aivm.aiStatus.collectAsState().value,
@@ -101,7 +104,7 @@ fun App(
         composable(Nav.ArchiveScreenRoute.route) {
           ArchiveScreen(
               ideas = avm.state.collectAsState().value,
-              onEvent = { avm.onEvent(it, navCtrl, ivm) },
+              onEvent = { event -> avm.onEvent(event, navCtrl, ivm) },
               selectionState = avm.selection.collectAsState().value,
               settings = svm.state.collectAsState().value)
         }
@@ -115,7 +118,7 @@ fun App(
             }) {
               AiScreen(
                   models = aivm.models.collectAsState().value,
-                  onEvent = { aivm.onEvent(it) },
+                  onEvent = { event -> aivm.onEvent(event) },
                   status = aivm.aiStatus.collectAsState().value,
                   error = null)
             }
@@ -127,8 +130,8 @@ fun App(
             exitTransition = {
               slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut()
             }) {
-              FeedbackScreen {
-                svm.sendFeedback(it)
+              FeedbackScreen { feedback ->
+                svm.sendFeedback(feedback)
                 navCtrl.navigateUp()
               }
             }

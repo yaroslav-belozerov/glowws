@@ -32,10 +32,10 @@ constructor(
     private val mapper: IdeaMapper,
     private val mediaManager: MediaManager
 ) : ViewModel() {
-  private var _state: MutableStateFlow<List<IdeaDomainModel>> = MutableStateFlow(emptyList())
+  private val _state: MutableStateFlow<List<IdeaDomainModel>> = MutableStateFlow(emptyList())
   val state = _state.asStateFlow()
 
-  private var _selectionState: MutableStateFlow<SelectionState<Long>> =
+  private val _selectionState: MutableStateFlow<SelectionState<Long>> =
       MutableStateFlow(SelectionState())
   val selection = _selectionState.asStateFlow()
 

@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
+import com.yaabelozerov.glowws.Const
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.room.PointType
@@ -205,8 +206,8 @@ fun MainScreen(
           onSetPriority = { onEvent(MainScreenEvent.SetPriority(idea.id, it)) },
           inSelectionMode = selection.inSelectionMode,
           isSelected = selection.entries.contains(idea.id),
-          displayPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS]!!.boolean(),
-          fullImage = settings[SettingsKeys.IMAGE_FULL_HEIGHT]!!.boolean())
+          displayPlaceholders = settings.getValue(SettingsKeys.SHOW_PLACEHOLDERS).boolean(),
+          fullImage = settings.getValue(SettingsKeys.IMAGE_FULL_HEIGHT).boolean())
     }
   }
 }
@@ -231,8 +232,11 @@ fun Idea(
   var isDialogOpen by remember { mutableStateOf(false) }
   val outlineColor by
       animateColorAsState(
-          if (isSelected) MaterialTheme.colorScheme.surfaceContainerHighest
-          else MaterialTheme.colorScheme.surfaceContainer)
+          if (isSelected) {
+            MaterialTheme.colorScheme.surfaceContainerHighest
+          } else {
+            MaterialTheme.colorScheme.surfaceContainer
+          })
 
   Column(modifier = modifier.fillMaxWidth()) {
     Row(
@@ -280,24 +284,29 @@ fun Idea(
                     contentDescription = null)
           }
           Crossfade(priority != 0L) { show ->
-            if (show)
-                Column(
-                    modifier = Modifier.fillMaxHeight().padding(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)) {
-                      for (it in 1..3) {
-                        Crossfade(it <= priority) { active ->
-                          Box(
-                              modifier =
-                                  Modifier.clip(MaterialTheme.shapes.small)
-                                      .width(8.dp)
-                                      .height(12.dp)
-                                      .background(
-                                          if (active) MaterialTheme.colorScheme.primary
-                                          else MaterialTheme.colorScheme.surfaceContainerHigh))
-                        }
+            if (show) {
+              Column(
+                  modifier = Modifier.fillMaxHeight().padding(4.dp),
+                  verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)) {
+                    for (it in 1..Const.UI.MAX_PRIORITY) {
+                      Crossfade(it <= priority) { active ->
+                        Box(
+                            modifier =
+                                Modifier.clip(MaterialTheme.shapes.small)
+                                    .width(8.dp)
+                                    .height(12.dp)
+                                    .background(
+                                        if (active) {
+                                          MaterialTheme.colorScheme.primary
+                                        } else {
+                                          MaterialTheme.colorScheme.surfaceContainerHigh
+                                        }))
                       }
                     }
-            else Spacer(Modifier.width(16.dp))
+                  }
+            } else {
+              Spacer(Modifier.width(16.dp))
+            }
           }
         }
     Box(
@@ -325,15 +334,18 @@ fun Idea(
           Row(
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                (0L..3L).forEach {
+                for (it in 0L..3L) {
                   InputChip(
                       selected = it == priority,
                       onClick = { onSetPriority(it) },
                       label = {
                         Text(
                             text =
-                                if (it != 0L) it.toString()
-                                else stringResource(id = R.string.label_no_priority))
+                                if (it != 0L) {
+                                  it.toString()
+                                } else {
+                                  stringResource(id = R.string.label_no_priority)
+                                })
                       })
                 }
               }

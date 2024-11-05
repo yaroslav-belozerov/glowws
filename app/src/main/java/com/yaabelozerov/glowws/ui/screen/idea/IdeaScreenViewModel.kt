@@ -29,10 +29,10 @@ constructor(
     private val mediaManager: MediaManager,
     private val inferenceRepository: InferenceRepository
 ) : ViewModel() {
-  private var _points = MutableStateFlow(emptyList<PointDomainModel>())
+  private val _points = MutableStateFlow(emptyList<PointDomainModel>())
   val points = _points.asStateFlow()
 
-  private var _saved = MutableStateFlow(Pair(-1L, 0L))
+  private val _saved = MutableStateFlow(Pair(-1L, 0L))
 
   private val _onPickMedia: MutableStateFlow<(() -> Unit)?> = MutableStateFlow(null)
 
@@ -43,7 +43,7 @@ constructor(
       dao.getIdeaPoints(ideaId).flowOn(Dispatchers.IO).distinctUntilChanged().collectLatest { points
         ->
         _points.update {
-          points.map { PointDomainModel(it.pointId, it.type, it.pointContent, it.isMain) }
+          points.map { pt -> PointDomainModel(pt.pointId, pt.type, pt.pointContent, pt.isMain) }
         }
       }
     }
@@ -99,17 +99,21 @@ constructor(
   }
 
   suspend fun importImage(uri: Uri) {
-    mediaManager.importMedia(uri) {
-      viewModelScope.launch {
-        dao.insertPointUpdateIdeaAtIndex(
-            Point(
-                pointId = 0,
-                ideaParentId = _saved.value.first,
-                pointContent = it,
-                index = _saved.value.second,
-                type = PointType.IMAGE,
-                isMain = false))
+    try {
+      mediaManager.importMedia(uri) {
+        viewModelScope.launch {
+          dao.insertPointUpdateIdeaAtIndex(
+              Point(
+                  pointId = 0,
+                  ideaParentId = _saved.value.first,
+                  pointContent = it,
+                  index = _saved.value.second,
+                  type = PointType.IMAGE,
+                  isMain = false))
+        }
       }
+    } catch (e: Exception) {
+      e.printStackTrace()
     }
   }
 

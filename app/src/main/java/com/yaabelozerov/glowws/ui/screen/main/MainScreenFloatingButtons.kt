@@ -84,9 +84,10 @@ fun MainScreenFloatingButtons(
             }
           }
         }
-        if (!inSelection)
-            FloatingActionButton(onClick = { mvm.addNewIdea(callback = addNewIdeaCallback) }) {
-              Icon(imageVector = Icons.Default.Add, contentDescription = "add idea button")
-            }
+        if (!inSelection) {
+          FloatingActionButton(onClick = { mvm.addNewIdea(callback = addNewIdeaCallback) }) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = "add idea button")
+          }
+        }
       }
 }

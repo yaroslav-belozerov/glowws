@@ -22,7 +22,7 @@ class IdeaMapper @Inject constructor(private val dao: IdeaDao) {
       filterModel: FilterModel = FilterModel(emptyMap()),
       sortModel: SortModel = SortModel(SortOrder.DESCENDING, SortType.TIMESTAMP_MODIFIED)
   ): List<IdeaDomainModel> {
-    var out: MutableList<IdeaDomainModel> = mutableListOf()
+    val out: MutableList<IdeaDomainModel> = mutableListOf()
     val pattern = "HH:mm dd.MM.yyyy"
 
     for (idea in ideas) {
@@ -48,21 +48,17 @@ class IdeaMapper @Inject constructor(private val dao: IdeaDao) {
                   idea.timestampModified, SimpleDateFormat(pattern, Locale.ROOT).format(modified)),
               point))
     }
-    out =
-        out.sortedWith(
-                when (sortModel.type) {
-                  SortType.ALPHABETICAL ->
-                      compareBy<IdeaDomainModel> { it.mainPoint.content }
-                          .thenBy { it.modified.timestamp }
+    out.sortWith(
+        when (sortModel.type) {
+          SortType.ALPHABETICAL ->
+              compareBy<IdeaDomainModel> { it.mainPoint.content }.thenBy { it.modified.timestamp }
 
-                  SortType.TIMESTAMP_CREATED ->
-                      compareBy<IdeaDomainModel> { it.created.timestamp }
-                          .thenBy { it.modified.timestamp }
+          SortType.TIMESTAMP_CREATED ->
+              compareBy<IdeaDomainModel> { it.created.timestamp }.thenBy { it.modified.timestamp }
 
-                  SortType.TIMESTAMP_MODIFIED -> compareBy { it.modified.timestamp }
-                  SortType.PRIORITY -> compareBy { it.priority }
-                }.thenBy { it.modified.timestamp })
-            .toMutableList()
+          SortType.TIMESTAMP_MODIFIED -> compareBy { it.modified.timestamp }
+          SortType.PRIORITY -> compareBy { it.priority }
+        }.thenBy { it.modified.timestamp })
     if (sortModel.order == SortOrder.DESCENDING) out.reverse()
     return out
   }

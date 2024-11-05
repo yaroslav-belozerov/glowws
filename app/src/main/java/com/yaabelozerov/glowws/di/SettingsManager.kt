@@ -1,6 +1,5 @@
 package com.yaabelozerov.glowws.di
 
-import android.util.Log
 import com.squareup.moshi.Moshi
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.datastore.model.SettingsList
@@ -20,7 +19,7 @@ class SettingsManager(
     val s =
         settingsMapper.matchSettingsSchema(
             if (settingsData.isNotBlank()) {
-              ad.fromJson(settingsData)!!
+              ad.fromJson(settingsData) ?: SettingsList(emptyList())
             } else {
               SettingsList(emptyList())
             })
@@ -34,10 +33,9 @@ class SettingsManager(
   }
 
   suspend fun modifySetting(key: SettingsKeys, value: String) {
-    Log.i("modifySetting", "$key $value")
     val settings =
-        ad.fromJson(dataStoreManager.getSettings().first())!!.list!!.map {
-          if (it.key!! == key) it.copy(value = value) else it
+        ad.fromJson(dataStoreManager.getSettings().first())?.list?.map {
+          if (it.key == key) it.copy(value = value) else it
         }
     setSettings(SettingsList(settings))
   }
@@ -46,8 +44,4 @@ class SettingsManager(
       dataStoreManager.setTimesOpened(dataStoreManager.getTimesOpened().first() + 1)
 
   suspend fun getAppVisits() = dataStoreManager.getTimesOpened().first()
-
-  suspend fun setModelId(id: Long) = dataStoreManager.setCurrentModelId(id)
-
-  suspend fun getModelId() = dataStoreManager.getCurrentModelId().first()
 }

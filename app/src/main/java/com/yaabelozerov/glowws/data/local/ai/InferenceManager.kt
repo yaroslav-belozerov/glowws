@@ -5,8 +5,8 @@ import android.net.Uri
 import android.util.Log
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import com.google.mediapipe.tasks.genai.llminference.LlmInference.LlmInferenceOptions
+import com.yaabelozerov.glowws.Const
 import com.yaabelozerov.glowws.R
-import com.yaabelozerov.glowws.di.SettingsManager
 import com.yaabelozerov.glowws.queryName
 import java.io.File
 import java.nio.file.Files
@@ -35,9 +35,7 @@ fun InferenceManagerState.notBusy(): Boolean {
 
 fun <T> MutableStateFlow<T?>.reset() = this.update { null }
 
-class InferenceManager
-@Inject
-constructor(private val app: Context, private val settingsManager: SettingsManager) {
+class InferenceManager @Inject constructor(private val app: Context) {
   private val _model: MutableStateFlow<LlmInference?> = MutableStateFlow(null)
   val model = _model.asStateFlow()
 
@@ -50,6 +48,7 @@ constructor(private val app: Context, private val settingsManager: SettingsManag
 
   val error: MutableStateFlow<Exception?> = MutableStateFlow(null)
 
+  @Suppress("MagicNumber")
   private suspend fun tryLoadModel(path: String, onUpdate: suspend (String) -> Unit = {}): Boolean {
     try {
       withContext(Dispatchers.IO) {
@@ -120,8 +119,8 @@ constructor(private val app: Context, private val settingsManager: SettingsManag
         val outStream = outFile.outputStream()
 
         try {
-          val buf = ByteArray(16 * 1024)
-          var read: Int = inStream!!.read(buf)
+          val buf = ByteArray(Const.File.MODEL_CHUNK_SIZE)
+          var read: Int = inStream?.read(buf) ?: throw NullPointerException("inStream is null")
           while (read != -1) {
             outStream.write(buf)
             read = inStream.read(buf)

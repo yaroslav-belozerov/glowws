@@ -44,16 +44,6 @@ import com.yaabelozerov.glowws.ui.model.SelectionState
 import com.yaabelozerov.glowws.ui.screen.main.boolean
 import java.io.File
 
-sealed class ArchiveScreenEvent {
-  data class Open(val id: Long) : ArchiveScreenEvent()
-
-  data class Remove(val id: Long) : ArchiveScreenEvent()
-
-  data class Unarchive(val id: Long) : ArchiveScreenEvent()
-
-  data class Select(val id: Long) : ArchiveScreenEvent()
-}
-
 @Composable
 fun ArchiveScreen(
     modifier: Modifier = Modifier,
@@ -160,4 +150,14 @@ fun ArchiveIdea(
                     needsConfirmation = true)),
         onDismiss = { isDialogOpen = false })
   }
+}
+
+sealed class ArchiveScreenEvent {
+  data class Open(val id: Long) : ArchiveScreenEvent()
+
+  data class Remove(val id: Long) : ArchiveScreenEvent()
+
+  data class Unarchive(val id: Long) : ArchiveScreenEvent()
+
+  data class Select(val id: Long) : ArchiveScreenEvent()
 }

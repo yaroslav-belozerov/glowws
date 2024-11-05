@@ -2,6 +2,7 @@ package com.yaabelozerov.glowws.ui.common
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Archive
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.yaabelozerov.glowws.Const
 import com.yaabelozerov.glowws.R
 
 enum class Nav(
@@ -74,10 +76,12 @@ fun BottomNavBar(navController: NavHostController) {
           },
           icon = {
             Icon(
-                imageVector = if (selected) screen.iconActive!! else screen.iconInactive!!,
+                imageVector =
+                    (if (selected) screen.iconActive else screen.iconInactive)
+                        ?: Icons.Default.ErrorOutline,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = if (!selected) Modifier.alpha(0.4f) else Modifier)
+                modifier = if (!selected) Modifier.alpha(Const.UI.UNUSED_ICON_ALPHA) else Modifier)
           })
     }
   }
