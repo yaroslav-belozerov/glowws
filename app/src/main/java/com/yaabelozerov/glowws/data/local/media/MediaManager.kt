@@ -8,6 +8,7 @@ import com.yaabelozerov.glowws.queryName
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.nio.file.Files
 
 class MediaManager(private val app: Context) {
   suspend fun importMedia(uri: Uri, callback: (String) -> Unit = {}) {
@@ -25,7 +26,7 @@ class MediaManager(private val app: Context) {
         val outStream = outFile.outputStream()
 
         try {
-          val buf = ByteArray(Const.File.MODEL_CHUNK_SIZE)
+          val buf = ByteArray(Const.File.IMAGE_CHUNK_SIZE)
           var read: Int = inStream?.read(buf) ?: throw NullPointerException("inStream is  null")
           while (read != -1) {
             outStream.write(buf)
@@ -44,10 +45,10 @@ class MediaManager(private val app: Context) {
     }
   }
 
-  suspend fun removeMedia(path: String) {
+  suspend fun removeMedia(name: String) {
     withContext(Dispatchers.IO) {
       try {
-        val file = File(path)
+        val file = File(name)
         if (!file.exists()) return@withContext
         file.delete()
       } catch (e: Exception) {

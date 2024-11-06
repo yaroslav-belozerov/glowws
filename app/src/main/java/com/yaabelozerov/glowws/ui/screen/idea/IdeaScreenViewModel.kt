@@ -51,18 +51,22 @@ constructor(
     }
   }
 
-  fun onEvent(event: IdeaScreenEvent, ideaId: Long, onBack: () -> Unit) {
-    when (event) {
-      is IdeaScreenEvent.AddPoint -> addPointAtIndex(event.type, ideaId, event.index)
-      is IdeaScreenEvent.ExecutePoint -> generateResponse(event.prompt, listOf(event.content), event.pointId)
-      is IdeaScreenEvent.GoBack -> onBack()
-      is IdeaScreenEvent.RemovePoint -> removePoint(event.id)
-      is IdeaScreenEvent.SavePoint -> modifyPoint(event.id, event.text, event.isMain)
-      is IdeaScreenEvent.ExecutePointNew -> generateResponseNew(event.index, event.prompt, ideaId)
+  fun onEvent(event: IdeaScreenEvent, ideaId: Long, onBack: () -> Unit, onError: (Exception) -> Unit) {
+    try {
+      when (event) {
+        is IdeaScreenEvent.AddPoint -> addPointAtIndex(event.type, ideaId, event.index)
+        is IdeaScreenEvent.ExecutePoint -> generateResponse(event.prompt, listOf(event.content), event.pointId)
+        is IdeaScreenEvent.GoBack -> onBack()
+        is IdeaScreenEvent.RemovePoint -> removePoint(event.id)
+        is IdeaScreenEvent.SavePoint -> modifyPoint(event.id, event.text, event.isMain)
+        is IdeaScreenEvent.ExecutePointNew -> generateResponseNew(event.index, event.prompt, ideaId)
+      }
+    } catch (e: Exception) {
+      onError(e)
     }
   }
 
-  fun addPointAtIndex(
+  private fun addPointAtIndex(
       pointType: PointType,
       ideaId: Long,
       index: Long,
@@ -89,7 +93,7 @@ constructor(
     }
   }
 
-  fun modifyPoint(
+  private fun modifyPoint(
       pointId: Long,
       content: String? = null,
       isMain: Boolean? = null,
@@ -103,7 +107,7 @@ constructor(
     }
   }
 
-  fun removePoint(pointId: Long) {
+  private fun removePoint(pointId: Long) {
     viewModelScope.launch {
       val pt = dao.getPoint(pointId).first()
       val ideaId = pt.ideaParentId
@@ -115,7 +119,7 @@ constructor(
     }
   }
 
-  fun addImage(ideaId: Long, index: Long) {
+  private fun addImage(ideaId: Long, index: Long) {
     _saved.update { Pair(ideaId, index) }
     _onPickMedia.value?.invoke()
   }
@@ -135,19 +139,19 @@ constructor(
     }
   }
 
-  fun generateResponse(s: Prompt, contentStrings: List<String>, pointId: Long) {
+  private fun generateResponse(s: Prompt, contentStrings: List<String>, pointId: Long) {
     viewModelScope.launch {
       Log.i("generateResponse", "Generating ${s.name} with $contentStrings")
       inferenceRepository.generate(s, contentStrings, onUpdate = { modifyPoint(pointId, it) }, pointId)
     }
   }
 
-  fun generateResponseNew(index: Int, prompt: Prompt, ideaId: Long) {
+  private fun generateResponseNew(index: Int, prompt: Prompt, ideaId: Long) {
     addPointAtIndex(PointType.TEXT, ideaId, index.toLong()) { pointId ->
       generateResponse(prompt, when (prompt) {
         Prompt.FillIn -> listOf(points.value[index-1].content, points.value[index+1].content)
-        Prompt.Summarize -> points.value.filterIndexed { i, it -> i < index && it.type == PointType.TEXT }.map { it.content }
-        else -> error("Unexpected prompt in generateResponseNew")
+        Prompt.Summarize, Prompt.Continue -> points.value.filterIndexed { i, it -> i < index && it.type == PointType.TEXT }.map { it.content }
+        else -> error("Unknown prompt type for new point")
       }, pointId)
     }
   }

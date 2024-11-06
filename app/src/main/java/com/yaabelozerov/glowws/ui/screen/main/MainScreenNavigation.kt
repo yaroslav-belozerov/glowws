@@ -43,7 +43,8 @@ fun App(
     svm: SettingsScreenViewModel,
     avm: ArchiveScreenViewModel,
     aivm: AiScreenViewModel,
-    snackbar: Pair<SnackbarHostState, CoroutineScope>
+    snackbar: Pair<SnackbarHostState, CoroutineScope>,
+    onError: (Exception) -> Unit
 ) {
   NavHost(
       modifier = Modifier.padding(innerPadding),
@@ -87,8 +88,8 @@ fun App(
                               }
                             }
                             navCtrl.navigateUp()
-                          })
-                    } ?: Log.e("IdeaScreen", "No idea id in backstack entry")
+                          }, onError = onError)
+                    } ?: onError(error("No idea id in backstack entry"))
                   },
                   settings = svm.state.collectAsState().value,
                   aiStatus = aivm.aiStatus.collectAsState().value,

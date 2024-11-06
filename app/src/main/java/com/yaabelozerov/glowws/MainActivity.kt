@@ -2,6 +2,7 @@ package com.yaabelozerov.glowws
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -107,7 +108,9 @@ class MainActivity : ComponentActivity() {
                     svm = svm,
                     avm = avm,
                     aivm = aivm,
-                    snackbar = Pair(snackbarHostState, scope))
+                    snackbar = Pair(snackbarHostState, scope), onError = { e ->
+                      Toast.makeText(this, e.localizedMessage, Toast.LENGTH_SHORT).show()
+                  })
 
                 SortFilterModalBottomSheet(mvm = mvm)
               },

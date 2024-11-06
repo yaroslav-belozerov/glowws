@@ -73,7 +73,7 @@ class InferenceRepositoryImpl(
                 Prompt.Rephrase ->
                     "system: ${app.resources.getString(prompt.prompt)}\nuser: ${contentStrings[0]}"
 
-                Prompt.Summarize ->
+                Prompt.Summarize, Prompt.Continue ->
                   "system: ${app.resources.getString(prompt.prompt)}\nuser: ${contentStrings.joinToString("\nuser: ")}"
               }
           currentLocalJob =
@@ -101,7 +101,7 @@ class InferenceRepositoryImpl(
                         ),
                         Message(content = listOf(Content(text = contentStrings[0]))))
 
-                Prompt.Summarize ->
+                Prompt.Summarize, Prompt.Continue ->
                   listOf(
                       Message(
                       role = "system",
@@ -161,7 +161,7 @@ class InferenceRepositoryImpl(
                             role = "system", content = app.resources.getString(prompt.prompt)),
                         GigaChatMessage(content = contentStrings[0]))
 
-                Prompt.Summarize ->
+                Prompt.Summarize, Prompt.Continue ->
                   listOf(
                     GigaChatMessage(
                       role = "system",

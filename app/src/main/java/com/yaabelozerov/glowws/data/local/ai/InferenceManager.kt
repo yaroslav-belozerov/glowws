@@ -48,14 +48,13 @@ class InferenceManager @Inject constructor(private val app: Context) {
 
   val error: MutableStateFlow<Exception?> = MutableStateFlow(null)
 
-  @Suppress("MagicNumber")
   private suspend fun tryLoadModel(path: String, onUpdate: suspend (String) -> Unit = {}): Boolean {
     try {
       withContext(Dispatchers.IO) {
         val options =
             LlmInferenceOptions.builder()
                 .setModelPath(path)
-                .setMaxTokens(1000)
+                .setMaxTokens(512)
                 .setTopK(40)
                 .setResultListener { part, done ->
                   _state.update { Pair(done, it.second + part) }

@@ -82,4 +82,6 @@
     <string name="prompt_summarize" translatable="false">You will be given several pieces of text. Summarize them and make a logical conclusion. Do not include the texts themselves.</string>
     <string name="ai_action_fill_in">FIll Gap</string>
     <string name="placeholder_generating">Generating</string>
+    <string name="prompt_continue" translatable="false">You will be given several pieces of text. Continue the logical chain. Preserve original topic. Do not include anything besides the continuation.</string>
+    <string name="ai_action_continue">Continue</string>
 </resources>

@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -35,6 +37,7 @@ import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -106,7 +109,7 @@ fun IdeaScreen(
                 onExecute = {},
                 prompts = emptyList(),
                 holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean(),
-              aiStatus = Triple(null, InferenceManagerState.IDLE, 0))
+                aiStatus = Triple(null, InferenceManagerState.IDLE, 0))
           }
         }
 
@@ -140,7 +143,8 @@ fun IdeaScreen(
                       onEvent(IdeaScreenEvent.ExecutePoint(prompt, str, point.id))
                     },
                     showPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean(),
-                    status = aiStatus)
+                    status = aiStatus,
+                    prompts = listOf(Prompt.Rephrase))
 
             PointType.IMAGE ->
                 ImagePoint(
@@ -164,8 +168,9 @@ fun IdeaScreen(
                         point.type == PointType.TEXT &&
                             points.getOrNull(index + 1)?.type == PointType.TEXT
                       },
-                      Prompt.Summarize.takeIf { point.type == PointType.TEXT }),
-            aiStatus = aiStatus)
+                      Prompt.Summarize.takeIf { point.type == PointType.TEXT },
+                      Prompt.Continue.takeIf { point.type == PointType.TEXT }),
+              aiStatus = aiStatus)
         }
       }
 }
@@ -221,28 +226,28 @@ fun AddPointLine(
           verticalArrangement = Arrangement.spacedBy(4.dp),
           horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(PointType.entries.toList()) {
-              Button(
+              FilledTonalButton(
                   onClick = {
                     onAdd(it)
                     open = false
                   }) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                          Icon(it.icon, contentDescription = it.title)
-                          Text(it.title)
-                        }
+                    Icon(it.icon, contentDescription = it.title)
+                    Spacer(Modifier.width(4.dp))
+                    Text(it.title)
                   }
             }
-            if (aiStatus.first != null && aiStatus.second == InferenceManagerState.ACTIVE) items(prompts) {
-              Button(
-                  onClick = {
-                    onExecute(it)
-                    open = false
-                  }) {
-                    Text(stringResource(it.nameRes))
-                  }
-            }
+            if (aiStatus.first != null && aiStatus.second == InferenceManagerState.ACTIVE)
+                items(prompts) {
+                  Button(
+                      onClick = {
+                        onExecute(it)
+                        open = false
+                      }) {
+                        Icon(it.icon, contentDescription = stringResource(it.nameRes))
+                        Spacer(Modifier.width(4.dp))
+                        Text(stringResource(it.nameRes))
+                      }
+                }
           }
     }
   }
@@ -310,7 +315,8 @@ fun TextPoint(
     onRemove: () -> Unit,
     onExecute: (Prompt, String) -> Unit,
     showPlaceholders: Boolean,
-    status: Triple<Model?, InferenceManagerState, Long>
+    status: Triple<Model?, InferenceManagerState, Long>,
+    prompts: List<Prompt>
 ) {
   Crossfade(modifier = modifier, targetState = isMain) { main ->
     Box(
@@ -384,14 +390,21 @@ fun TextPoint(
                   Text(text = stringResource(id = R.string.label_cancel))
                 }
                 if (status.first != null && status.second == InferenceManagerState.ACTIVE) {
-                  OutlinedButton(
-                      onClick = {
-                        onModify(false)
-                        onSave(currentText.text, currentMainStatus)
-                        onExecute(Prompt.Rephrase, currentText.text)
-                      }) {
-                        Text(text = stringResource(R.string.ai_action_rephrase))
-                      }
+                  prompts.forEach {
+                    OutlinedButton(
+                        onClick = {
+                          onModify(false)
+                          onSave(currentText.text, currentMainStatus)
+                          onExecute(it, currentText.text)
+                        }) {
+                          Icon(
+                              it.icon,
+                              contentDescription = stringResource(it.nameRes),
+                              modifier = Modifier.size(18.dp))
+                          Spacer(Modifier.width(4.dp))
+                          Text(text = stringResource(it.nameRes))
+                        }
+                  }
                 }
                 OutlinedIconButton(
                     onClick = {

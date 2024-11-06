@@ -79,4 +79,5 @@
     <string name="ai_action_summarize">Объединить</string>
     <string name="ai_action_fill_in">Заполнить</string>
     <string name="placeholder_generating">Генерация..</string>
+    <string name="ai_action_continue">Продолжить</string>
 </resources>
