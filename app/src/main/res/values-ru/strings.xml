@@ -50,7 +50,7 @@
     <string name="s_display_full_height_images">Полная высота картинок</string>
     <string name="s_user_long_press_type">Зажать для выбора типа мысли</string>
     <string name="ai_status_responding">Отвечает</string>
-    <string name="placeholder_tap_to_edit">Нажмите для редактирвоания</string>
+    <string name="placeholder_tap_to_edit">Нажмите для редактирования</string>
     <string name="m_idea_discarded">Пустая идея удалена</string>
     <string name="s_user_max_tokens">Макс. кол-во токенов</string>
     <string name="very_little">Мало</string>
@@ -71,5 +71,15 @@
     <string name="sort_priority">Приоритет</string>
     <string name="i_add_point_placeholder">Нажмите, чтобы создать пункт</string>
     <string name="ai_no_token">Нет токена</string>
+<<<<<<< Updated upstream
     <string name="s_reset">Сбросить настройки</string>
+=======
+    <string name="ai_action_rephrase">Сжать</string>
+    <string name="ai_import_local">Импорт модели</string>
+    <string name="ai_model_name">Название</string>
+    <string name="ai_model_token">Токен</string>
+    <string name="ai_action_summarize">Объединить</string>
+    <string name="ai_action_fill_in">Заполнить</string>
+    <string name="placeholder_generating">Генерация..</string>
+>>>>>>> Stashed changes
 </resources>

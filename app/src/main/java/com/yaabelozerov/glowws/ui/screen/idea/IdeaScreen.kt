@@ -25,6 +25,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+<<<<<<< Updated upstream
+=======
+import androidx.compose.foundation.lazy.itemsIndexed
+>>>>>>> Stashed changes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -71,6 +75,7 @@ import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
+import com.yaabelozerov.glowws.domain.model.Prompt
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.ui.screen.main.boolean
 import java.io.File
@@ -79,11 +84,24 @@ import java.io.File
 fun IdeaScreen(
     modifier: Modifier = Modifier,
     points: List<PointDomainModel>,
+<<<<<<< Updated upstream
     onEvent: (IdeaScreenEvent) -> Unit,
     settings: Map<SettingsKeys, SettingDomainModel>,
     aiStatus: Triple<Model?, InferenceManagerState, Long>
 ) {
   BackHandler { onEvent(IdeaScreenEvent.GoBack) }
+=======
+    onBack: () -> Unit,
+    onAdd: (PointType, Long) -> Unit,
+    onSave: (Long, String, Boolean) -> Unit,
+    onRemove: (Long) -> Unit,
+    onExecute: (Long, Prompt, String) -> Unit,
+    onExecuteNew: (Int, Prompt) -> Unit,
+    settings: Map<SettingsKeys, SettingDomainModel>,
+    aiStatus: Triple<Model?, InferenceManagerState, Long>
+) {
+  BackHandler { onBack() }
+>>>>>>> Stashed changes
 
   var modifiedId by remember { mutableStateOf<Long?>(null) }
   LazyColumn(
@@ -93,15 +111,26 @@ fun IdeaScreen(
       contentPadding = PaddingValues(16.dp)) {
         item {
           Row {
+<<<<<<< Updated upstream
             IconButton(onClick = { onEvent(IdeaScreenEvent.GoBack) }) {
+=======
+            IconButton(onClick = onBack) {
+>>>>>>> Stashed changes
               Icon(
                   imageVector = Icons.Default.Close,
                   contentDescription = "back button",
                   tint = MaterialTheme.colorScheme.primary)
             }
             AddPointLine(
+<<<<<<< Updated upstream
                 onAdd = { onEvent(IdeaScreenEvent.AddPoint(it, 0)) },
                 holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean())
+=======
+                onAdd = { onAdd(it, 0) },
+                holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean(),
+                onExecute = {},
+                prompts = emptyList())
+>>>>>>> Stashed changes
           }
         }
 
@@ -117,7 +146,11 @@ fun IdeaScreen(
           }
         }
 
+<<<<<<< Updated upstream
         items(points, key = { it.id }) { point ->
+=======
+        itemsIndexed(points, key = { _, it -> it.id }) { index, point ->
+>>>>>>> Stashed changes
           when (point.type) {
             PointType.TEXT ->
                 TextPoint(
@@ -127,11 +160,17 @@ fun IdeaScreen(
                     id = point.id,
                     content = point.content,
                     isMain = point.isMain,
+<<<<<<< Updated upstream
                     onSave = { newText, isMain ->
                       onEvent(IdeaScreenEvent.SavePoint(point.id, newText, isMain))
                     },
                     onRemove = { onEvent(IdeaScreenEvent.RemovePoint(point.id)) },
                     onExecute = { onEvent(IdeaScreenEvent.ExecutePoint(point.id, it)) },
+=======
+                    onSave = { newText, isMain -> onSave(point.id, newText, isMain) },
+                    onRemove = { onRemove(point.id) },
+                    onExecute = { prompt, content -> onExecute(point.id, prompt, content) },
+>>>>>>> Stashed changes
                     showPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean(),
                     status = aiStatus)
 
@@ -141,6 +180,7 @@ fun IdeaScreen(
                     isBeingModified = modifiedId == point.id,
                     onModify = { modifiedId = if (it) point.id else null },
                     isMain = point.isMain,
+<<<<<<< Updated upstream
                     onRemove = { onEvent(IdeaScreenEvent.RemovePoint(point.id)) },
                     onSave = { onEvent(IdeaScreenEvent.SavePoint(point.id, point.content, it)) })
           }
@@ -148,13 +188,39 @@ fun IdeaScreen(
           AddPointLine(
               onAdd = { onEvent(IdeaScreenEvent.AddPoint(it, points.indexOf(point).toLong() + 1)) },
               holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean())
+=======
+                    onRemove = { onRemove(point.id) },
+                    onSave = { onSave(point.id, point.content, it) })
+          }
+          Spacer(modifier = Modifier.height(16.dp))
+          AddPointLine(
+              onAdd = { onAdd(it, points.indexOf(point).toLong() + 1) },
+              holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean(),
+              onExecute = { onExecuteNew(points.indexOf(point) + 1, it) },
+              prompts =
+                  listOfNotNull(
+                      Prompt.FillIn.takeIf {
+                        point.type == PointType.TEXT &&
+                            points.getOrNull(index + 1)?.type == PointType.TEXT
+                      },
+                      Prompt.Summarize.takeIf { point.type == PointType.TEXT }))
+>>>>>>> Stashed changes
         }
       }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
+<<<<<<< Updated upstream
 fun AddPointLine(onAdd: (PointType) -> Unit, holdForType: Boolean) {
+=======
+fun AddPointLine(
+    onAdd: (PointType) -> Unit,
+    onExecute: (Prompt) -> Unit,
+    prompts: List<Prompt>,
+    holdForType: Boolean
+) {
+>>>>>>> Stashed changes
   var open by remember { mutableStateOf(false) }
   Row(
       modifier = Modifier.fillMaxWidth().padding(0.dp, 0.dp, 0.dp, 16.dp),
@@ -210,6 +276,18 @@ fun AddPointLine(onAdd: (PointType) -> Unit, holdForType: Boolean) {
                         }
                   }
             }
+<<<<<<< Updated upstream
+=======
+            items(prompts) {
+              Button(
+                  onClick = {
+                    onExecute(it)
+                    open = false
+                  }) {
+                    it.nameRes.let { res -> Text(stringResource(res)) }
+                  }
+            }
+>>>>>>> Stashed changes
           }
     }
   }
@@ -275,7 +353,7 @@ fun TextPoint(
     isMain: Boolean,
     onSave: (String, Boolean) -> Unit,
     onRemove: () -> Unit,
-    onExecute: (String) -> Unit,
+    onExecute: (Prompt, String) -> Unit,
     showPlaceholders: Boolean,
     status: Triple<Model?, InferenceManagerState, Long>
 ) {
@@ -286,9 +364,13 @@ fun TextPoint(
                 .then(
                     if (status.third != id && !isBeingModified) {
                       Modifier.clickable { onModify(true) }
+<<<<<<< Updated upstream
                     } else {
                       Modifier
                     })
+=======
+                    } else Modifier)
+>>>>>>> Stashed changes
                 .fillMaxWidth()
                 .animateContentSize()
                 .background(
@@ -333,7 +415,11 @@ fun TextPoint(
       } else {
         Column(Modifier.fillMaxWidth()) {
           var currentText by remember(content) { mutableStateOf(TextFieldValue(content)) }
+<<<<<<< Updated upstream
           val currentMainStatus by remember { mutableStateOf(isMain) }
+=======
+          var currentMainStatus by remember { mutableStateOf(isMain) }
+>>>>>>> Stashed changes
           LaunchedEffect(key1 = Unit) {
             pointFocus.requestFocus()
             currentText = currentText.copy(selection = TextRange(currentText.text.length))
@@ -355,9 +441,15 @@ fun TextPoint(
                       onClick = {
                         onModify(false)
                         onSave(currentText.text, currentMainStatus)
+<<<<<<< Updated upstream
                         onExecute(currentText.text)
                       }) {
                         Text(text = "Rephrase")
+=======
+                        onExecute(Prompt.Rephrase, currentText.text)
+                      }) {
+                        Text(text = stringResource(R.string.ai_action_rephrase))
+>>>>>>> Stashed changes
                       }
                 }
                 OutlinedIconButton(
@@ -391,6 +483,7 @@ fun TextPoint(
       }
     }
   }
+<<<<<<< Updated upstream
 }
 
 sealed class IdeaScreenEvent {
@@ -403,4 +496,6 @@ sealed class IdeaScreenEvent {
   data class RemovePoint(val id: Long) : IdeaScreenEvent()
 
   data class ExecutePoint(val id: Long, val text: String) : IdeaScreenEvent()
+=======
+>>>>>>> Stashed changes
 }

@@ -4,6 +4,8 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.compose.ui.graphics.Color
+import com.yaabelozerov.glowws.domain.model.Prompt
+import okhttp3.internal.immutableListOf
 
 sealed class Const {
   object UI {

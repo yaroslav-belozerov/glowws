@@ -52,6 +52,7 @@ fun App(
       enterTransition = { fadeIn() },
       exitTransition = { fadeOut() }) {
         composable(Nav.MainScreenRoute.route) {
+<<<<<<< Updated upstream
           MainScreen(
               modifier = Modifier,
               mvm = mvm,
@@ -60,6 +61,77 @@ fun App(
               selection = mvm.selection.collectAsState().value,
               settings = svm.state.collectAsState().value,
               snackbar = snackbar)
+=======
+            MainScreen(
+                modifier = Modifier,
+                mvm = mvm,
+                ideas = mvm.state.collectAsState().value.ideas,
+                onClickIdea = { id ->
+                    navController.navigate(Nav.IdeaScreenRoute.withParam(id))
+                    ivm.refreshPoints(id)
+                },
+                onArchiveIdea = { id -> mvm.archiveIdea(id) },
+                onSelect = { id -> mvm.onSelect(id) },
+                onSetPriority = { id, priority -> mvm.setPriority(id, priority) },
+                inSelectionMode = mvm.selection.collectAsState().value.inSelectionMode,
+                selection = mvm.selection.collectAsState().value.entries,
+                settings = svm.state.collectAsState().value,
+                onNavgigateToFeedback = { navController.navigate(Nav.FeedbackRoute.route) },
+                snackbar = snackbar
+            )
+        }
+        composable(route = Nav.IdeaScreenRoute.withParam("{id}"),
+            arguments = listOf(navArgument("id") { type = NavType.LongType }),
+            enterTransition = {
+                slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up) + fadeIn()
+            },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut() }) { backStackEntry ->
+            val discardText = stringResource(R.string.m_idea_discarded)
+            backStackEntry.arguments?.getLong("id")?.let { ideaId ->
+                IdeaScreen(
+                    modifier = Modifier.consumeWindowInsets(innerPaddingValues),
+                    points = ivm.points.collectAsState().value,
+                    onBack = {
+                        mvm.tryDiscardEmpty(ideaId) {
+                            snackbar.second.launch {
+                                snackbar.first.showSnackbar(
+                                    discardText, duration = SnackbarDuration.Short
+                                )
+                            }
+                        }
+                        navController.navigateUp()
+                    },
+                    onAdd = { type, ind ->
+                        ivm.addPointAtIndex(
+                            type, ideaId, ind
+                        )
+                    },
+                    onSave = { pointId, newText, isMain ->
+                        ivm.modifyPoint(
+                            pointId, newText, isMain
+                        )
+                    },
+                    onRemove = { pointId ->
+                        ivm.removePoint(pointId)
+                    },
+                    onExecute = { pointId, prompt, string ->
+                        ivm.generateResponse(prompt, listOf(string), pointId)
+                    },
+                    onExecuteNew = { index, prompt ->
+                        ivm.generateResponseNew(index, prompt, ideaId)
+                    },
+                    settings = svm.state.collectAsState().value,
+                    aiStatus = aivm.aiStatus.collectAsState().value,
+                )
+            }
+        }
+        composable(Nav.SettingsScreenRoute.route) {
+            SettingsScreen(settings = svm.state.collectAsState().value, onModify = { key, value ->
+                svm.modifySetting(key, value) { mvm.fetchSort() }
+            }, aiStatus = aivm.aiStatus.collectAsState().value, onNavigateToAi = {
+                navController.navigate(Nav.AiScreenRoute.route)
+            })
+>>>>>>> Stashed changes
         }
         composable(
             route = Nav.IdeaScreenRoute.withParam("{id}"),
