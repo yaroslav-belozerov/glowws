@@ -71,9 +71,7 @@
     <string name="sort_priority">Приоритет</string>
     <string name="i_add_point_placeholder">Нажмите, чтобы создать пункт</string>
     <string name="ai_no_token">Нет токена</string>
-<<<<<<< Updated upstream
     <string name="s_reset">Сбросить настройки</string>
-=======
     <string name="ai_action_rephrase">Сжать</string>
     <string name="ai_import_local">Импорт модели</string>
     <string name="ai_model_name">Название</string>
@@ -81,5 +79,4 @@
     <string name="ai_action_summarize">Объединить</string>
     <string name="ai_action_fill_in">Заполнить</string>
     <string name="placeholder_generating">Генерация..</string>
->>>>>>> Stashed changes
 </resources>

@@ -1,6 +1,7 @@
 package com.yaabelozerov.glowws.ui.screen.idea
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yaabelozerov.glowws.data.local.media.MediaManager
@@ -12,10 +13,6 @@ import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.Prompt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-<<<<<<< Updated upstream
-=======
-import kotlin.reflect.KClass
->>>>>>> Stashed changes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +31,6 @@ constructor(
     private val mediaManager: MediaManager,
     private val inferenceRepository: InferenceRepository
 ) : ViewModel() {
-<<<<<<< Updated upstream
   private val _points = MutableStateFlow(emptyList<PointDomainModel>())
   val points = _points.asStateFlow()
 
@@ -44,114 +40,25 @@ constructor(
 
   fun setOnPickMedia(onPickMedia: () -> Unit) = _onPickMedia.update { onPickMedia }
 
-=======
-  private var _points = MutableStateFlow(emptyList<PointDomainModel>())
-  val points = _points.asStateFlow()
-
-  private var _saved = MutableStateFlow(Pair(-1L, 0L))
-
-  val onPickMedia: MutableStateFlow<(() -> Unit)?> = MutableStateFlow(null)
-
->>>>>>> Stashed changes
   fun refreshPoints(ideaId: Long) {
     viewModelScope.launch {
       dao.getIdeaPoints(ideaId).flowOn(Dispatchers.IO).distinctUntilChanged().collectLatest { points
         ->
         _points.update {
-<<<<<<< Updated upstream
           points.map { pt -> PointDomainModel(pt.pointId, pt.type, pt.pointContent, pt.isMain) }
         }
       }
     }
   }
 
-  fun addPointAtIndex(pointType: PointType, ideaId: Long, index: Long, content: String = "") {
-    viewModelScope.launch {
-      when (pointType) {
-        PointType.TEXT ->
-            dao.insertPointUpdateIdeaAtIndex(
-                Point(
-                    pointId = 0,
-                    ideaParentId = ideaId,
-                    pointContent = content,
-                    index = index,
-                    type = pointType,
-                    isMain = false))
-
-        PointType.IMAGE -> addImage(ideaId, index)
-      }
-    }
-  }
-
-  fun modifyPoint(
-      pointId: Long,
-      content: String? = null,
-      isMain: Boolean? = null,
-      callback: () -> Unit = {}
-  ) {
-    viewModelScope.launch {
-      val point = dao.getPoint(pointId).first()
-      dao.upsertPointUpdateIdea(
-          point.copy(pointContent = content ?: point.pointContent, isMain = isMain ?: point.isMain))
-      callback()
-    }
-  }
-
-  fun removePoint(pointId: Long) {
-    viewModelScope.launch {
-      val pt = dao.getPoint(pointId).first()
-      val ideaId = pt.ideaParentId
-      dao.deletePointAndIndex(pointId)
-      dao.updateIdeaContentFromPoints(ideaId)
-      if (pt.type == PointType.IMAGE) {
-        mediaManager.removeMedia(pt.pointContent)
-      }
-    }
-  }
-
-  fun addImage(ideaId: Long, index: Long) {
-    _saved.update { Pair(ideaId, index) }
-    _onPickMedia.value?.invoke()
-  }
-
-  suspend fun importImage(uri: Uri) {
-    try {
-      mediaManager.importMedia(uri) {
-        viewModelScope.launch {
-          dao.insertPointUpdateIdeaAtIndex(
-              Point(
-                  pointId = 0,
-                  ideaParentId = _saved.value.first,
-                  pointContent = it,
-                  index = _saved.value.second,
-                  type = PointType.IMAGE,
-                  isMain = false))
-        }
-      }
-    } catch (e: Exception) {
-      e.printStackTrace()
-    }
-  }
-
-  fun generateResponse(s: String, pointId: Long) {
-    viewModelScope.launch {
-      inferenceRepository.generate(s, onUpdate = { modifyPoint(pointId, it) }, pointId)
-    }
-  }
-
   fun onEvent(event: IdeaScreenEvent, ideaId: Long, onBack: () -> Unit) {
     when (event) {
       is IdeaScreenEvent.AddPoint -> addPointAtIndex(event.type, ideaId, event.index)
-      is IdeaScreenEvent.ExecutePoint -> generateResponse(event.text, event.id)
+      is IdeaScreenEvent.ExecutePoint -> generateResponse(event.prompt, listOf(event.content), event.pointId)
       is IdeaScreenEvent.GoBack -> onBack()
       is IdeaScreenEvent.RemovePoint -> removePoint(event.id)
       is IdeaScreenEvent.SavePoint -> modifyPoint(event.id, event.text, event.isMain)
-    }
-  }
-=======
-          points.map { PointDomainModel(it.pointId, it.type, it.pointContent, it.isMain) }
-        }
-      }
+      is IdeaScreenEvent.ExecutePointNew -> generateResponseNew(event.index, event.prompt, ideaId)
     }
   }
 
@@ -210,7 +117,7 @@ constructor(
 
   fun addImage(ideaId: Long, index: Long) {
     _saved.update { Pair(ideaId, index) }
-    onPickMedia.value?.invoke()
+    _onPickMedia.value?.invoke()
   }
 
   suspend fun importImage(uri: Uri) {
@@ -244,5 +151,4 @@ constructor(
       }, pointId)
     }
   }
->>>>>>> Stashed changes
 }

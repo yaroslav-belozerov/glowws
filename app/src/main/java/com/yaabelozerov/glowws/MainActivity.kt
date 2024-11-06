@@ -54,19 +54,16 @@ class MainActivity : ComponentActivity() {
     val avm: ArchiveScreenViewModel by viewModels()
     val aivm: AiScreenViewModel by viewModels()
 
-    aivm.setOnPickModel {
+    val onPickModel =
       registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            uri?.let { aivm.importLocalModel(uri) }
-          }
-          .launch(arrayOf("application/octet-stream"))
-    }
+        uri?.let { aivm.importLocalModel(uri) }
+      }
+    aivm.setOnPickModel(onPickModel = {onPickModel.launch(arrayOf("application/octet-stream"))})
 
-    ivm.setOnPickMedia {
-      registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            uri?.let { ivm.viewModelScope.launch { ivm.importImage(uri) } }
-          }
-          .launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    val onPickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+      uri?.let { ivm.viewModelScope.launch { ivm.importImage(uri) } }
     }
+    ivm.setOnPickMedia(onPickMedia = { onPickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) })
 
     setContent {
       val navCtrl = rememberNavController()

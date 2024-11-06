@@ -22,12 +22,7 @@ data class GigaChatMessageResponse(
     @Json(name = "choices") val gigaChatChoices: List<GigaChatChoice>,
     val created: Long,
     val model: String,
-<<<<<<< Updated upstream
     @Json(name = "object") val objectField: String,
-=======
-    @Json(name = "object")
-    val objectField: String,
->>>>>>> Stashed changes
     val usage: Usage,
 )
 

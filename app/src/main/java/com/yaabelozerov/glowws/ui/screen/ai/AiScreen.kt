@@ -169,7 +169,7 @@ fun AiScreen(
                                 }
                               },
                               prefix = {
-                                Text("Name", modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp))
+                                Text(stringResource(R.string.ai_model_name), modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp))
                               },
                               singleLine = true,
                               modifier = Modifier.fillMaxWidth().focusRequester(focus),
@@ -179,54 +179,13 @@ fun AiScreen(
                                 nameChanged = newName != model.name
                               })
 
-                          if (model.type.needsToken) {
-                            var token by remember { mutableStateOf(model.token.orEmpty()) }
-                            var changed by remember { mutableStateOf(false) }
-                            OutlinedTextField(
-                                shape = MaterialTheme.shapes.medium,
-                                trailingIcon = {
-                                  if (changed) {
-                                    IconButton(
-                                        onClick = {
-                                          onEvent(AiScreenEvent.Edit(model.copy(token = token)))
-                                          focusManager.clearFocus()
-                                          changed = false
-                                        }) {
-                                          Icon(Icons.Default.Check, "OK")
-                                        }
-                                  }
-                                },
-                                prefix = {
-<<<<<<< Updated upstream
-                                  Text("Token", modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp))
-=======
-                                    Text(
-                                        stringResource(R.string.ai_model_name), modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)
-                                    )
->>>>>>> Stashed changes
-                                },
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth().focusRequester(focus),
-                                value = token,
-                                onValueChange = {
-<<<<<<< Updated upstream
-                                  token = it
-                                  changed = token != model.token
-                                },
-                                visualTransformation = PasswordVisualTransformation())
-                          }
-=======
-                                    newName = it
-                                    nameChanged = newName != model.name
-                                })
-
                             if (model.type.needsToken) {
                                 var token by remember { mutableStateOf(model.token ?: "") }
                                 var changed by remember { mutableStateOf(false) }
                                 OutlinedTextField(shape = MaterialTheme.shapes.medium,
                                     trailingIcon = {
                                         if (changed) IconButton(onClick = {
-                                            onEdit(model.copy(token = token))
+                                            onEvent(AiScreenEvent.Edit(model.copy(token = token)))
                                             focusManager.clearFocus()
                                             changed = false
                                         }) {
@@ -253,14 +212,12 @@ fun AiScreen(
                                     visualTransformation = PasswordVisualTransformation()
                                 )
                             }
->>>>>>> Stashed changes
                         }
                   }
             }
           }
         }
         Row(
-<<<<<<< Updated upstream
             modifier = Modifier.padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
               IconButton(
@@ -289,38 +246,6 @@ fun AiScreen(
                                         " " +
                                         (status.first?.name.orEmpty()))
                           }
-=======
-            modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            IconButton(enabled = status.second.notBusy(), onClick = { onRefresh() }) {
-                Icon(imageVector = Icons.Default.Refresh, contentDescription = null)
-            }
-            OutlinedButton(
-                enabled = status.second.notBusy(),
-                onClick = { onAdd() },
-                modifier = Modifier.weight(1f)
-            ) {
-                if (status.second.notBusy()) {
-                    Text(
-                        text = stringResource(R.string.ai_import_local)
-                    )
-                } else {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        if (!status.second.notBusy()) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeCap = StrokeCap.Round,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        Text(
-                            text = stringResource(id = status.second.resId) + " " + (status.first?.name
-                                ?: "")
-                        )
->>>>>>> Stashed changes
                     }
                   }
             }
@@ -332,11 +257,11 @@ sealed class AiScreenEvent {
 
   data class Delete(val model: Model) : AiScreenEvent()
 
-  object Unload : AiScreenEvent()
+  data object Unload : AiScreenEvent()
 
-  object Add : AiScreenEvent()
+  data object Add : AiScreenEvent()
 
-  object Refresh : AiScreenEvent()
+  data object Refresh : AiScreenEvent()
 
   data class Edit(val model: Model) : AiScreenEvent()
 }

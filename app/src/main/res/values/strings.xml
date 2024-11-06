@@ -71,9 +71,7 @@
     <string name="sort_priority">Priority</string>
     <string name="i_add_point_placeholder">Click to Add Point</string>
     <string name="ai_no_token">No Token</string>
-<<<<<<< Updated upstream
     <string name="s_reset">Reset to Default</string>
-=======
     <string name="prompt_fill_in" translatable="false">You will be given 2 pieces of text. You have to fill in the most logical text in between. Only provide the missing text in plain text.</string>
     <string name="prompt_rephrase" translatable="false">You will be given a piece of text. You have to rephrase it more concisely.</string>
     <string name="ai_action_rephrase">Rephrase</string>
@@ -84,5 +82,4 @@
     <string name="prompt_summarize" translatable="false">You will be given several pieces of text. Summarize them and make a logical conclusion. Do not include the texts themselves.</string>
     <string name="ai_action_fill_in">FIll Gap</string>
     <string name="placeholder_generating">Generating</string>
->>>>>>> Stashed changes
 </resources>
