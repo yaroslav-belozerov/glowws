@@ -88,4 +88,6 @@
     <string name="i_point_type_text">Text</string>
     <string name="i_point_type_image">Image</string>
     <string name="error_unknown">Unknown Error</string>
+    <string name="placeholder_archive_empty">Archived ideas will appear here</string>
+    <string name="placeholder_add_idea">Click to Add Idea</string>
 </resources>

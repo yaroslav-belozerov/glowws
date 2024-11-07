@@ -24,13 +24,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AddCircleOutline
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -55,6 +59,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -208,6 +213,17 @@ fun MainScreen(
           isSelected = selection.entries.contains(idea.id),
           displayPlaceholders = settings.getValue(SettingsKeys.SHOW_PLACEHOLDERS).boolean(),
           fullImage = settings.getValue(SettingsKeys.IMAGE_FULL_HEIGHT).boolean())
+    }
+  }
+  if (ideas.isEmpty()) {
+    Box(
+      modifier = Modifier.fillMaxSize()) {
+      Row(modifier = Modifier.padding(vertical = 32.dp).align(Alignment.BottomCenter), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+          stringResource(R.string.placeholder_add_idea),
+          fontSize = 16.sp)
+        Icon(Icons.AutoMirrored.Default.ArrowForward, contentDescription = null)
+      }
     }
   }
 }
