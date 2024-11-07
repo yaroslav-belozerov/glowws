@@ -1,0 +1,14 @@
+[
+  {
+    "id": 0,
+    "type": "OPENROUTER",
+    "name": "Llama 3.2 11B",
+    "isChosen": false
+  },
+  {
+    "id": 0,
+    "type": "GIGACHAT",
+    "name": "GigaChat Lite",
+    "isChosen": false
+  }
+]
