@@ -218,7 +218,7 @@ fun MainScreen(
   if (ideas.isEmpty()) {
     Box(
       modifier = Modifier.fillMaxSize()) {
-      Row(modifier = Modifier.padding(vertical = 32.dp).align(Alignment.BottomCenter), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      Row(modifier = Modifier.padding(bottom = 32.dp, end = 88.dp).align(Alignment.BottomEnd), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
           stringResource(R.string.placeholder_add_idea),
           fontSize = 16.sp)

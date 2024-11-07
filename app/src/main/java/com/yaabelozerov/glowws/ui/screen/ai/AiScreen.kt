@@ -229,7 +229,7 @@ fun AiScreen(
                   onClick = { onEvent(AiScreenEvent.Add) },
                   modifier = Modifier.weight(1f)) {
                     if (status.second.notBusy()) {
-                      Text(text = "Import model")
+                      Text(text = stringResource(R.string.ai_import_local))
                     } else {
                       Row(
                           verticalAlignment = Alignment.CenterVertically,

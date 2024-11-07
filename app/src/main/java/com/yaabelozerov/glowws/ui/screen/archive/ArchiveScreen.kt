@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -83,7 +84,7 @@ fun ArchiveScreen(
       }
   if (ideas.isEmpty())
       Column(
-          modifier = Modifier.fillMaxSize(),
+          modifier = Modifier.fillMaxSize().padding(horizontal = 48.dp),
           verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
           horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
@@ -92,6 +93,7 @@ fun ArchiveScreen(
                 modifier = Modifier.size(128.dp).alpha(Const.UI.UNUSED_ICON_ALPHA))
             Text(
                 stringResource(R.string.placeholder_archive_empty),
+                textAlign = TextAlign.Center,
                 fontSize = 20.sp,
                 modifier = Modifier.alpha(Const.UI.UNUSED_ICON_ALPHA))
           }

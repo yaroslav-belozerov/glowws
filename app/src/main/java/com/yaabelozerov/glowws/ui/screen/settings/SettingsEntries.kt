@@ -51,7 +51,7 @@ fun BooleanSettingsEntry(
       modifier =
           modifier
               .clickable { onModify(entry.key, (!entry.value).toString()) }
-              .padding(16.dp, 4.dp),
+              .padding(16.dp, 8.dp),
       verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(entry.key.resId),
@@ -166,8 +166,6 @@ fun AiSettingsEntry(
     onNavigate: () -> Unit
 ) {
   Column(modifier = modifier.fillMaxWidth()) {
-    SettingsHeader(icon = Icons.Default.AutoAwesome, name = stringResource(id = R.string.s_cat_ai))
-    Spacer(modifier = Modifier.height(8.dp))
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.clickable { onNavigate() }.padding(16.dp, 8.dp)) {
