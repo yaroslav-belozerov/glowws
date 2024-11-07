@@ -79,9 +79,10 @@
     <string name="ai_model_name">Name</string>
     <string name="ai_model_token">Token</string>
     <string name="ai_action_summarize">Summarize</string>
-    <string name="prompt_summarize" translatable="false">You will be given several pieces of text. Summarize them and make a logical conclusion. Do not include the texts themselves.</string>
+    <string name="prompt_summarize" translatable="false">You will be given several pieces of text. Summarize them and make a logical conclusion. Do not include the texts themselves. Do not continue past the summary.</string>
     <string name="ai_action_fill_in">FIll Gap</string>
     <string name="placeholder_generating">Generating</string>
-    <string name="prompt_continue" translatable="false">You will be given several pieces of text. Continue the logical chain. Preserve original topic. Do not include anything besides the continuation.</string>
+    <string name="prompt_continue" translatable="false">You will be given several pieces of text. Continue the logical chain. Preserve original topic. Do not include anything besides the continuation. Do not add remarks of you own. Do not ask for more context or information. Work with only what you were given. Be concise.</string>
     <string name="ai_action_continue">Continue</string>
+    <string name="prompt_local_prepend" translatable="false">You are assistant. Execute the prompt. Do not mention yourself or the prompt. Do not say anything besides the answer to the prompt.</string>
 </resources>

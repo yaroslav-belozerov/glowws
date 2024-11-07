@@ -84,8 +84,9 @@ object AppModule {
       ors: OpenRouterService,
       gcs: GigaChatService,
       @ApplicationContext app: Context,
+      moshi: Moshi,
       dataStoreManager: DataStoreManager
-  ): InferenceRepository = InferenceRepositoryImpl(infm, ors, gcs, app, dataStoreManager)
+  ): InferenceRepository = InferenceRepositoryImpl(infm, ors, gcs, app, moshi, dataStoreManager)
 
   @Singleton
   @Provides

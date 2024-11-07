@@ -54,7 +54,7 @@ class InferenceManager @Inject constructor(private val app: Context) {
         val options =
             LlmInferenceOptions.builder()
                 .setModelPath(path)
-                .setMaxTokens(512)
+                .setMaxTokens(256)
                 .setTopK(40)
                 .setResultListener { part, done ->
                   _state.update { Pair(done, it.second + part) }

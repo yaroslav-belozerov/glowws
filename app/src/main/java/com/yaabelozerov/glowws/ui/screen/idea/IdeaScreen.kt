@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -73,6 +74,8 @@ import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.room.Model
+import com.yaabelozerov.glowws.data.local.room.ModelType
+import com.yaabelozerov.glowws.data.local.room.ModelVariant
 import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.Prompt
@@ -142,6 +145,7 @@ fun IdeaScreen(
                     onExecute = { prompt, str ->
                       onEvent(IdeaScreenEvent.ExecutePoint(prompt, str, point.id))
                     },
+                    onCancel = { onEvent(IdeaScreenEvent.ExecuteCancel) },
                     showPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean(),
                     status = aiStatus,
                     prompts = listOf(Prompt.Rephrase))
@@ -314,6 +318,7 @@ fun TextPoint(
     onSave: (String, Boolean) -> Unit,
     onRemove: () -> Unit,
     onExecute: (Prompt, String) -> Unit,
+    onCancel: () -> Unit,
     showPlaceholders: Boolean,
     status: Triple<Model?, InferenceManagerState, Long>,
     prompts: List<Prompt>
@@ -348,6 +353,7 @@ fun TextPoint(
                 } else {
                   MaterialTheme.colorScheme.surfaceContainer
                 })
+        if (status.first?.type !in ModelType.LOCAL.variants) IconButton(onClick = onCancel, modifier = Modifier.padding(8.dp).align(Alignment.TopEnd)) { Icon(Icons.Default.Stop, contentDescription = "stop") }
       }
       val pointFocus = remember { FocusRequester() }
       if (!isBeingModified) {
@@ -452,4 +458,6 @@ sealed class IdeaScreenEvent {
       IdeaScreenEvent()
 
   data class ExecutePointNew(val prompt: Prompt, val index: Int) : IdeaScreenEvent()
+
+  data object ExecuteCancel : IdeaScreenEvent()
 }

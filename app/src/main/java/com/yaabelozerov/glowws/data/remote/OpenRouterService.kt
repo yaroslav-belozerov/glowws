@@ -1,6 +1,7 @@
 package com.yaabelozerov.glowws.data.remote
 
 import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.JsonDataException
 import com.yaabelozerov.glowws.Const
 import java.io.BufferedReader
 import java.io.IOException
@@ -25,7 +26,7 @@ interface OpenRouterService {
   ): Call<ResponseBody>
 }
 
-fun getResponse(input: BufferedReader, ad: JsonAdapter<OpenRouterResponse>, onErr: () -> Unit) =
+fun getResponse(input: BufferedReader, streamAd: JsonAdapter<OpenRouterResponse>, regularAd: JsonAdapter<List<Content>>, onErr: () -> Unit) =
     flow {
       try {
         while (currentCoroutineContext().isActive) {
@@ -33,11 +34,19 @@ fun getResponse(input: BufferedReader, ad: JsonAdapter<OpenRouterResponse>, onEr
           if (line != null && line.startsWith(Const.Net.OPENROUTER_STREAMING_PREFIX)) {
             try {
               val answerDetailInfo =
-                  ad.fromJson(line.substring(Const.Net.OPENROUTER_STREAMING_PREFIX.length).trim())
+                  streamAd.fromJson(line.substring(Const.Net.OPENROUTER_STREAMING_PREFIX.length).trim())
               emit(answerDetailInfo)
             } catch (e: Exception) {
-              e.printStackTrace()
-              onErr()
+              if (e is JsonDataException) {
+                try {
+                  val answerDetailInfo = regularAd.fromJson(line.substring(Const.Net.OPENROUTER_STREAMING_PREFIX.length).trim())
+                  emit(OpenRouterResponse(choices = answerDetailInfo?.map { StreamingChoice(delta = Delta(content = it.text, role = null), error = null, finishReason = null) }.orEmpty()))
+                } catch (e: Exception) {
+                  emit(null)
+                  e.printStackTrace()
+                  onErr()
+                }
+              }
             }
           }
         }

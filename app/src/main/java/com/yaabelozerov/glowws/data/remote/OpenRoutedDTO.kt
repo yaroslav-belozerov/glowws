@@ -15,8 +15,6 @@ data class Content(
     val text: String,
 )
 
-data class StreamResponse(val data: StreamingChoice? = null)
-
 data class OpenRouterResponse(val id: String? = null, val choices: List<StreamingChoice>? = null)
 
 data class StreamingChoice(

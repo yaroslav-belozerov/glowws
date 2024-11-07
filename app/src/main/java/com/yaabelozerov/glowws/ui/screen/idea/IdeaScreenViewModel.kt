@@ -2,6 +2,7 @@ package com.yaabelozerov.glowws.ui.screen.idea
 
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yaabelozerov.glowws.data.local.media.MediaManager
@@ -14,6 +15,7 @@ import com.yaabelozerov.glowws.domain.model.Prompt
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -35,6 +37,7 @@ constructor(
   val points = _points.asStateFlow()
 
   private val _saved = MutableStateFlow(Pair(-1L, 0L))
+  private var currentJob: Job? = null
 
   private val _onPickMedia: MutableStateFlow<(() -> Unit)?> = MutableStateFlow(null)
 
@@ -60,6 +63,10 @@ constructor(
         is IdeaScreenEvent.RemovePoint -> removePoint(event.id)
         is IdeaScreenEvent.SavePoint -> modifyPoint(event.id, event.text, event.isMain)
         is IdeaScreenEvent.ExecutePointNew -> generateResponseNew(event.index, event.prompt, ideaId)
+        is IdeaScreenEvent.ExecuteCancel -> {
+          currentJob?.cancel()
+          inferenceRepository.deactivate()
+        }
       }
     } catch (e: Exception) {
       onError(e)
@@ -140,9 +147,12 @@ constructor(
   }
 
   private fun generateResponse(s: Prompt, contentStrings: List<String>, pointId: Long) {
-    viewModelScope.launch {
+    currentJob = viewModelScope.launch {
       Log.i("generateResponse", "Generating ${s.name} with $contentStrings")
-      inferenceRepository.generate(s, contentStrings, onUpdate = { modifyPoint(pointId, it) }, pointId)
+      inferenceRepository.generate(s, contentStrings, onUpdate = { modifyPoint(pointId, it) }, pointId, onErr = {
+        currentJob?.cancel()
+        inferenceRepository.deactivate()
+      })
     }
   }
 

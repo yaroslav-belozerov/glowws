@@ -6,7 +6,8 @@ import android.util.Log
 import android.widget.Toast
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.squareup.moshi.Types
+import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.ai.InferenceManager
 import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
 import com.yaabelozerov.glowws.data.local.room.Model
@@ -28,7 +29,6 @@ import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -37,12 +37,17 @@ import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.temporal.ChronoField
 
 class InferenceRepositoryImpl(
     private val localInferenceManager: InferenceManager,
     private val openRouterService: OpenRouterService,
     private val gigaChatService: GigaChatService,
     private val app: Context,
+    private val moshi: Moshi,
     private val dataStoreManager: AppModule.DataStoreManager
 ) : InferenceRepository {
   private val _source =
@@ -51,15 +56,24 @@ class InferenceRepositoryImpl(
   override val source = _source.asStateFlow()
 
   private val _response = MutableStateFlow("")
-  val ad: JsonAdapter<OpenRouterResponse> =
-      Moshi.Builder()
-          .add(KotlinJsonAdapterFactory())
-          .build()
-          .adapter(OpenRouterResponse::class.java)
+  val streamingAd: JsonAdapter<OpenRouterResponse> = moshi.adapter(OpenRouterResponse::class.java)
+  val regularAd: JsonAdapter<List<Content>> =
+      moshi
+          .adapter<List<Content>?>(
+              Types.newParameterizedType(List::class.java, Content::class.java))
+          .lenient()
 
-  private var currentLocalJob: Job? = null
+  override fun deactivate() {
+    _source.update { it.copy(second = InferenceManagerState.ACTIVE, third = -1L) }
+  }
 
-  override suspend fun generate(prompt: Prompt, contentStrings: List<String>, onUpdate: (String) -> Unit, pointId: Long) {
+  override suspend fun generate(
+      prompt: Prompt,
+      contentStrings: List<String>,
+      onUpdate: (String) -> Unit,
+      pointId: Long,
+      onErr: () -> Unit
+  ) {
     _source.update { it.copy(second = InferenceManagerState.RESPONDING, third = pointId) }
     val token = _source.value.first?.token ?: ""
     try {
@@ -68,18 +82,21 @@ class InferenceRepositoryImpl(
           val message =
               when (prompt) {
                 Prompt.FillIn ->
-                    "system: ${app.resources.getString(prompt.prompt)}\nuser: ${contentStrings[0]}\nuser: ${contentStrings[1]}"
+                    app.resources.getString(R.string.prompt_local_prepend) +
+                        "system: ${app.resources.getString(prompt.prompt)}\nuser: ${contentStrings[0]}\nuser: ${contentStrings[1]}\nassistant:"
 
                 Prompt.Rephrase ->
-                    "system: ${app.resources.getString(prompt.prompt)}\nuser: ${contentStrings[0]}"
+                    app.resources.getString(R.string.prompt_local_prepend) +
+                        "system: ${app.resources.getString(prompt.prompt)}\nuser: ${contentStrings[0]}\nassistant:"
 
-                Prompt.Summarize, Prompt.Continue ->
-                  "system: ${app.resources.getString(prompt.prompt)}\nuser: ${contentStrings.joinToString("\nuser: ")}"
+                Prompt.Summarize,
+                Prompt.Continue ->
+                    app.resources.getString(R.string.prompt_local_prepend) +
+                        "system: ${app.resources.getString(prompt.prompt)}\nuser: ${contentStrings.joinToString("\nuser: ")}\nassistant:"
               }
-          currentLocalJob =
-              localInferenceManager.execute(message, onUpdate) {
-                _source.update { it.copy(second = InferenceManagerState.ACTIVE, third = -1L) }
-              }
+          localInferenceManager.execute(message, onUpdate) {
+            _source.update { it.copy(second = InferenceManagerState.ACTIVE, third = -1L) }
+          }
         }
 
         ModelVariant.OPENROUTER -> {
@@ -89,7 +106,8 @@ class InferenceRepositoryImpl(
                     listOf(
                         Message(
                             role = "system",
-                            content = listOf(Content(text = app.resources.getString(prompt.prompt)))),
+                            content =
+                                listOf(Content(text = app.resources.getString(prompt.prompt)))),
                         Message(content = listOf(Content(text = contentStrings[0]))),
                         Message(content = listOf(Content(text = contentStrings[1]))))
 
@@ -97,16 +115,19 @@ class InferenceRepositoryImpl(
                     listOf(
                         Message(
                             role = "system",
-                            content = listOf(Content(text = app.resources.getString(prompt.prompt))),
+                            content =
+                                listOf(Content(text = app.resources.getString(prompt.prompt))),
                         ),
                         Message(content = listOf(Content(text = contentStrings[0]))))
 
-                Prompt.Summarize, Prompt.Continue ->
-                  listOf(
-                      Message(
-                      role = "system",
-                    content = listOf(Content(text = app.resources.getString(prompt.prompt))),
-                  )) + contentStrings.map { Message(content = listOf(Content(text = it))) }
+                Prompt.Summarize,
+                Prompt.Continue ->
+                    listOf(
+                        Message(
+                            role = "system",
+                            content =
+                                listOf(Content(text = app.resources.getString(prompt.prompt))),
+                        )) + contentStrings.map { Message(content = listOf(Content(text = it))) }
               }
           openRouterService
               .generate(
@@ -125,10 +146,11 @@ class InferenceRepositoryImpl(
                       }
                       val scope = CoroutineScope(Dispatchers.IO)
                       scope.launch {
-                        getResponse(reader, ad) {
+                        getResponse(reader, streamingAd, regularAd) {
                               _source.update {
                                 it.copy(second = InferenceManagerState.ACTIVE, third = -1L)
                               }
+                              _response.update { "" }
                             }
                             .collect { resp ->
                               _response.update {
@@ -161,15 +183,16 @@ class InferenceRepositoryImpl(
                             role = "system", content = app.resources.getString(prompt.prompt)),
                         GigaChatMessage(content = contentStrings[0]))
 
-                Prompt.Summarize, Prompt.Continue ->
-                  listOf(
-                    GigaChatMessage(
-                      role = "system",
-                      content = app.resources.getString(prompt.prompt),
-                    )) + contentStrings.map { GigaChatMessage(content = it) }
+                Prompt.Summarize,
+                Prompt.Continue ->
+                    listOf(
+                        GigaChatMessage(
+                            role = "system",
+                            content = app.resources.getString(prompt.prompt),
+                        )) + contentStrings.map { GigaChatMessage(content = it) }
               }
           dataStoreManager.getTempTokenExpiry().collect { expiresAt ->
-            if (expiresAt == 0L || Instant.ofEpochSecond(expiresAt) < Instant.now()) {
+            if (expiresAt == 0L || Instant.ofEpochMilli(expiresAt) < Instant.now()) {
               val authResp =
                   gigaChatService.auth(rqiu = UUID.randomUUID().toString(), token = "Basic $token")
               dataStoreManager.setTempToken(authResp.accessToken)
@@ -195,6 +218,7 @@ class InferenceRepositoryImpl(
       }
     } catch (e: Exception) {
       interrupt(e)
+      onErr()
     }
   }
 
@@ -246,7 +270,6 @@ class InferenceRepositoryImpl(
     }
     localInferenceManager.importModel(uri, callback)
   }
-
 
   override fun unloadModel() {
     _source.update { it.copy(null, InferenceManagerState.IDLE, -1L) }
