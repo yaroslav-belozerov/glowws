@@ -76,6 +76,7 @@ class InferenceRepositoryImpl(
   ) {
     _source.update { it.copy(second = InferenceManagerState.RESPONDING, third = pointId) }
     val token = _source.value.first?.token ?: ""
+    _response.update { "" }
     try {
       when (_source.value.first?.type) {
         ModelVariant.ONDEVICE -> {
