@@ -31,7 +31,7 @@
     <string name="m_reset_sortfilter">Сбросить</string>
     <string name="m_sort">Сортировка</string>
     <string name="m_filter">Фильтр</string>
-    <string name="s_default_filter_ingroup">В проекте</string>
+    <string name="filter_priority">Приоритет</string>
     <string name="s_default_sort_asc">По возрастанию</string>
     <string name="s_default_sort_desc">По убыванию</string>
     <string name="s_user_default_sort_order">Направление сортировки</string>

@@ -94,23 +94,11 @@ class SettingsMapper {
     return SortModel(order, type)
   }
 
-  //    fun getFilter(settings: SettingsList): FilterModel {
-  //        val split = settings.list?.findLast { it.key == SettingsKeys.FILTER }?.value?.split(
-  //            JSON_DELIMITER
-  //        )!!
-  //        val mp = mutableMapOf<FilterFlag, Boolean>()
-  //        FilterFlag.entries.forEachIndexed { index, filterFlag ->
-  //            mp[filterFlag] = split[index] == "true"
-  //        }
-  //        return FilterModel(mp)
-  //    }
-
   private fun getLocalChoice(s: String): Int? =
       try {
         when (s) {
           in SortOrder.entries.fastJoinToString() -> SortOrder.valueOf(s).resId
           in SortType.entries.fastJoinToString() -> SortType.valueOf(s).resId
-          in FilterFlag.entries.fastJoinToString() -> FilterFlag.valueOf(s).resId
           else -> null
         }
       } catch (_: Exception) {

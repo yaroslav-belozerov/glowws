@@ -31,7 +31,7 @@
     <string name="m_reset_sortfilter">Reset</string>
     <string name="m_sort">Sorting</string>
     <string name="m_filter">Filter</string>
-    <string name="s_default_filter_ingroup">In Group</string>
+    <string name="filter_priority">Priority</string>
     <string name="s_default_sort_asc">Ascending</string>
     <string name="s_default_sort_desc">Descending</string>
     <string name="s_user_default_sort_order">Sort Order</string>

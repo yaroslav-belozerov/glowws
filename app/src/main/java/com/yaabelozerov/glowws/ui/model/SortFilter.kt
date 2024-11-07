@@ -24,8 +24,8 @@ enum class SortType(val resId: Int) {
 
 data class SortModel(val order: SortOrder, val type: SortType)
 
-enum class FilterFlag(val resId: Int) {
-  IN_GROUP(R.string.s_default_filter_ingroup)
+sealed class FilterFlag(val resId: Int) {
+  data class WithPriority(val priority: List<Int>): FilterFlag(R.string.filter_priority)
 }
 
 data class FilterModel(val flags: Map<FilterFlag, Boolean>)

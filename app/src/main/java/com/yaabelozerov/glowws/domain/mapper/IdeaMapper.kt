@@ -6,6 +6,7 @@ import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.domain.model.JoinedTimestamp
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
+import com.yaabelozerov.glowws.ui.model.FilterFlag
 import com.yaabelozerov.glowws.ui.model.FilterModel
 import com.yaabelozerov.glowws.ui.model.SortModel
 import com.yaabelozerov.glowws.ui.model.SortOrder
@@ -15,12 +16,13 @@ import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
+import kotlin.reflect.KClass
 
 class IdeaMapper @Inject constructor(private val dao: IdeaDao) {
   suspend fun toDomainModel(
-      ideas: List<Idea>,
-      filterModel: FilterModel = FilterModel(emptyMap()),
-      sortModel: SortModel = SortModel(SortOrder.DESCENDING, SortType.TIMESTAMP_MODIFIED)
+    ideas: List<Idea>,
+    filterModel: Map<KClass<FilterFlag>, FilterFlag>? = null,
+    sortModel: SortModel = SortModel(SortOrder.DESCENDING, SortType.TIMESTAMP_MODIFIED)
   ): List<IdeaDomainModel> {
     val out: MutableList<IdeaDomainModel> = mutableListOf()
     val pattern = "HH:mm dd.MM.yyyy"
@@ -60,6 +62,10 @@ class IdeaMapper @Inject constructor(private val dao: IdeaDao) {
           SortType.PRIORITY -> compareBy { it.priority }
         }.thenBy { it.modified.timestamp })
     if (sortModel.order == SortOrder.DESCENDING) out.reverse()
-    return out
+    return if (filterModel != null) out.filter {
+      filterModel.mapValues { flag -> when (flag.value) {
+        is FilterFlag.WithPriority -> (flag.value as FilterFlag.WithPriority).priority.contains(it.priority.toInt()) || (flag.value as FilterFlag.WithPriority).priority.isEmpty()
+      } }.all { it.value }
+    } else out
   }
 }

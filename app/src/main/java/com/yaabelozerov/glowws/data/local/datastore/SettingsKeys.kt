@@ -49,11 +49,4 @@ enum class SettingsKeys(
       "false",
       emptyList(),
       R.string.s_user_long_press_type),
-  //    FILTER(
-  //        SettingsCategories.USER,
-  //        SettingsTypes.MULTIPLE_CHOICE,
-  //        "",
-  //        FilterFlag.entries.map { it.name },
-  //        R.string.s_user_default_filter
-  //    )
 }

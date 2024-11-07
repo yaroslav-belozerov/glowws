@@ -11,7 +11,6 @@ import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
 import com.yaabelozerov.glowws.ui.common.Nav
 import com.yaabelozerov.glowws.ui.common.withParam
 import com.yaabelozerov.glowws.ui.model.FilterFlag
-import com.yaabelozerov.glowws.ui.model.FilterModel
 import com.yaabelozerov.glowws.ui.model.SelectionState
 import com.yaabelozerov.glowws.ui.model.SortOrder
 import com.yaabelozerov.glowws.ui.model.SortType
@@ -25,6 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.reflect.KClass
 
 @HiltViewModel
 class MainScreenViewModel
@@ -63,7 +63,7 @@ constructor(
   }
 
   fun resetFilter() {
-    _state.update { it.copy(filter = FilterModel(emptyMap())) }
+    _state.update { it.copy(filter = MainScreenState().filter) }.also { fetchMainScreen() }
   }
 
   fun fetchSort() =
@@ -92,10 +92,13 @@ constructor(
     }
   }
 
-  fun setFilterFlag(flag: FilterFlag, value: Boolean) =
-      _state
-          .update { it.copy(filter = it.filter.copy(flags = it.filter.flags + (flag to value))) }
-          .also { fetchMainScreen() }
+  fun updateFilterFlag(flagType: KClass<FilterFlag>, flag: FilterFlag) {
+    _state
+      .update { state ->
+        state.copy(filter = state.filter + (flagType to flag))
+      }
+      .also { fetchMainScreen() }
+  }
 
   fun setSortType(type: SortType) =
       _state.update { it.copy(sort = it.sort.copy(type = type)) }.also { fetchMainScreen() }
