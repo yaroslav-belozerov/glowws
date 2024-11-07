@@ -67,7 +67,7 @@ fun AiScreen(
       modifier = modifier.animateContentSize().fillMaxSize(),
       verticalArrangement = Arrangement.spacedBy(8.dp)) {
         error?.let {
-          Text(modifier = Modifier.padding(16.dp), text = it.localizedMessage ?: "Unknown error")
+          Text(modifier = Modifier.padding(16.dp), text = it.localizedMessage ?: stringResource(R.string.error_unknown))
         }
         models.keys.forEach { type ->
           Text(

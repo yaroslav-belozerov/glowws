@@ -48,7 +48,7 @@
     <string name="label_configure">Настроить</string>
     <string name="s_display_monet_theme">Динамические цвета</string>
     <string name="s_display_full_height_images">Полная высота картинок</string>
-    <string name="s_user_long_press_type">Зажать для выбора типа мысли</string>
+    <string name="s_user_long_press_type">Зажать для выбора типа пункта</string>
     <string name="ai_status_responding">Отвечает</string>
     <string name="placeholder_tap_to_edit">Нажмите для редактирования</string>
     <string name="m_idea_discarded">Пустая идея удалена</string>
@@ -87,4 +87,5 @@
     <string name="prompt_local_prepend">Твоя роль - assistant. Выполни задание. Не упоминай себя или задание. Не говори ничего, кроме ответа. Не добавляй ничего от себя. Не запрашивай больше информации. Работай только с тем, что дано. Будь краток.</string>
     <string name="i_point_type_text">Текст</string>
     <string name="i_point_type_image">Картинка</string>
+    <string name="error_unknown">Неизвестная ошибка</string>
 </resources>

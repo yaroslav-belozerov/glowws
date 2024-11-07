@@ -87,4 +87,5 @@
     <string name="prompt_local_prepend">You are assistant. Execute the prompt. Do not mention yourself or the prompt. Do not say anything besides the answer to the prompt. Do not add remarks of you own. Do not ask for more context or information. Work with only what you were given. Be concise.</string>
     <string name="i_point_type_text">Text</string>
     <string name="i_point_type_image">Image</string>
+    <string name="error_unknown">Unknown Error</string>
 </resources>
