@@ -72,17 +72,19 @@
     <string name="i_add_point_placeholder">Click to Add Point</string>
     <string name="ai_no_token">No Token</string>
     <string name="s_reset">Reset to Default</string>
-    <string name="prompt_fill_in" translatable="false">You will be given 2 pieces of text. You have to fill in the most logical text in between. Only provide the missing text in plain text.</string>
-    <string name="prompt_rephrase" translatable="false">You will be given a piece of text. You have to rephrase it more concisely.</string>
+    <string name="prompt_fill_in">You will be given 2 pieces of text. You have to fill in the most logical text in between. Only provide the missing text in plain text.</string>
+    <string name="prompt_rephrase">You will be given a piece of text. You have to rephrase it more concisely.</string>
     <string name="ai_action_rephrase">Rephrase</string>
     <string name="ai_import_local">Import Model</string>
     <string name="ai_model_name">Name</string>
     <string name="ai_model_token">Token</string>
     <string name="ai_action_summarize">Summarize</string>
-    <string name="prompt_summarize" translatable="false">You will be given several pieces of text. Summarize them and make a logical conclusion. Do not include the texts themselves. Do not continue past the summary.</string>
+    <string name="prompt_summarize">You will be given several pieces of text. Summarize them and make a logical conclusion. Do not include the texts themselves. Do not continue past the summary.</string>
     <string name="ai_action_fill_in">FIll Gap</string>
     <string name="placeholder_generating">Generating</string>
-    <string name="prompt_continue" translatable="false">You will be given several pieces of text. Continue the logical chain. Preserve original topic. Do not include anything besides the continuation. Do not add remarks of you own. Do not ask for more context or information. Work with only what you were given. Be concise.</string>
+    <string name="prompt_continue">You will be given several pieces of text. Continue the logical chain. Preserve original topic. Do not include anything besides the continuation.</string>
     <string name="ai_action_continue">Continue</string>
-    <string name="prompt_local_prepend" translatable="false">You are assistant. Execute the prompt. Do not mention yourself or the prompt. Do not say anything besides the answer to the prompt.</string>
+    <string name="prompt_local_prepend">You are assistant. Execute the prompt. Do not mention yourself or the prompt. Do not say anything besides the answer to the prompt. Do not add remarks of you own. Do not ask for more context or information. Work with only what you were given. Be concise.</string>
+    <string name="i_point_type_text">Text</string>
+    <string name="i_point_type_image">Image</string>
 </resources>

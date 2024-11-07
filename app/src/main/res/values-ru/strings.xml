@@ -72,12 +72,19 @@
     <string name="i_add_point_placeholder">Нажмите, чтобы создать пункт</string>
     <string name="ai_no_token">Нет токена</string>
     <string name="s_reset">Сбросить настройки</string>
+    <string name="prompt_fill_in">Тебе будет предоставлено 2 фрагмента текста. Тебе нужно будет вставить наиболее логичный текст между ними. Напиши только недостающий текст. Не используй форматирование.</string>
+    <string name="prompt_rephrase">Тебе будет дан фрагмент текста. Ты должен перефразировать его более кратко.</string>
     <string name="ai_action_rephrase">Сжать</string>
     <string name="ai_import_local">Импорт модели</string>
     <string name="ai_model_name">Название</string>
     <string name="ai_model_token">Токен</string>
     <string name="ai_action_summarize">Объединить</string>
+    <string name="prompt_summarize">Тебе будет предоставлено несколько фрагментов текста. Обобщи их и сделай логический вывод. Не включай сами тексты.</string>
     <string name="ai_action_fill_in">Заполнить</string>
     <string name="placeholder_generating">Генерация..</string>
+    <string name="prompt_continue">Тебе будет предоставлено несколько фрагментов текста. Продолжи логическую цепочку. Сохрани исходную тему. Не включай ничего, кроме продолжения.</string>
     <string name="ai_action_continue">Продолжить</string>
+    <string name="prompt_local_prepend">Твоя роль - assistant. Выполни задание. Не упоминай себя или задание. Не говори ничего, кроме ответа. Не добавляй ничего от себя. Не запрашивай больше информации. Работай только с тем, что дано. Будь краток.</string>
+    <string name="i_point_type_text">Текст</string>
+    <string name="i_point_type_image">Картинка</string>
 </resources>

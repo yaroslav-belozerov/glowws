@@ -235,9 +235,9 @@ fun AddPointLine(
                     onAdd(it)
                     open = false
                   }) {
-                    Icon(it.icon, contentDescription = it.title)
+                    Icon(it.icon, contentDescription = stringResource(it.resId))
                     Spacer(Modifier.width(4.dp))
-                    Text(it.title)
+                    Text(stringResource(it.resId))
                   }
             }
             if (aiStatus.first != null && aiStatus.second == InferenceManagerState.ACTIVE)

@@ -28,9 +28,9 @@ data class Point(
     var isMain: Boolean,
 )
 
-enum class PointType(val title: String, val icon: ImageVector) {
-  TEXT("Text", Icons.Default.FormatColorText),
-  IMAGE("Image", Icons.Default.Image)
+enum class PointType(val resId: Int, val icon: ImageVector) {
+  TEXT(R.string.i_point_type_text, Icons.Default.FormatColorText),
+  IMAGE(R.string.i_point_type_image, Icons.Default.Image)
 }
 
 enum class ModelType(val resId: Int, vararg val variants: ModelVariant) {
