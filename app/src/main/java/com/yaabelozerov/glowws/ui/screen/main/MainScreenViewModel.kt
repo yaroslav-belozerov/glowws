@@ -74,7 +74,7 @@ constructor(
 
   fun toggleSortFilterModal() = _isSortFilterOpen.update { !_isSortFilterOpen.value }
 
-  fun fetchMainScreen() {
+  private fun fetchMainScreen() {
     viewModelScope.launch {
       if (_state.value.searchQuery.isBlank()) {
         dao.getAllIdeas().collect { items ->
@@ -103,19 +103,19 @@ constructor(
   fun setSortType(type: SortType) =
       _state.update { it.copy(sort = it.sort.copy(type = type)) }.also { fetchMainScreen() }
 
-  fun setSortOrder(order: SortOrder) =
+  private fun setSortOrder(order: SortOrder) =
       _state.update { it.copy(sort = it.sort.copy(order = order)) }.also { fetchMainScreen() }
 
   fun reverseSortOrder() = setSortOrder(_state.value.sort.order.reversed())
 
-  fun archiveIdea(ideaId: Long) {
+  private fun archiveIdea(ideaId: Long) {
     viewModelScope.launch {
       dao.setArchiveIdea(ideaId)
       fetchMainScreen()
     }
   }
 
-  fun setPriority(ideaId: Long, priority: Long) {
+  private fun setPriority(ideaId: Long, priority: Long) {
     viewModelScope.launch {
       dao.setPriorityIdea(ideaId, priority)
       fetchMainScreen()
@@ -138,7 +138,7 @@ constructor(
 
   fun deselectAll() = _selectionState.update { SelectionState() }
 
-  fun onSelect(ideaId: Long) = _selectionState.update { it.select(ideaId) }
+  private fun onSelect(ideaId: Long) = _selectionState.update { it.select(ideaId) }
 
   fun updateSearchQuery(newQuery: String) {
     _state.update { it.copy(searchQuery = newQuery) }

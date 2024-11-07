@@ -162,14 +162,12 @@ fun SortColumn(
                 modifier = Modifier.padding(0.dp, 0.dp, 4.dp, 0.dp))
             Text(
                 text = stringResource(it.resId),
-                //                            fontSize = 16.sp,
             )
           }
         } else {
           OutlinedButton(onClick = { setSortType(it) }) {
             Text(
                 text = stringResource(it.resId),
-                //                            fontSize = 16.sp,
             )
           }
         }
