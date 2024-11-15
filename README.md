@@ -11,9 +11,9 @@
 👷‍♂️ In active development. Not yet released.
 
 ## Features
-- [ ] Fast and powerful idea-taking: add paragraphs, logical links, media and URLs inside
-- [ ] Flexible idea organization: reminders, relevance
-- [ ] Offline AI-powered paraphrasing and explanation 
+- [x] Fast and powerful idea-taking: add paragraphs, media inside 
+- [x] Flexible idea organization with relevance
+- [x] Offline AI-powered paraphrasing and explanation 
 
 ## Installation
 ### Android
@@ -23,9 +23,9 @@ You can download binaries as .apk files in [Releases](https://github.com/yarosla
 IOS support is not planned. See [Status](#project-status).
 
 ## Design Principles
-**Privacy.** App must not collect any user data without their explicit consent.  
-**Transparency.** App has to be open-source to the fullest extent. Internet connection must not be required for usage.  
-**Ease of use.** App must not be cluttered or slow. Everything has to be appropriately labeled and easy to sightread.
+**Privacy.** Glowws does not collect any user data without their explicit consent.  
+**Transparency.** Glowws is open-source. Internet connection isn't required to use the app.  
+**Ease of use.** Glowws is fast and mininmalist. 
 
 ## Useful links
 - 🎨 [**Design prototype on Figma**](https://www.figma.com/file/XHeWuyqFiYjxuU1FQnz3ca/Glowws?type=design&mode=design&t=pttUdCNgLtngGWx1-1)
