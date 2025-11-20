@@ -97,7 +97,7 @@ fun IdeaScreen(
   LazyColumn(
       modifier =
           modifier.fillMaxSize().imePadding().background(MaterialTheme.colorScheme.background),
-      verticalArrangement = Arrangement.spacedBy(8.dp),
+      verticalArrangement = Arrangement.spacedBy(4.dp),
       contentPadding = PaddingValues(16.dp)) {
         item {
           Row {
@@ -159,7 +159,7 @@ fun IdeaScreen(
                     onRemove = { onEvent(IdeaScreenEvent.RemovePoint(point.id)) },
                     onSave = { onEvent(IdeaScreenEvent.SavePoint(point.id, point.content, it)) })
           }
-          Spacer(modifier = Modifier.height(16.dp))
+          Spacer(modifier = Modifier.height(4.dp))
           AddPointLine(
               onAdd = { onEvent(IdeaScreenEvent.AddPoint(it, points.indexOf(point).toLong() + 1)) },
               holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean(),
@@ -190,7 +190,7 @@ fun AddPointLine(
 ) {
   var open by remember { mutableStateOf(false) }
   Row(
-      modifier = Modifier.fillMaxWidth().padding(0.dp, 0.dp, 0.dp, 16.dp),
+      modifier = Modifier.fillMaxWidth(),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Box(
@@ -202,7 +202,7 @@ fun AddPointLine(
         val haptic = LocalHapticFeedback.current
         Icon(
             modifier =
-                Modifier.padding(4.dp)
+                Modifier.padding(horizontal = 4.dp)
                     .clip(MaterialTheme.shapes.extraLarge)
                     .combinedClickable(
                         onClick = {

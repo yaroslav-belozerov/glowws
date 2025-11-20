@@ -134,11 +134,6 @@ fun MainScreen(
                   color = MaterialTheme.colorScheme.primary,
                   modifier = Modifier.padding(horizontal = 16.dp))
             }
-            IconButton(onClick = { onEvent(MainScreenEvent.NavigateToFeedback) }) {
-              Icon(
-                  Icons.Default.Feedback,
-                  contentDescription = stringResource(R.string.s_cat_feedback))
-            }
           }
     }
     item {

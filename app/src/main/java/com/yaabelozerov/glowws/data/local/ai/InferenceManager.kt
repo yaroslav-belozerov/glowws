@@ -5,6 +5,7 @@ import android.net.Uri
 import android.util.Log
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import com.google.mediapipe.tasks.genai.llminference.LlmInference.LlmInferenceOptions
+import com.google.mediapipe.tasks.genai.llminference.ProgressListener
 import com.yaabelozerov.glowws.Const
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.queryName
@@ -41,10 +42,11 @@ class InferenceManager @Inject constructor(private val app: Context) {
 
   private val _state: MutableStateFlow<Pair<Boolean, String>> = MutableStateFlow(Pair(true, ""))
   private val _callback: MutableStateFlow<Pair<(String) -> Unit, () -> Unit>> =
-      MutableStateFlow(
-          Pair(
-              first = { st -> println("empty callback: $st") },
-              second = { println("empty callback: onEnd") }))
+    MutableStateFlow(
+      Pair(
+        first = { st -> println("empty callback: $st") },
+        second = { println("empty callback: onEnd") })
+    )
 
   val error: MutableStateFlow<Exception?> = MutableStateFlow(null)
 
@@ -52,21 +54,11 @@ class InferenceManager @Inject constructor(private val app: Context) {
     try {
       withContext(Dispatchers.IO) {
         val options =
-            LlmInferenceOptions.builder()
-                .setModelPath(path)
-                .setMaxTokens(256)
-                .setTopK(40)
-                .setResultListener { part, done ->
-                  _state.update { Pair(done, it.second + part) }
-                  _callback.value.first(_state.value.second)
-                  if (done) {
-                    _state.update { it.copy(second = "") }
-                    _callback.value.second()
-                  }
-                }
-                .setTemperature(0.8f)
-                .setRandomSeed(101)
-                .build()
+          LlmInferenceOptions.builder()
+            .setModelPath(path)
+            .setMaxTokens(256)
+            .setMaxTopK(40)
+            .build()
         val inference = LlmInference.createFromOptions(app, options)
         _model.update { inference }
       }
@@ -143,13 +135,22 @@ class InferenceManager @Inject constructor(private val app: Context) {
   }
 
   private fun setCallback(onUpdate: (String) -> Unit, onEnd: () -> Unit) =
-      _callback.update { Pair(onUpdate, onEnd) }
+    _callback.update { Pair(onUpdate, onEnd) }
 
   fun execute(prompt: String, onUpdate: (String) -> Unit = {}, onEnd: () -> Unit = {}): Job {
     val scope = CoroutineScope(Dispatchers.IO)
     return scope.launch {
       setCallback(onUpdate, onEnd)
-      _model.value?.generateResponseAsync(prompt)
+      _model.value?.generateResponseAsync(
+        prompt
+      ) { part, done ->
+        _state.update { Pair(done, it.second + part) }
+        _callback.value.first(_state.value.second)
+        if (done) {
+          _state.update { it.copy(second = "") }
+          _callback.value.second()
+        }
+      }
     }
   }
 

@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.compose.compiler)
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("com.ncorti.ktfmt.gradle")
@@ -12,12 +13,12 @@ tasks.withType(JavaCompile::class.java) {
 
 android {
     namespace = "com.yaabelozerov.glowws"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.yaabelozerov.glowws"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1"
 
@@ -36,11 +37,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = "17"
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
         compose = true

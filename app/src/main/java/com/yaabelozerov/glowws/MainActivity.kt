@@ -75,22 +75,6 @@ class MainActivity : ComponentActivity() {
       LaunchedEffect(true) {
         mvm.appFirstVisit {
           snackbarHostState.showSnackbar(message = text, duration = SnackbarDuration.Short)
-          try {
-            Retrofit.Builder()
-                .baseUrl(Const.Net.MODEL_PRELOAD_BASE_URL)
-                .addConverterFactory(
-                    MoshiConverterFactory.create(
-                        Moshi.Builder().add(KotlinJsonAdapterFactory()).build()))
-                .build()
-                .create(PreloadModelsService::class.java)
-                .getModels()
-                .awaitResponse()
-                .also { Log.i("got", it.body().toString()) }
-                .body()
-                ?.let { aivm.importRemoteModels(it) }
-          } catch (e: Exception) {
-            e.printStackTrace()
-          }
         }
       }
       val dynamicColor = svm.state.collectAsState().value[SettingsKeys.MONET_THEME].booleanOrNull()
