@@ -171,7 +171,7 @@ fun MainScreen(
                         .padding(bottom = 16.dp),
                 singleLine = true,
                 shape = MaterialTheme.shapes.large,
-                value = mvm.state.collectAsState().value.searchQuery,
+                value = mvm.filterState.collectAsState().value.searchQuery,
                 onValueChange = { mvm.updateSearchQuery(it) },
                 colors =
                     OutlinedTextFieldDefaults.colors(

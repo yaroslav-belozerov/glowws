@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -24,7 +25,6 @@ import com.yaabelozerov.glowws.ui.common.withParam
 import com.yaabelozerov.glowws.ui.screen.ai.AiScreen
 import com.yaabelozerov.glowws.ui.screen.ai.AiScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreen
-import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreen
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.settings.FeedbackScreen
@@ -41,11 +41,14 @@ fun App(
     mvm: MainScreenViewModel,
     ivm: IdeaScreenViewModel,
     svm: SettingsScreenViewModel,
-    avm: ArchiveScreenViewModel,
     aivm: AiScreenViewModel,
     snackbar: Pair<SnackbarHostState, CoroutineScope>,
     onError: (Exception) -> Unit
 ) {
+  LaunchedEffect(Unit) {
+    mvm.fetchMainScreen()
+    mvm.fetchSort()
+  }
   NavHost(
       modifier = Modifier.padding(innerPadding),
       navController = navCtrl,
@@ -81,15 +84,16 @@ fun App(
                           event = it,
                           ideaId = id,
                           onBack = {
-                            mvm.tryDiscardEmpty(id) {
-                              snackbar.second.launch {
-                                snackbar.first.showSnackbar(
-                                    discardText, duration = SnackbarDuration.Short)
-                              }
-                            }
+//                            mvm.tryDiscardEmpty(id) {
+//                              snackbar.second.launch {
+//                                snackbar.first.showSnackbar(
+//                                    discardText, duration = SnackbarDuration.Short)
+//                              }
+//                            }
+                            mvm.fetchSort()
                             navCtrl.navigateUp()
                           }, onError = onError)
-                    } ?: onError(error("No idea id in backstack entry"))
+                    } ?: onError(Exception("No idea id in backstack entry"))
                   },
                   settings = svm.state.collectAsState().value,
                   aiStatus = aivm.aiStatus.collectAsState().value,
@@ -106,9 +110,11 @@ fun App(
         }
         composable(Nav.ArchiveScreenRoute.route) {
           ArchiveScreen(
-              ideas = avm.state.collectAsState().value,
-              onEvent = { event -> avm.onEvent(event, navCtrl, ivm) },
-              selectionState = avm.selection.collectAsState().value,
+              ideas = mvm.state.collectAsState().value.archivedIdeas,
+              onEvent = { event ->
+//                mvm.onEvent(event, navCtrl, ivm)
+              },
+              selectionState = mvm.selection.collectAsState().value,
               settings = svm.state.collectAsState().value)
         }
         composable(

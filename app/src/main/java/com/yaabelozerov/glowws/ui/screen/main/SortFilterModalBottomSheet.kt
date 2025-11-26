@@ -48,13 +48,13 @@ fun SortFilterModalBottomSheet(mvm: MainScreenViewModel) {
   if (mvm.sortFilterOpen.collectAsState().value) {
     ModalBottomSheet(onDismissRequest = { mvm.toggleSortFilterModal() }) {
       Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        val flags = mvm.state.collectAsState().value.filter
+        val flags = mvm.filterState.collectAsState().value.filter
         FilterColumn(
             flags,
             setFilterFlag = { type, flag -> mvm.updateFilterFlag(type, flag) },
             resetFilter = { mvm.resetFilter() })
         SortColumn(
-            sortModel = mvm.state.collectAsState().value.sort,
+            sortModel = mvm.filterState.collectAsState().value.sort,
             setSortType = { mvm.setSortType(it) },
             reverseOrder = { mvm.reverseSortOrder() },
             resetSort = { mvm.fetchSort() })

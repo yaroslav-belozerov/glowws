@@ -73,7 +73,7 @@ fun MainScreenFloatingButtons(
         val isSearchOpen = mvm.searchOpen.collectAsState().value
         if (!isSearchOpen) {
           Row {
-            if (mvm.state.collectAsState().value.searchQuery.isNotBlank()) {
+            if (mvm.filterState.collectAsState().value.searchQuery.isNotBlank()) {
               FloatingActionButton(onClick = { mvm.updateSearchQuery("") }) {
                 Icon(imageVector = Icons.Default.Clear, contentDescription = "clear search button")
               }

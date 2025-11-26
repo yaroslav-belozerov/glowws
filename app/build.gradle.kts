@@ -5,6 +5,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("com.ncorti.ktfmt.gradle")
+    kotlin("plugin.serialization")
 }
 
 tasks.withType(JavaCompile::class.java) {
@@ -42,9 +43,6 @@ android {
     }
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.10"
     }
     packaging {
         resources {
@@ -88,4 +86,11 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.coil)
     implementation(libs.coil.compose)
+
+  implementation(libs.ktor.core)
+  implementation(libs.ktor.okhttp)
+  implementation(libs.ktor.content.negotiation)
+  implementation(libs.ktor.json)
+  implementation(libs.kotlinx.coroutines.core)
+  implementation(libs.kotlinx.coroutines.android)
 }

@@ -6,7 +6,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenFloatingButtons
-import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
 import com.yaabelozerov.glowws.ui.screen.main.MainScreenFloatingButtons
 import com.yaabelozerov.glowws.ui.screen.main.MainScreenViewModel
@@ -16,7 +15,6 @@ fun FloatingActionButtons(
     navController: NavHostController,
     mvm: MainScreenViewModel,
     ivm: IdeaScreenViewModel,
-    avm: ArchiveScreenViewModel
 ) {
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   when (navBackStackEntry?.destination?.route?.toDestination()) {
@@ -29,7 +27,7 @@ fun FloatingActionButtons(
               ivm.refreshPoints(id)
             })
 
-    Nav.ArchiveScreenRoute -> ArchiveScreenFloatingButtons(avm = avm)
+    Nav.ArchiveScreenRoute -> ArchiveScreenFloatingButtons(mvm = mvm)
 
     else -> {}
   }

@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  username     String @id
+  passwordHash String
+  ideas        Idea[] @relation()
+}
+
+model Idea {
+  id                Int      @id @default(autoincrement())
+  priority          Int      @default(0)
+  isArchived        Boolean  @default(false)
+  timestampCreated  DateTime @default(now())
+  timestampModified DateTime @default(now())
+  points            Point[]  @relation("ChildPoints")
+  ownerUsername     String
+  owner             User     @relation(fields: [ownerUsername], references: [username], onDelete: Cascade)
+}
+
+model Point {
+  id           Int       @id @default(autoincrement())
+  parentId     Int
+  parent       Idea      @relation("ChildPoints", fields: [parentId], references: [id], onDelete: Cascade)
+  pointContent String    @default("")
+  index        Int       @default(0)
+  type         PointType @default(TEXT)
+  isMain       Boolean   @default(false)
+}
+
+enum PointType {
+  TEXT
+  IMAGE
+}

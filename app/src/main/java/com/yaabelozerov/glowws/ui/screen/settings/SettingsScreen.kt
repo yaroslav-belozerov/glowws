@@ -15,6 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,23 +63,20 @@ fun SettingsScreen(
         when (entry) {
           is BooleanSettingDomainModel -> BooleanSettingsEntry(entry = entry, onModify = onModify)
 
-          is StringSettingDomainModel -> {
-            Text(text = entry.value)
-            Button(onClick = { /*TODO*/ }) { Text(text = stringResource(id = R.string.label_edit)) }
-          }
+          is StringSettingDomainModel -> StringSettingsEntry(entry = entry, onModify = onModify)
 
           is DoubleSettingDomainModel -> {
-            var isBeingModifier by remember { mutableStateOf(false) }
+            var isBeingModified by remember { mutableStateOf(false) }
             Row(
                 modifier = Modifier.fillParentMaxWidth().padding(16.dp, 16.dp, 32.dp, 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween) {
                   var newValue by remember { mutableStateOf(entry.value.toInt()) }
                   Text(stringResource(entry.key.resId), fontSize = 20.sp)
-                  if (!isBeingModifier) {
+                  if (!isBeingModified) {
                     Text(
                         newValue.toString(),
-                        modifier = Modifier.clickable { isBeingModifier = true },
+                        modifier = Modifier.clickable { isBeingModified = true },
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold)
                   } else {
@@ -92,7 +90,7 @@ fun SettingsScreen(
                         keyboardActions =
                             KeyboardActions {
                               onModify(entry.key, newValue.toString())
-                              isBeingModifier = false
+                              isBeingModified = false
                             })
                   }
                 }

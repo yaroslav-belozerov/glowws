@@ -135,18 +135,12 @@ object AppModule {
     suspend fun setTimesOpened(timesOpened: Long) =
         settingsDataStore.edit { it[timesOpenedKey] = timesOpened }
 
-    private val tempTokenKey = stringPreferencesKey("temp_token")
+    private val jwtKey = stringPreferencesKey("jwt")
+    fun jwt(): Flow<String> = settingsDataStore.data.map { it[jwtKey].orEmpty() }
+    suspend fun setJwt(token: String) = settingsDataStore.edit { it[jwtKey] = token }
 
-    fun getTempToken(): Flow<String> = settingsDataStore.data.map { it[tempTokenKey].orEmpty() }
-
-    suspend fun setTempToken(token: String) = settingsDataStore.edit { it[tempTokenKey] = token }
-
-    private val tempTokenExpiryKey = longPreferencesKey("temp_token_expiry")
-
-    fun getTempTokenExpiry(): Flow<Long> =
-        settingsDataStore.data.map { it[tempTokenExpiryKey] ?: 0 }
-
-    suspend fun setTempTokenExpiry(expiresAt: Long) =
-        settingsDataStore.edit { it[tempTokenExpiryKey] = expiresAt }
+    private val instanceKey = stringPreferencesKey("instance")
+    fun instanceUrl(): Flow<String> = settingsDataStore.data.map { it[instanceKey].orEmpty() }
+    suspend fun setInstanceUrl(token: String) = settingsDataStore.edit { it[instanceKey] = token }
   }
 }

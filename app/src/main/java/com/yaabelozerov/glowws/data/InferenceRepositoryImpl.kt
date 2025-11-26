@@ -169,50 +169,50 @@ class InferenceRepositoryImpl(
         }
 
         ModelVariant.GIGACHAT -> {
-          val remoteMessages =
-              when (prompt) {
-                Prompt.FillIn ->
-                    listOf(
-                        GigaChatMessage(
-                            role = "system", content = app.resources.getString(prompt.prompt)),
-                        GigaChatMessage(content = contentStrings[0]),
-                        GigaChatMessage(content = contentStrings[1]))
-
-                Prompt.Rephrase ->
-                    listOf(
-                        GigaChatMessage(
-                            role = "system", content = app.resources.getString(prompt.prompt)),
-                        GigaChatMessage(content = contentStrings[0]))
-
-                Prompt.Summarize,
-                Prompt.Continue ->
-                    listOf(
-                        GigaChatMessage(
-                            role = "system",
-                            content = app.resources.getString(prompt.prompt),
-                        )) + contentStrings.map { GigaChatMessage(content = it) }
-              }
-          dataStoreManager.getTempTokenExpiry().collect { expiresAt ->
-            if (expiresAt == 0L || Instant.ofEpochMilli(expiresAt) < Instant.now()) {
-              val authResp =
-                  gigaChatService.auth(rqiu = UUID.randomUUID().toString(), token = "Basic $token")
-              dataStoreManager.setTempToken(authResp.accessToken)
-              dataStoreManager.setTempTokenExpiry(authResp.expiresAt)
-            }
-            dataStoreManager.getTempToken().collect { tempToken ->
-              val generated =
-                  gigaChatService.generate(
-                      token = "Bearer $tempToken",
-                      request =
-                          GigaChatMessageRequest(
-                              model =
-                                  _source.value.first?.path ?: error("No model path in GigaChat"),
-                              messages = remoteMessages))
-              _response.update { generated.gigaChatChoices[0].message.content }
-              onUpdate(_response.value)
-              _source.update { it.copy(second = InferenceManagerState.ACTIVE, third = -1L) }
-            }
-          }
+//          val remoteMessages =
+//              when (prompt) {
+//                Prompt.FillIn ->
+//                    listOf(
+//                        GigaChatMessage(
+//                            role = "system", content = app.resources.getString(prompt.prompt)),
+//                        GigaChatMessage(content = contentStrings[0]),
+//                        GigaChatMessage(content = contentStrings[1]))
+//
+//                Prompt.Rephrase ->
+//                    listOf(
+//                        GigaChatMessage(
+//                            role = "system", content = app.resources.getString(prompt.prompt)),
+//                        GigaChatMessage(content = contentStrings[0]))
+//
+//                Prompt.Summarize,
+//                Prompt.Continue ->
+//                    listOf(
+//                        GigaChatMessage(
+//                            role = "system",
+//                            content = app.resources.getString(prompt.prompt),
+//                        )) + contentStrings.map { GigaChatMessage(content = it) }
+//              }
+//          dataStoreManager.getTempTokenExpiry().collect { expiresAt ->
+//            if (expiresAt == 0L || Instant.ofEpochMilli(expiresAt) < Instant.now()) {
+//              val authResp =
+//                  gigaChatService.auth(rqiu = UUID.randomUUID().toString(), token = "Basic $token")
+//              dataStoreManager.setTempToken(authResp.accessToken)
+//              dataStoreManager.setTempTokenExpiry(authResp.expiresAt)
+//            }
+//            dataStoreManager.getTempToken().collect { tempToken ->
+//              val generated =
+//                  gigaChatService.generate(
+//                      token = "Bearer $tempToken",
+//                      request =
+//                          GigaChatMessageRequest(
+//                              model =
+//                                  _source.value.first?.path ?: error("No model path in GigaChat"),
+//                              messages = remoteMessages))
+//              _response.update { generated.gigaChatChoices[0].message.content }
+//              onUpdate(_response.value)
+//              _source.update { it.copy(second = InferenceManagerState.ACTIVE, third = -1L) }
+//            }
+//          }
         }
 
         null -> TODO()

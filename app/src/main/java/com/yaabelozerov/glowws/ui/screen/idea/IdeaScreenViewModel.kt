@@ -5,13 +5,19 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yaabelozerov.glowws.Net
 import com.yaabelozerov.glowws.data.local.media.MediaManager
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.data.local.room.Point
 import com.yaabelozerov.glowws.data.local.room.PointType
+import com.yaabelozerov.glowws.di.AppModule
 import com.yaabelozerov.glowws.domain.InferenceRepository
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
+import com.yaabelozerov.glowws.domain.model.PointModel
+import com.yaabelozerov.glowws.domain.model.PointUpdateRequest
 import com.yaabelozerov.glowws.domain.model.Prompt
+import com.yaabelozerov.glowws.domain.model.toDomain
+import com.yaabelozerov.glowws.domain.model.toDomainModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -31,8 +37,12 @@ class IdeaScreenViewModel
 constructor(
     private val dao: IdeaDao,
     private val mediaManager: MediaManager,
-    private val inferenceRepository: InferenceRepository
+    private val inferenceRepository: InferenceRepository,
+  private val dataStoreManager: AppModule.DataStoreManager
 ) : ViewModel() {
+  private val instanceUrl = dataStoreManager.instanceUrl()
+  private val jwt = dataStoreManager.jwt()
+
   private val _points = MutableStateFlow(emptyList<PointDomainModel>())
   val points = _points.asStateFlow()
 
@@ -45,12 +55,9 @@ constructor(
 
   fun refreshPoints(ideaId: Long) {
     viewModelScope.launch {
-      dao.getIdeaPoints(ideaId).flowOn(Dispatchers.IO).distinctUntilChanged().collectLatest { points
-        ->
-        _points.update {
-          points.map { pt -> PointDomainModel(pt.pointId, pt.type, pt.pointContent, pt.isMain) }
-        }
-      }
+      Net.get<List<PointModel>>(instanceUrl, "points/$ideaId", jwt.first()).onSuccess { newPts ->
+        _points.update { newPts.toDomain() }
+      }.onFailure(Throwable::printStackTrace)
     }
   }
 
@@ -83,16 +90,19 @@ constructor(
     viewModelScope.launch {
       when (pointType) {
         PointType.TEXT -> {
-          val id =
-              dao.insertPointUpdateIdeaAtIndex(
-                  Point(
-                      pointId = 0,
-                      ideaParentId = ideaId,
-                      pointContent = content,
-                      index = index,
-                      type = pointType,
-                      isMain = false))
-          textCallback(id)
+          Net.post<PointModel>(instanceUrl, "points/$ideaId", jwt.first()).onSuccess {
+            refreshPoints(ideaId)
+            textCallback(it.id)
+          }.onFailure(Throwable::printStackTrace)
+//          val id =
+//              dao.insertPointUpdateIdeaAtIndex(
+//                  Point(
+//                      pointId = 0,
+//                      ideaParentId = ideaId,
+//                      pointContent = content,
+//                      index = index,
+//                      type = pointType,
+//                      isMain = false))
         }
 
         PointType.IMAGE -> addImage(ideaId, index)
@@ -102,27 +112,38 @@ constructor(
 
   private fun modifyPoint(
       pointId: Long,
-      content: String? = null,
-      isMain: Boolean? = null,
+      content: String,
+      isMain: Boolean,
       callback: () -> Unit = {}
   ) {
     viewModelScope.launch {
-      val point = dao.getPoint(pointId).first()
-      dao.upsertPointUpdateIdea(
-          point.copy(pointContent = content ?: point.pointContent, isMain = isMain ?: point.isMain))
-      callback()
+      Net.put<List<PointModel>, _>(
+        instanceUrl,
+        "points/$pointId",
+        jwt.first(),
+        PointUpdateRequest(content, isMain)
+      ).onSuccess {newPts ->
+        _points.update { newPts.toDomain() }
+        callback()
+      }.onFailure(Throwable::printStackTrace)
+//      val point = dao.getPoint(pointId).first()
+//      dao.upsertPointUpdateIdea(
+//          point.copy(pointContent = content ?: point.pointContent, isMain = isMain ?: point.isMain))
     }
   }
 
   private fun removePoint(pointId: Long) {
     viewModelScope.launch {
-      val pt = dao.getPoint(pointId).first()
-      val ideaId = pt.ideaParentId
-      dao.deletePointAndIndex(pointId)
-      dao.updateIdeaContentFromPoints(ideaId)
-      if (pt.type == PointType.IMAGE) {
-        mediaManager.removeMedia(pt.pointContent)
-      }
+      Net.delete<List<PointModel>>(instanceUrl, "points/$pointId", jwt.first()).onSuccess {  newPts ->
+        _points.update { newPts.toDomain() }
+      }.onFailure(Throwable::printStackTrace)
+//      val pt = dao.getPoint(pointId).first()
+//      val ideaId = pt.ideaParentId
+//      dao.deletePointAndIndex(pointId)
+//      dao.updateIdeaContentFromPoints(ideaId)
+//      if (pt.type == PointType.IMAGE) {
+//        mediaManager.removeMedia(pt.pointContent)
+//      }
     }
   }
 
@@ -149,10 +170,10 @@ constructor(
   private fun generateResponse(s: Prompt, contentStrings: List<String>, pointId: Long) {
     currentJob = viewModelScope.launch {
       Log.i("generateResponse", "Generating ${s.name} with $contentStrings")
-      inferenceRepository.generate(s, contentStrings, onUpdate = { modifyPoint(pointId, it) }, pointId, onErr = {
-        currentJob?.cancel()
-        inferenceRepository.deactivate()
-      })
+//      inferenceRepository.generate(s, contentStrings, onUpdate = { modifyPoint(pointId, it) }, pointId, onErr = {
+//        currentJob?.cancel()
+//        inferenceRepository.deactivate()
+//      })
     }
   }
 

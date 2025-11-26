@@ -1,5 +1,6 @@
 package com.yaabelozerov.glowws.ui.screen.settings
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,12 +14,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +43,7 @@ import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.domain.model.BooleanSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.ChoiceSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.MultipleChoiceSettingDomainModel
+import com.yaabelozerov.glowws.domain.model.StringSettingDomainModel
 import com.yaabelozerov.glowws.toReadableKey
 
 @Composable
@@ -50,8 +55,8 @@ fun BooleanSettingsEntry(
   Row(
       modifier =
           modifier
-              .clickable { onModify(entry.key, (!entry.value).toString()) }
-              .padding(16.dp, 8.dp),
+            .clickable { onModify(entry.key, (!entry.value).toString()) }
+            .padding(16.dp, 8.dp),
       verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(entry.key.resId),
@@ -66,23 +71,50 @@ fun BooleanSettingsEntry(
 }
 
 @Composable
+fun StringSettingsEntry(
+  modifier: Modifier = Modifier,
+  entry: StringSettingDomainModel,
+  onModify: (SettingsKeys, String) -> Unit
+) {
+  var isBeingModified by remember { mutableStateOf(false) }
+  var temp by remember { mutableStateOf(entry.value) }
+  Column(
+    modifier = modifier
+    .clickable { isBeingModified = true }
+    .padding(16.dp, 16.dp)) {
+    Text(text = stringResource(entry.key.resId), fontSize = 24.sp)
+    Text(text = entry.value)
+    AnimatedVisibility(visible = isBeingModified) {
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        OutlinedTextField(modifier = modifier.fillMaxWidth(), value = temp, onValueChange = { temp = it }, shape = MaterialTheme.shapes.medium)
+        Button(onClick = {  onModify(entry.key, temp); isBeingModified = false }) { Text(text = stringResource(id = R.string.label_save)) }
+      }
+    }
+  }
+}
+
+@Composable
 fun ChoiceSettingDomainEntry(
     modifier: Modifier = Modifier,
     entry: ChoiceSettingDomainModel,
     onModify: (SettingsKeys, String) -> Unit
 ) {
   var expanded by remember { mutableStateOf(false) }
-  Column(modifier = modifier.clickable { expanded = true }.padding(16.dp, 16.dp)) {
+  Column(modifier = modifier
+    .clickable { expanded = true }
+    .padding(16.dp, 16.dp)) {
     Text(text = stringResource(entry.key.resId), fontSize = 24.sp)
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       entry.choices.forEachIndexed { index, value ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier =
-                Modifier.fillMaxWidth().clickable {
-                  onModify(entry.key, value)
-                  expanded = false
-                }) {
+                Modifier
+                  .fillMaxWidth()
+                  .clickable {
+                    onModify(entry.key, value)
+                    expanded = false
+                  }) {
               val local = entry.localChoicesIds.getOrNull(index)
               if (entry.value == value) {
                 Icon(
@@ -111,20 +143,24 @@ fun MultipleChoiceSettingsEntry(
     onModify: (SettingsKeys, String) -> Unit
 ) {
   var expanded by remember { mutableStateOf(false) }
-  Column(modifier = modifier.clickable { expanded = true }.padding(16.dp, 16.dp)) {
+  Column(modifier = modifier
+    .clickable { expanded = true }
+    .padding(16.dp, 16.dp)) {
     Text(text = stringResource(entry.key.resId), fontSize = 24.sp)
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       entry.choices.forEachIndexed { index, elem ->
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier =
-                Modifier.fillMaxWidth().clickable {
-                  onModify(
+                Modifier
+                  .fillMaxWidth()
+                  .clickable {
+                    onModify(
                       entry.key,
                       entry.value
-                          .mapIndexed { i, value -> if (i == index) !value else value }
-                          .joinToString(JSON_DELIMITER))
-                }) {
+                        .mapIndexed { i, value -> if (i == index) !value else value }
+                        .joinToString(JSON_DELIMITER))
+                  }) {
               if (entry.value[index]) {
                 Icon(
                     modifier = Modifier.padding(16.dp, 0.dp, 0.dp, 0.dp),
@@ -168,7 +204,9 @@ fun AiSettingsEntry(
   Column(modifier = modifier.fillMaxWidth()) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.clickable { onNavigate() }.padding(16.dp, 8.dp)) {
+        modifier = Modifier
+          .clickable { onNavigate() }
+          .padding(16.dp, 8.dp)) {
           Column(Modifier.weight(1f)) {
             if (!modelName.isNullOrBlank()) {
               Text(text = modelName, fontSize = 20.sp)
