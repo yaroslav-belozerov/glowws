@@ -85,360 +85,369 @@ import java.io.File
 
 @Composable
 fun IdeaScreen(
-    modifier: Modifier = Modifier,
-    points: List<PointDomainModel>,
-    onEvent: (IdeaScreenEvent) -> Unit,
-    settings: Map<SettingsKeys, SettingDomainModel>,
-    aiStatus: Triple<Model?, InferenceManagerState, Long>
+  modifier: Modifier = Modifier,
+  points: List<PointDomainModel>,
+  onEvent: (IdeaScreenEvent) -> Unit,
+  settings: Map<SettingsKeys, SettingDomainModel>,
+  aiStatus: Triple<Model?, InferenceManagerState, Long>
 ) {
   BackHandler { onEvent(IdeaScreenEvent.GoBack) }
 
   var modifiedId by remember { mutableStateOf<Long?>(null) }
   LazyColumn(
-      modifier =
-          modifier.fillMaxSize().imePadding().background(MaterialTheme.colorScheme.background),
-      verticalArrangement = Arrangement.spacedBy(4.dp),
-      contentPadding = PaddingValues(16.dp)) {
-        item {
-          Row {
-            IconButton(onClick = { onEvent(IdeaScreenEvent.GoBack) }) {
-              Icon(
-                  imageVector = Icons.Default.Close,
-                  contentDescription = "back button",
-                  tint = MaterialTheme.colorScheme.primary)
-            }
-            AddPointLine(
-                onAdd = { onEvent(IdeaScreenEvent.AddPoint(it, 0)) },
-                onExecute = {},
-                prompts = emptyList(),
-                holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean(),
-                aiStatus = Triple(null, InferenceManagerState.IDLE, 0))
-          }
+    modifier = modifier
+      .fillMaxSize()
+      .imePadding()
+      .background(MaterialTheme.colorScheme.background),
+    verticalArrangement = Arrangement.spacedBy(4.dp),
+    contentPadding = PaddingValues(16.dp)
+  ) {
+    item {
+      Row {
+        IconButton(onClick = { onEvent(IdeaScreenEvent.GoBack) }) {
+          Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = "back button",
+            tint = MaterialTheme.colorScheme.primary
+          )
         }
+        AddPointLine(
+          onAdd = { onEvent(IdeaScreenEvent.AddPoint(it, 0)) },
+          onExecute = {},
+          prompts = emptyList(),
+          holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean(),
+          aiStatus = Triple(null, InferenceManagerState.IDLE, 0)
+        )
+      }
+    }
 
-        item {
-          if (points.isEmpty()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                  Text(stringResource(R.string.i_add_point_placeholder))
-                  Icon(Icons.Default.ArrowUpward, contentDescription = null)
-                }
-          }
-        }
-
-        itemsIndexed(points, key = { _, it -> it.id }) { index, point ->
-          when (point.type) {
-            PointType.TEXT ->
-                TextPoint(
-                    modifier = Modifier.animateItem(),
-                    isBeingModified = modifiedId == point.id,
-                    onModify = { modifiedId = if (it) point.id else null },
-                    id = point.id,
-                    content = point.content,
-                    isMain = point.isMain,
-                    onSave = { newText, isMain ->
-                      onEvent(IdeaScreenEvent.SavePoint(point.id, newText, isMain))
-                    },
-                    onRemove = { onEvent(IdeaScreenEvent.RemovePoint(point.id)) },
-                    onExecute = { prompt, str ->
-                      onEvent(IdeaScreenEvent.ExecutePoint(prompt, str, point.id))
-                    },
-                    onCancel = { onEvent(IdeaScreenEvent.ExecuteCancel) },
-                    showPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean(),
-                    status = aiStatus,
-                    prompts = listOf(Prompt.Rephrase))
-
-            PointType.IMAGE ->
-                ImagePoint(
-                    content = point.content,
-                    isBeingModified = modifiedId == point.id,
-                    onModify = { modifiedId = if (it) point.id else null },
-                    isMain = point.isMain,
-                    onRemove = { onEvent(IdeaScreenEvent.RemovePoint(point.id)) },
-                    onSave = { onEvent(IdeaScreenEvent.SavePoint(point.id, point.content, it)) })
-          }
-          Spacer(modifier = Modifier.height(4.dp))
-          AddPointLine(
-              onAdd = { onEvent(IdeaScreenEvent.AddPoint(it, points.indexOf(point).toLong() + 1)) },
-              holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean(),
-              onExecute = {
-                onEvent(IdeaScreenEvent.ExecutePointNew(it, points.indexOf(point) + 1))
-              },
-              prompts =
-                  listOfNotNull(
-                      Prompt.FillIn.takeIf {
-                        point.type == PointType.TEXT &&
-                            points.getOrNull(index + 1)?.type == PointType.TEXT
-                      },
-                      Prompt.Summarize.takeIf { point.type == PointType.TEXT },
-                      Prompt.Continue.takeIf { point.type == PointType.TEXT }),
-              aiStatus = aiStatus)
+    item {
+      if (points.isEmpty()) {
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.End),
+          modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+        ) {
+          Text(stringResource(R.string.i_add_point_placeholder))
+          Icon(Icons.Default.ArrowUpward, contentDescription = null)
         }
       }
+    }
+
+    items(points, key = { it.id }) { point ->
+      when (point.type) {
+        PointType.TEXT -> TextPoint(
+          modifier = Modifier.animateItem(),
+          isBeingModified = modifiedId == point.id,
+          onModify = { modifiedId = if (it) point.id else null },
+          pt = point,
+          onSave = { newText, isMain ->
+            onEvent(IdeaScreenEvent.SavePoint(point.id, newText, isMain))
+          },
+          onRemove = { onEvent(IdeaScreenEvent.RemovePoint(point.id)) },
+          onExecute = { prompt, str ->
+            onEvent(IdeaScreenEvent.ExecutePoint(prompt, str, point.id))
+          },
+          onCancel = { onEvent(IdeaScreenEvent.ExecuteCancel) },
+          showPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean(),
+          status = aiStatus,
+          prompts = listOf(Prompt.Rephrase)
+        )
+
+        PointType.IMAGE -> ImagePoint(
+          content = point.content,
+          isBeingModified = modifiedId == point.id,
+          onModify = { modifiedId = if (it) point.id else null },
+          isMain = point.isMain,
+          onRemove = { onEvent(IdeaScreenEvent.RemovePoint(point.id)) },
+          onSave = { onEvent(IdeaScreenEvent.SavePoint(point.id, point.content, it)) })
+      }
+      Spacer(modifier = Modifier.height(4.dp))
+      AddPointLine(
+        onAdd = { onEvent(IdeaScreenEvent.AddPoint(it, point.index + 1)) },
+        holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean(),
+        onExecute = {
+          onEvent(IdeaScreenEvent.ExecutePointNew(it, points.indexOf(point) + 1))
+        },
+        prompts = listOfNotNull(
+          Prompt.FillIn.takeIf {
+          point.type == PointType.TEXT && points.getOrNull(points.indexOf(point) - 1)?.type == PointType.TEXT
+        },
+          Prompt.Summarize.takeIf { point.type == PointType.TEXT },
+          Prompt.Continue.takeIf { point.type == PointType.TEXT }),
+        aiStatus = aiStatus
+      )
+    }
+  }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun AddPointLine(
-    onAdd: (PointType) -> Unit,
-    onExecute: (Prompt) -> Unit,
-    prompts: List<Prompt>,
-    holdForType: Boolean,
-    aiStatus: Triple<Model?, InferenceManagerState, Long>
+  onAdd: (PointType) -> Unit,
+  onExecute: (Prompt) -> Unit,
+  prompts: List<Prompt>,
+  holdForType: Boolean,
+  aiStatus: Triple<Model?, InferenceManagerState, Long>
 ) {
   var open by remember { mutableStateOf(false) }
   Row(
-      modifier = Modifier.fillMaxWidth(),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier =
-                Modifier.height(4.dp)
-                    .weight(1f)
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)))
-        val haptic = LocalHapticFeedback.current
-        Icon(
-            modifier =
-                Modifier.padding(horizontal = 4.dp)
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .combinedClickable(
-                        onClick = {
-                          if (holdForType) {
-                            onAdd(PointType.TEXT)
-                          } else {
-                            open = true
-                          }
-                        },
-                        onLongClick = {
-                          open = true
-                          haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        })
-                    .padding(8.dp),
-            imageVector = Icons.Default.Add,
-            contentDescription = "add point button",
-            tint = MaterialTheme.colorScheme.primary)
-      }
+    modifier = Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    Box(
+      modifier = Modifier
+        .height(4.dp)
+        .weight(1f)
+        .clip(MaterialTheme.shapes.medium)
+        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f))
+    )
+    val haptic = LocalHapticFeedback.current
+    Icon(
+      modifier = Modifier
+        .padding(horizontal = 4.dp)
+        .clip(MaterialTheme.shapes.extraLarge)
+        .combinedClickable(onClick = {
+          if (holdForType) {
+            onAdd(PointType.TEXT)
+          } else {
+            open = true
+          }
+        }, onLongClick = {
+          open = true
+          haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        })
+        .padding(8.dp),
+      imageVector = Icons.Default.Add,
+      contentDescription = "add point button",
+      tint = MaterialTheme.colorScheme.primary
+    )
+  }
 
   if (open) {
     ModalBottomSheet(onDismissRequest = { open = false }) {
       LazyVerticalGrid(
-          modifier = Modifier.padding(12.dp, 0.dp),
-          columns = GridCells.Fixed(2),
-          verticalArrangement = Arrangement.spacedBy(4.dp),
-          horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(PointType.entries.toList()) {
-              FilledTonalButton(
-                  onClick = {
-                    onAdd(it)
-                    open = false
-                  }) {
-                    Icon(it.icon, contentDescription = stringResource(it.resId))
-                    Spacer(Modifier.width(4.dp))
-                    Text(stringResource(it.resId))
-                  }
-            }
-            if (aiStatus.first != null && aiStatus.second == InferenceManagerState.ACTIVE)
-                items(prompts) {
-                  Button(
-                      onClick = {
-                        onExecute(it)
-                        open = false
-                      }) {
-                        Icon(it.icon, contentDescription = stringResource(it.nameRes))
-                        Spacer(Modifier.width(4.dp))
-                        Text(stringResource(it.nameRes))
-                      }
-                }
+        modifier = Modifier.padding(12.dp, 0.dp),
+        columns = GridCells.Fixed(2),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+      ) {
+        items(PointType.entries.toList()) {
+          FilledTonalButton(
+            onClick = {
+              onAdd(it)
+              open = false
+            }) {
+            Icon(it.icon, contentDescription = stringResource(it.resId))
+            Spacer(Modifier.width(4.dp))
+            Text(stringResource(it.resId))
           }
+        }
+        if (aiStatus.first != null && aiStatus.second == InferenceManagerState.ACTIVE) items(prompts) {
+          Button(
+            onClick = {
+              onExecute(it)
+              open = false
+            }) {
+            Icon(it.icon, contentDescription = stringResource(it.nameRes))
+            Spacer(Modifier.width(4.dp))
+            Text(stringResource(it.nameRes))
+          }
+        }
+      }
     }
   }
 }
 
 @Composable
 fun ImagePoint(
-    modifier: Modifier = Modifier,
-    isBeingModified: Boolean,
-    onModify: (Boolean) -> Unit,
-    content: String,
-    isMain: Boolean,
-    onSave: (Boolean) -> Unit,
-    onRemove: () -> Unit
+  modifier: Modifier = Modifier,
+  isBeingModified: Boolean,
+  onModify: (Boolean) -> Unit,
+  content: String,
+  isMain: Boolean,
+  onSave: (Boolean) -> Unit,
+  onRemove: () -> Unit
 ) {
   Crossfade(modifier = modifier, targetState = isBeingModified) { showUi ->
     Box(
-        modifier =
-            Modifier.clip(MaterialTheme.shapes.medium).fillMaxWidth().clickable {
-              onModify(!showUi)
-            },
-        contentAlignment = Alignment.BottomEnd) {
-          SubcomposeAsyncImage(
-              modifier =
-                  Modifier.fillMaxWidth().drawWithContent {
-                    drawContent()
-                    if (showUi) drawRect(color = Color.Black.copy(alpha = 0.5f), size = size)
-                  },
-              contentScale = ContentScale.FillWidth,
-              model = File(content),
-              contentDescription = null)
-          if (showUi) {
-            Row(modifier = Modifier.padding(16.dp)) {
-              OutlinedIconButton(
-                  onClick = {
-                    onRemove()
-                    onModify(false)
-                  }) {
-                    Icon(Icons.Default.Delete, contentDescription = null)
-                  }
-              OutlinedIconToggleButton(
-                  checked = isMain,
-                  onCheckedChange = {
-                    onSave(it)
-                    onModify(false)
-                  }) {
-                    Icon(Icons.Default.Star, contentDescription = null)
-                  }
-            }
+      modifier = Modifier
+        .clip(MaterialTheme.shapes.medium)
+        .fillMaxWidth()
+        .clickable {
+          onModify(!showUi)
+        }, contentAlignment = Alignment.BottomEnd
+    ) {
+      SubcomposeAsyncImage(
+        modifier = Modifier
+          .fillMaxWidth()
+          .drawWithContent {
+            drawContent()
+            if (showUi) drawRect(color = Color.Black.copy(alpha = 0.5f), size = size)
+          }, contentScale = ContentScale.FillWidth, model = File(content), contentDescription = null
+      )
+      if (showUi) {
+        Row(modifier = Modifier.padding(16.dp)) {
+          OutlinedIconButton(
+            onClick = {
+              onRemove()
+              onModify(false)
+            }) {
+            Icon(Icons.Default.Delete, contentDescription = null)
+          }
+          OutlinedIconToggleButton(
+            checked = isMain, onCheckedChange = {
+              onSave(it)
+              onModify(false)
+            }) {
+            Icon(Icons.Default.Star, contentDescription = null)
           }
         }
+      }
+    }
   }
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TextPoint(
-    modifier: Modifier = Modifier,
-    isBeingModified: Boolean,
-    onModify: (Boolean) -> Unit,
-    id: Long,
-    content: String,
-    isMain: Boolean,
-    onSave: (String, Boolean) -> Unit,
-    onRemove: () -> Unit,
-    onExecute: (Prompt, String) -> Unit,
-    onCancel: () -> Unit,
-    showPlaceholders: Boolean,
-    status: Triple<Model?, InferenceManagerState, Long>,
-    prompts: List<Prompt>
+  modifier: Modifier = Modifier,
+  isBeingModified: Boolean,
+  onModify: (Boolean) -> Unit,
+  pt: PointDomainModel,
+  onSave: (String, Boolean) -> Unit,
+  onRemove: () -> Unit,
+  onExecute: (Prompt, String) -> Unit,
+  onCancel: () -> Unit,
+  showPlaceholders: Boolean,
+  status: Triple<Model?, InferenceManagerState, Long>,
+  prompts: List<Prompt>
 ) {
-  Crossfade(modifier = modifier, targetState = isMain) { main ->
+  Crossfade(modifier = modifier, targetState = pt.isMain) { main ->
     Box(
-        modifier =
-            Modifier.clip(MaterialTheme.shapes.medium)
-                .then(
-                    if (status.third != id && !isBeingModified) {
-                      Modifier.clickable { onModify(true) }
-                    } else {
-                      Modifier
-                    })
-                .fillMaxWidth()
-                .animateContentSize()
-                .background(
-                    if (main && !isBeingModified) {
-                      MaterialTheme.colorScheme.primaryContainer
-                    } else {
-                      MaterialTheme.colorScheme.surfaceContainer
-                    })
-                .then(modifier),
+      modifier = Modifier
+        .clip(MaterialTheme.shapes.medium)
+        .then(
+          if (status.third != pt.id && !isBeingModified) {
+          Modifier.clickable { onModify(true) }
+        } else {
+          Modifier
+        })
+        .fillMaxWidth()
+        .animateContentSize()
+        .background(
+          if (main && !isBeingModified) {
+            MaterialTheme.colorScheme.primaryContainer
+          } else {
+            MaterialTheme.colorScheme.surfaceContainer
+          }
+        )
+        .then(modifier),
     ) {
-      if (status.second == InferenceManagerState.RESPONDING && status.third == id) {
+      if (status.second == InferenceManagerState.RESPONDING && status.third == pt.id) {
         LinearProgressIndicator(
-            modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.primary,
-            trackColor =
-                if (main && !isBeingModified) {
-                  MaterialTheme.colorScheme.primaryContainer
-                } else {
-                  MaterialTheme.colorScheme.surfaceContainer
-                })
-        if (status.first?.type !in ModelType.LOCAL.variants) IconButton(onClick = onCancel, modifier = Modifier.padding(8.dp).align(Alignment.TopEnd)) { Icon(Icons.Default.Stop, contentDescription = "stop") }
+          modifier = Modifier.fillMaxWidth(),
+          color = MaterialTheme.colorScheme.primary,
+          trackColor = if (main && !isBeingModified) {
+            MaterialTheme.colorScheme.primaryContainer
+          } else {
+            MaterialTheme.colorScheme.surfaceContainer
+          }
+        )
+        if (status.first?.type !in ModelType.LOCAL.variants) IconButton(
+          onClick = onCancel, modifier = Modifier
+            .padding(8.dp)
+            .align(Alignment.TopEnd)
+        ) { Icon(Icons.Default.Stop, contentDescription = "stop") }
       }
       val pointFocus = remember { FocusRequester() }
       if (!isBeingModified) {
-        Crossfade(targetState = content) {
+        Crossfade(targetState = pt.content) {
           Text(
-              modifier = Modifier.padding(16.dp),
-              style = MaterialTheme.typography.headlineSmall,
-              text =
-                  if (it.isBlank() && showPlaceholders) {
-                    stringResource(id = R.string.placeholder_tap_to_edit)
-                  } else {
-                    it
-                  },
-              color =
-                  (if (main) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                      } else {
-                        MaterialTheme.colorScheme.onSurface
-                      })
-                      .copy(alpha = if (it.isBlank()) 0.2f else 1f))
+            modifier = Modifier.padding(16.dp),
+            style = MaterialTheme.typography.headlineSmall,
+            text = if (it.isBlank() && showPlaceholders) {
+              stringResource(id = R.string.placeholder_tap_to_edit)
+            } else {
+              it
+            },
+            color = (if (main) {
+              MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+              MaterialTheme.colorScheme.onSurface
+            }).copy(alpha = if (it.isBlank()) 0.2f else 1f)
+          )
         }
       } else {
         Column(Modifier.fillMaxWidth()) {
-          var currentText by remember(content) { mutableStateOf(TextFieldValue(content)) }
-          var currentMainStatus by remember { mutableStateOf(isMain) }
+          var currentText by remember(pt.content) { mutableStateOf(TextFieldValue(pt.content)) }
+          var currentMainStatus by remember { mutableStateOf(pt.isMain) }
           LaunchedEffect(key1 = Unit) {
             pointFocus.requestFocus()
             currentText = currentText.copy(selection = TextRange(currentText.text.length))
           }
           OutlinedTextField(
-              textStyle = MaterialTheme.typography.headlineSmall,
-              value = currentText,
-              onValueChange = { currentText = it },
-              modifier = Modifier.fillMaxWidth().focusRequester(pointFocus),
-              shape = MaterialTheme.shapes.medium)
+            textStyle = MaterialTheme.typography.headlineSmall,
+            value = currentText,
+            onValueChange = { currentText = it },
+            modifier = Modifier
+              .fillMaxWidth()
+              .focusRequester(pointFocus),
+            shape = MaterialTheme.shapes.medium
+          )
           FlowRow(
-              Modifier.fillMaxWidth().padding(8.dp),
-              horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { onModify(false) }) {
-                  Text(text = stringResource(id = R.string.label_cancel))
+            Modifier
+              .fillMaxWidth()
+              .padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            OutlinedButton(onClick = { onModify(false) }) {
+              Text(text = stringResource(id = R.string.label_cancel))
+            }
+            if (status.first != null && status.second == InferenceManagerState.ACTIVE) {
+              prompts.forEach {
+                OutlinedButton(
+                  onClick = {
+                    onModify(false)
+                    onSave(currentText.text, currentMainStatus)
+                    onExecute(it, currentText.text)
+                  }) {
+                  Icon(
+                    it.icon, contentDescription = stringResource(it.nameRes), modifier = Modifier.size(18.dp)
+                  )
+                  Spacer(Modifier.width(4.dp))
+                  Text(text = stringResource(it.nameRes))
                 }
-                if (status.first != null && status.second == InferenceManagerState.ACTIVE) {
-                  prompts.forEach {
-                    OutlinedButton(
-                        onClick = {
-                          onModify(false)
-                          onSave(currentText.text, currentMainStatus)
-                          onExecute(it, currentText.text)
-                        }) {
-                          Icon(
-                              it.icon,
-                              contentDescription = stringResource(it.nameRes),
-                              modifier = Modifier.size(18.dp))
-                          Spacer(Modifier.width(4.dp))
-                          Text(text = stringResource(it.nameRes))
-                        }
-                  }
-                }
-                OutlinedIconButton(
-                    onClick = {
-                      onModify(false)
-                      onRemove()
-                    }) {
-                      Icon(
-                          Icons.Default.Delete,
-                          contentDescription = stringResource(R.string.a_remove_idea))
-                    }
-                OutlinedIconToggleButton(
-                    currentMainStatus,
-                    onCheckedChange = {
-                      onSave(currentText.text, it)
-                      onModify(false)
-                    }) {
-                      Icon(
-                          Icons.Default.Key,
-                          contentDescription = stringResource(R.string.i_set_key))
-                    }
-                Button(
-                    onClick = {
-                      onSave(currentText.text, currentMainStatus)
-                      onModify(false)
-                    }) {
-                      Text(text = stringResource(id = R.string.label_save))
-                    }
               }
+            }
+            OutlinedIconButton(
+              onClick = {
+                onModify(false)
+                onRemove()
+              }) {
+              Icon(
+                Icons.Default.Delete, contentDescription = stringResource(R.string.a_remove_idea)
+              )
+            }
+            OutlinedIconToggleButton(
+              currentMainStatus, onCheckedChange = {
+                onSave(currentText.text, it)
+                onModify(false)
+              }) {
+              Icon(
+                Icons.Default.Key, contentDescription = stringResource(R.string.i_set_key)
+              )
+            }
+            Button(
+              onClick = {
+                onSave(currentText.text, currentMainStatus)
+                onModify(false)
+              }) {
+              Text(text = stringResource(id = R.string.label_save))
+            }
+          }
         }
       }
     }
@@ -454,8 +463,7 @@ sealed class IdeaScreenEvent {
 
   data class RemovePoint(val id: Long) : IdeaScreenEvent()
 
-  data class ExecutePoint(val prompt: Prompt, val content: String, val pointId: Long) :
-      IdeaScreenEvent()
+  data class ExecutePoint(val prompt: Prompt, val content: String, val pointId: Long) : IdeaScreenEvent()
 
   data class ExecutePointNew(val prompt: Prompt, val index: Int) : IdeaScreenEvent()
 

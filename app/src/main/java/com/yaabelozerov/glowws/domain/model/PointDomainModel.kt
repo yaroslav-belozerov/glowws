@@ -7,7 +7,8 @@ data class PointDomainModel(
   val id: Long,
   val type: PointType,
   val content: String,
-  val isMain: Boolean
+  val isMain: Boolean,
+  val index: Long
 )
 
 @Serializable
@@ -26,6 +27,12 @@ data class PointModel(
   val isMain: Boolean
 )
 
+@Serializable
+data class PointCreateRequest(
+  val parentId: Long,
+  val index: Long
+)
+
 fun PointModel.toDomainModel() = PointDomainModel(
   id = id,
   type = when (type) {
@@ -34,7 +41,8 @@ fun PointModel.toDomainModel() = PointDomainModel(
     else -> PointType.TEXT
   },
   content = pointContent,
-  isMain = isMain
+  isMain = isMain,
+  index = index
 )
 
 fun List<PointModel>.toDomain() = map { it.toDomainModel() }

@@ -2,6 +2,7 @@ package com.yaabelozerov.glowws.ui.screen.main
 
 import com.yaabelozerov.glowws.domain.model.IdeaDomainModel
 import com.yaabelozerov.glowws.domain.model.IdeaModel
+import com.yaabelozerov.glowws.domain.model.IdeaModelFull
 import com.yaabelozerov.glowws.domain.model.archived
 import com.yaabelozerov.glowws.domain.model.notArchived
 import com.yaabelozerov.glowws.domain.model.toDomain
@@ -23,5 +24,5 @@ data class MainScreenFilterState(
   val searchQuery: String = ""
 )
 
-fun MainScreenState.setIdeas(list: List<IdeaModel>) =
+fun MainScreenState.setIdeas(list: List<IdeaModelFull>) =
   copy(ideas = list.notArchived().toDomain(), archivedIdeas = list.archived().toDomain())

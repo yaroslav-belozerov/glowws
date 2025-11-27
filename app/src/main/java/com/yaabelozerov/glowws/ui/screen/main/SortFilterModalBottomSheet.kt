@@ -29,7 +29,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,13 +47,13 @@ fun SortFilterModalBottomSheet(mvm: MainScreenViewModel) {
   if (mvm.sortFilterOpen.collectAsState().value) {
     ModalBottomSheet(onDismissRequest = { mvm.toggleSortFilterModal() }) {
       Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        val flags = mvm.filterState.collectAsState().value.filter
+        val flags = mvm.filter.collectAsState().value.filter
         FilterColumn(
             flags,
             setFilterFlag = { type, flag -> mvm.updateFilterFlag(type, flag) },
             resetFilter = { mvm.resetFilter() })
         SortColumn(
-            sortModel = mvm.filterState.collectAsState().value.sort,
+            sortModel = mvm.filter.collectAsState().value.sort,
             setSortType = { mvm.setSortType(it) },
             reverseOrder = { mvm.reverseSortOrder() },
             resetSort = { mvm.fetchSort() })

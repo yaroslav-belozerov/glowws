@@ -4,21 +4,20 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.compose.ui.graphics.Color
-import com.yaabelozerov.glowws.domain.model.Prompt
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.cookie
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.headers
+import io.ktor.http.parametersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -75,21 +74,24 @@ object Net {
     expectSuccess = true
   }
 
-  suspend inline fun <reified T> get(baseUrlFlow: Flow<String>, path: String, token: String) = runCatching {
+  suspend inline fun <reified T> get(baseUrlFlow: Flow<String>, path: String, token: String, param: Pair<String, String>? = null) = runCatching {
     httpClient.get("${baseUrlFlow.first()}/$path") {
+      param?.run { parameter(first, second) }
       cookie("auth", token)
     }.body<T>()
   }
 
-  suspend inline fun <reified T, reified V> put(baseUrlFlow: Flow<String>, path: String, token: String, reqBody: V) = runCatching {
+  suspend inline fun <reified T, reified V> put(baseUrlFlow: Flow<String>, path: String, token: String, reqBody: V, param: Pair<String, String>? = null) = runCatching {
     httpClient.put("${baseUrlFlow.first()}/$path") {
+      param?.run { parameter(first, second) }
       setBody(reqBody)
       cookie("auth", token)
     }.body<T>()
   }
 
-  suspend inline fun <reified T> put(baseUrlFlow: Flow<String>, path: String, token: String) = runCatching {
+  suspend inline fun <reified T> put(baseUrlFlow: Flow<String>, path: String, token: String, param: Pair<String, String>? = null) = runCatching {
     httpClient.put("${baseUrlFlow.first()}/$path") {
+      param?.run { parameter(first, second) }
       cookie("auth", token)
     }.body<T>()
   }
@@ -100,8 +102,23 @@ object Net {
     }.body<T>()
   }
 
+  suspend inline fun <reified T, reified V> post(baseUrlFlow: Flow<String>, path: String, token: String, reqBody: V) = runCatching {
+    httpClient.post("${baseUrlFlow.first()}/$path") {
+      setBody(reqBody)
+      cookie("auth", token)
+    }.body<T>()
+  }
+
   suspend inline fun <reified T> delete(baseUrlFlow: Flow<String>, path: String, token: String) = runCatching {
     httpClient.delete("${baseUrlFlow.first()}/$path") {
+      cookie("auth", token)
+    }.body<T>()
+  }
+
+  suspend inline fun <reified T, reified V> delete(baseUrlFlow: Flow<String>, path: String, token: String, reqBody: V, param: Pair<String, String>? = null) = runCatching {
+    httpClient.delete("${baseUrlFlow.first()}/$path") {
+      param?.run { parameter(first, second) }
+      setBody(reqBody)
       cookie("auth", token)
     }.body<T>()
   }

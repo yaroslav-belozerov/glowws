@@ -31,9 +31,9 @@ class IdeaMapper @Inject constructor(private val dao: IdeaDao) {
       val pt = if (idea.mainPointId != -1L) dao.getPoint(idea.mainPointId).first() else null
       val point: PointDomainModel =
           if (pt != null) {
-            PointDomainModel(pt.pointId, pt.type, pt.pointContent, pt.isMain)
+            PointDomainModel(pt.pointId, pt.type, pt.pointContent, pt.isMain, pt.index)
           } else {
-            PointDomainModel(-1, PointType.TEXT, "", false)
+            PointDomainModel(-1, PointType.TEXT, "", false, -1)
           }
       val cal = Calendar.getInstance()
       cal.timeInMillis = idea.timestampCreated

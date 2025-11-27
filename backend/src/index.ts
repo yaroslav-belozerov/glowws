@@ -81,30 +81,7 @@ const app = new Elysia()
         if (!profile) {
             return status(401, 'Unauthorized')
         }
-        if (search == undefined) {
-            return db.idea.findMany({
-                where: {
-                    ownerUsername: `${profile.username}`
-                },
-                orderBy: {
-                    timestampModified: 'desc'
-                }
-            });
-        }
-        return db.idea.findMany({
-            where: {
-                ownerUsername: `${profile.username}`, points: {
-                    some: {
-                        pointContent: {
-                            contains: `${search}`
-                        }
-                    }
-                }
-            },
-            orderBy: {
-                timestampModified: 'desc'
-            }
-        });
+        return getIdeasMainScreen(profile.username, search)
     })
     .get("/points/:ideaId", async ({jwt, status, cookie: {auth}, params: {ideaId}}) => {
         const parentId = Number.parseInt(ideaId)
@@ -116,13 +93,33 @@ const app = new Elysia()
         if (!profile) {
             return status(401, 'Unauthorized')
         }
-        return db.point.findMany({where: {parentId}});
+        return db.point.findMany({where: {parentId}, orderBy: {index: 'asc'}});
     })
-    .post("/points/:ideaId", async ({jwt, status, cookie: {auth}, params: {ideaId}}) => {
-        const parentId = Number.parseInt(ideaId)
-        if (Number.isNaN(parentId)) {
+    .delete("/ideas/:ideaId", async ({jwt, status, cookie: {auth}, params: {ideaId}, query: {search}}) => {
+        const id = Number.parseInt(ideaId)
+        if (Number.isNaN(id)) {
             return status(400, 'Bad Request')
         }
+        // @ts-ignore
+        const profile = await jwt.verify(auth.value)
+        if (!profile) {
+            return status(401, 'Unauthorized')
+        }
+        await db.idea.delete({where: {id}})
+        return getIdeasMainScreen(profile.username, search)
+    })
+    .delete("/ideas/all", async ({jwt, status, cookie: {auth}, body, query: {search}}) => {
+        // @ts-ignore
+        const profile = await jwt.verify(auth.value)
+        if (!profile) {
+            return status(401, 'Unauthorized')
+        }
+        await db.$transaction(
+            body.map((id) => db.idea.delete({where: {id}}))
+        )
+        return getIdeasMainScreen(profile.username, search)
+    }, {body: t.Array(t.Number())})
+    .post("/points", async ({jwt, status, cookie: {auth}, body: {parentId, index}}) => {
         // @ts-ignore
         const profile = await jwt.verify(auth.value)
         if (!profile) {
@@ -131,12 +128,17 @@ const app = new Elysia()
         await db.$executeRaw`UPDATE "Idea"
                              SET "timestampModified" = DEFAULT
                              WHERE id = ${parentId}`;
+        await db.$executeRaw`UPDATE "Point"
+                             SET "index" = "index" + 1
+                             WHERE "parentId" = ${parentId}
+                               AND "index" >= ${index}`;
         return db.point.create({
             data: {
-                parentId: parentId,
+                parentId,
+                index
             }
         });
-    })
+    }, {body: t.Object({parentId: t.Number(), index: t.Number()})})
     .delete("/points/:pointId", async ({jwt, status, cookie: {auth}, params: {pointId}}) => {
         const id = Number.parseInt(pointId)
         if (Number.isNaN(id)) {
@@ -155,7 +157,7 @@ const app = new Elysia()
         await db.$executeRaw`UPDATE "Idea"
                              SET "timestampModified" = DEFAULT
                              WHERE id = ${deleted.parentId}`;
-        return db.point.findMany({where: {parentId: deleted.parentId}});
+        return db.point.findMany({where: {parentId: deleted.parentId}, orderBy: {index: 'asc'}});
     })
     .put("/points/:pointId", async ({jwt, status, cookie: {auth}, params: {pointId}, body: {pointContent, isMain}}) => {
         const id = Number.parseInt(pointId)
@@ -178,9 +180,9 @@ const app = new Elysia()
         await db.$executeRaw`UPDATE "Idea"
                              SET "timestampModified" = DEFAULT
                              WHERE id = ${updated.parentId}`;
-        return db.point.findMany({where: {parentId: updated.parentId}});
+        return db.point.findMany({where: {parentId: updated.parentId}, orderBy: {index: 'asc'}});
     }, {body: t.Object({pointContent: t.String(), isMain: t.Boolean()})})
-    .put("/ideas/:id/priority/:priority", async ({jwt, status, cookie: {auth}, params: {id, priority}}) => {
+    .put("/ideas/:id/priority/:priority", async ({jwt, status, cookie: {auth}, params: {id, priority}, query: {search}}) => {
         const intId = Number.parseInt(id)
         const intP = Number.parseInt(priority)
         if (Number.isNaN(intId) || Number.isNaN(intP)) {
@@ -195,9 +197,9 @@ const app = new Elysia()
                              SET "priority"          = ${intP},
                                  "timestampModified" = DEFAULT
                              WHERE id = ${intId}`;
-        return db.idea.findMany({where: {ownerUsername: `${profile.username}`}});
+        return getIdeasMainScreen(profile.username, search)
     })
-    .put("/ideas/archive/:id", async ({jwt, status, cookie: {auth}, params: {id}}) => {
+    .put("/ideas/archive/:id", async ({jwt, status, cookie: {auth}, params: {id}, query: {search}}) => {
         const intId = Number.parseInt(id)
         if (Number.isNaN(intId)) {
             return status(400, 'Bad Request')
@@ -211,9 +213,9 @@ const app = new Elysia()
                              SET "isArchived"        = NOT "isArchived",
                                  "timestampModified" = DEFAULT
                              WHERE id = ${intId}`;
-        return db.idea.findMany({where: {ownerUsername: `${profile.username}`}});
+        return getIdeasMainScreen(profile.username, search)
     })
-    .put("/ideas/archive/all", async ({jwt, status, cookie: {auth}, body}) => {
+    .put("/ideas/archive/all", async ({jwt, status, cookie: {auth}, body, query: {search}}) => {
         // @ts-ignore
         const profile = await jwt.verify(auth.value)
         if (!profile) {
@@ -222,12 +224,12 @@ const app = new Elysia()
         await db.$transaction(
             body.map((id) =>
                 db.$executeRaw`UPDATE "Idea"
-                             SET "isArchived"        = NOT "isArchived",
-                                 "timestampModified" = DEFAULT
-                             WHERE id = ${id}`
+                               SET "isArchived"        = NOT "isArchived",
+                                   "timestampModified" = DEFAULT
+                               WHERE id = ${id}`
             )
         )
-        return db.idea.findMany({where: {ownerUsername: `${profile.username}`}});
+        return getIdeasMainScreen(profile.username, search)
     }, {body: t.Array(t.Number())})
     .post("/ideas", async ({jwt, status, cookie: {auth}}) => {
         // @ts-ignore
@@ -246,3 +248,49 @@ const app = new Elysia()
 console.log(
     `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
 );
+
+const getIdeasMainScreen = (username: any, query: any) => {
+    if (query== undefined) {
+        return db.idea.findMany({
+            where: {
+                ownerUsername: `${username}`
+            },
+            orderBy: {
+                timestampModified: 'desc'
+            },
+            include: {
+                points: {
+                    orderBy: [{isMain: 'desc'}, {index: 'asc'}],
+                    select: {
+                        pointContent: true
+                    },
+                    take: 1
+                }
+            }
+        });
+    }
+    const search = `${query}`.replaceAll("%", () => "\\%").replaceAll("_", () => "\\_")
+    return db.idea.findMany({
+        where: {
+            ownerUsername: `${username}`, points: {
+                some: {
+                    pointContent: {
+                        contains: `%${search}%`
+                    }
+                }
+            }
+        },
+        orderBy: {
+            timestampModified: 'desc'
+        },
+        include: {
+            points: {
+                orderBy: [{isMain: 'desc'}, {index: 'asc'}],
+                select: {
+                    pointContent: true
+                },
+                take: 1
+            }
+        }
+    });
+}

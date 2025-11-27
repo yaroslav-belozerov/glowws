@@ -38,6 +38,7 @@ fun MainScreenFloatingButtons(
     addNewIdeaCallback: (Long) -> Unit
 ) {
   var isConfirmationOpen by remember { mutableStateOf(false) }
+  val select by mvm.select.collectAsState()
   if (isConfirmationOpen) {
     ScreenDialog(
         title = stringResource(id = R.string.dialog_archive_all),
@@ -46,7 +47,7 @@ fun MainScreenFloatingButtons(
                 DialogEntry(
                     Icons.Default.CheckCircle,
                     stringResource(id = R.string.label_confirm),
-                    { mvm.archiveSelected() }),
+                    { mvm.toggleArchiveSelected(false) }),
                 DialogEntry(
                     null,
                     stringResource(id = R.string.label_cancel),
@@ -57,7 +58,7 @@ fun MainScreenFloatingButtons(
       verticalArrangement = Arrangement.spacedBy(8.dp),
       horizontalAlignment = Alignment.End,
       modifier = modifier) {
-        val inSelection = mvm.selection.collectAsState().value.inSelectionMode
+        val inSelection = select.inSelectionMode
         if (inSelection) {
           FloatingActionButton(onClick = { isConfirmationOpen = true }) {
             Icon(imageVector = Icons.Default.Delete, contentDescription = "archive selected button")
@@ -73,7 +74,7 @@ fun MainScreenFloatingButtons(
         val isSearchOpen = mvm.searchOpen.collectAsState().value
         if (!isSearchOpen) {
           Row {
-            if (mvm.filterState.collectAsState().value.searchQuery.isNotBlank()) {
+            if (mvm.filter.collectAsState().value.searchQuery.isNotBlank()) {
               FloatingActionButton(onClick = { mvm.updateSearchQuery("") }) {
                 Icon(imageVector = Icons.Default.Clear, contentDescription = "clear search button")
               }

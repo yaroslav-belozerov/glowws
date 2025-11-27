@@ -12,6 +12,7 @@ import com.yaabelozerov.glowws.data.local.room.Point
 import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.di.AppModule
 import com.yaabelozerov.glowws.domain.InferenceRepository
+import com.yaabelozerov.glowws.domain.model.PointCreateRequest
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.PointModel
 import com.yaabelozerov.glowws.domain.model.PointUpdateRequest
@@ -90,7 +91,10 @@ constructor(
     viewModelScope.launch {
       when (pointType) {
         PointType.TEXT -> {
-          Net.post<PointModel>(instanceUrl, "points/$ideaId", jwt.first()).onSuccess {
+          Net.post<PointModel, _>(instanceUrl, "points", jwt.first(), PointCreateRequest(
+            parentId =ideaId,
+            index = index
+          )).onSuccess {
             refreshPoints(ideaId)
             textCallback(it.id)
           }.onFailure(Throwable::printStackTrace)
@@ -137,13 +141,6 @@ constructor(
       Net.delete<List<PointModel>>(instanceUrl, "points/$pointId", jwt.first()).onSuccess {  newPts ->
         _points.update { newPts.toDomain() }
       }.onFailure(Throwable::printStackTrace)
-//      val pt = dao.getPoint(pointId).first()
-//      val ideaId = pt.ideaParentId
-//      dao.deletePointAndIndex(pointId)
-//      dao.updateIdeaContentFromPoints(ideaId)
-//      if (pt.type == PointType.IMAGE) {
-//        mediaManager.removeMedia(pt.pointContent)
-//      }
     }
   }
 
