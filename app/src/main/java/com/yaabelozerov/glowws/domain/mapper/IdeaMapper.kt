@@ -52,9 +52,6 @@ class IdeaMapper @Inject constructor(private val dao: IdeaDao) {
     }
     out.sortWith(
         when (sortModel.type) {
-          SortType.ALPHABETICAL ->
-              compareBy<IdeaDomainModel> { it.mainPoint.content }.thenBy { it.modified.timestamp }
-
           SortType.TIMESTAMP_CREATED ->
               compareBy<IdeaDomainModel> { it.created.timestamp }.thenBy { it.modified.timestamp }
 

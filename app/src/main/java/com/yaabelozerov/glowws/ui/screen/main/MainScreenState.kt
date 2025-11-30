@@ -24,5 +24,19 @@ data class MainScreenFilterState(
   val searchQuery: String = ""
 )
 
-fun MainScreenState.setIdeas(list: List<IdeaModelFull>) =
-  copy(ideas = list.notArchived().toDomain(), archivedIdeas = list.archived().toDomain())
+fun MainScreenFilterState.buildParams(isArchive: Boolean = false): List<Pair<String, String>>? = buildList {
+  if (isArchive) return null
+  if (searchQuery.isNotBlank()) {
+    add("search" to searchQuery)
+  }
+  add("filter" to filter.map { filter ->
+    when (val value = filter.value) {
+      is FilterFlag.WithPriority -> value.priority.map { "priority=$it" }
+    }
+  }.joinToString(","))
+  add("sort" to sort.type.name.lowercase())
+  add("sort_dir" to sort.order.name.lowercase())
+}
+
+fun MainScreenState.setIdeas(list: List<IdeaModelFull>, instanceUrl: String) =
+  copy(ideas = list.notArchived().toDomain(instanceUrl), archivedIdeas = list.archived().toDomain(instanceUrl))

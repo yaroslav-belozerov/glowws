@@ -102,6 +102,7 @@ fun App(
         onModify = { key, value -> svm.modifySetting(key, value) { mvm.fetchSort() } },
         changed = svm.settingsChanged.collectAsState().value,
         onReset = { svm.resetSettings() },
+        onLogout = { svm.logout() },
         aiStatus = aivm.aiStatus.collectAsState().value,
         onNavigateToAi = { navCtrl.navigate(Nav.AiScreenRoute.route) })
     }

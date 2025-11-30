@@ -70,4 +70,10 @@ constructor(
       fetchSettings()
     }
   }
+
+  fun logout() {
+    viewModelScope.launch {
+      dataStoreManager.setJwt("")
+    }
+  }
 }

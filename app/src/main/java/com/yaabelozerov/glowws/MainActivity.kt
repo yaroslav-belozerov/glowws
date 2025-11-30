@@ -141,7 +141,7 @@ class MainActivity : ComponentActivity() {
                   )
                   .imePadding()
               ) {
-                var url by remember { mutableStateOf("") }
+                var url by remember { mutableStateOf(instanceUrl) }
                 var username by remember { mutableStateOf("") }
                 var password by remember { mutableStateOf("") }
                 Column {

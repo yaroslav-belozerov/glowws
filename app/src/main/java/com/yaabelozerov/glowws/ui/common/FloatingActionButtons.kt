@@ -23,6 +23,7 @@ fun FloatingActionButtons(
             modifier = Modifier,
             mvm = mvm,
             addNewIdeaCallback = { id ->
+              ivm.refreshPoints(-1)
               navController.navigate(Nav.IdeaScreenRoute.withParam(id))
               ivm.refreshPoints(id)
             })

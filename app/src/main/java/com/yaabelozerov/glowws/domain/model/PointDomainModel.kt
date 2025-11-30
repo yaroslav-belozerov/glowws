@@ -18,6 +18,11 @@ data class PointUpdateRequest(
 )
 
 @Serializable
+data class PointMainUpdateRequest(
+  val isMain: Boolean
+)
+
+@Serializable
 data class PointModel(
   val id: Long,
   val parentId: Long,
@@ -30,19 +35,24 @@ data class PointModel(
 @Serializable
 data class PointCreateRequest(
   val parentId: Long,
-  val index: Long
+  val index: Long,
+  val content: String,
+  val type: String
 )
 
-fun PointModel.toDomainModel() = PointDomainModel(
+fun PointModel.toDomainModel(instanceUrl: String) = PointDomainModel(
   id = id,
   type = when (type) {
     "TEXT" -> PointType.TEXT
     "IMAGE" -> PointType.IMAGE
     else -> PointType.TEXT
   },
-  content = pointContent,
+  content = when (type) {
+    "IMAGE" -> "$instanceUrl/$pointContent"
+    else -> pointContent
+  },
   isMain = isMain,
   index = index
 )
 
-fun List<PointModel>.toDomain() = map { it.toDomainModel() }
+fun List<PointModel>.toDomain(instanceUrl: String) = map { it.toDomainModel(instanceUrl) }

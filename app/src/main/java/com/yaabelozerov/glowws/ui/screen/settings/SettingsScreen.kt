@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -49,6 +50,7 @@ fun SettingsScreen(
     onModify: (SettingsKeys, String) -> Unit,
     changed: Boolean,
     onReset: () -> Unit,
+    onLogout: () -> Unit,
     aiStatus: Triple<Model?, InferenceManagerState, Long>,
     onNavigateToAi: () -> Unit
 ) {
@@ -110,10 +112,11 @@ fun SettingsScreen(
         onNavigateToAi()
       }
     }
-    if (changed) {
-      item {
-        Row(modifier = Modifier.fillParentMaxWidth(), horizontalArrangement = Arrangement.Center) {
-          ElevatedButton(onClick = onReset) { Text(stringResource(R.string.s_reset)) }
+    item {
+      Row(modifier = Modifier.fillParentMaxWidth(), horizontalArrangement = Arrangement.Center) {
+        if (changed) {
+          OutlinedButton(onClick = onReset) { Text(stringResource(R.string.s_reset)) }
+          OutlinedButton(onClick = onLogout) { Text("Log out") }
         }
       }
     }

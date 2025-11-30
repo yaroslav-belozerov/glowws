@@ -17,7 +17,6 @@ import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.parametersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -74,24 +73,24 @@ object Net {
     expectSuccess = true
   }
 
-  suspend inline fun <reified T> get(baseUrlFlow: Flow<String>, path: String, token: String, param: Pair<String, String>? = null) = runCatching {
+  suspend inline fun <reified T> get(baseUrlFlow: Flow<String>, path: String, token: String, params: List<Pair<String, String>>? = null) = runCatching {
     httpClient.get("${baseUrlFlow.first()}/$path") {
-      param?.run { parameter(first, second) }
+      params?.forEach { it.run { parameter(first, second) }  }
       cookie("auth", token)
     }.body<T>()
   }
 
-  suspend inline fun <reified T, reified V> put(baseUrlFlow: Flow<String>, path: String, token: String, reqBody: V, param: Pair<String, String>? = null) = runCatching {
+  suspend inline fun <reified T, reified V> put(baseUrlFlow: Flow<String>, path: String, token: String, reqBody: V, params: List<Pair<String, String>>? = null) = runCatching {
     httpClient.put("${baseUrlFlow.first()}/$path") {
-      param?.run { parameter(first, second) }
+      params?.forEach { it.run { parameter(first, second) }  }
       setBody(reqBody)
       cookie("auth", token)
     }.body<T>()
   }
 
-  suspend inline fun <reified T> put(baseUrlFlow: Flow<String>, path: String, token: String, param: Pair<String, String>? = null) = runCatching {
+  suspend inline fun <reified T> put(baseUrlFlow: Flow<String>, path: String, token: String, params: List<Pair<String, String>>? = null) = runCatching {
     httpClient.put("${baseUrlFlow.first()}/$path") {
-      param?.run { parameter(first, second) }
+      params?.forEach { it.run { parameter(first, second) }  }
       cookie("auth", token)
     }.body<T>()
   }
@@ -115,9 +114,9 @@ object Net {
     }.body<T>()
   }
 
-  suspend inline fun <reified T, reified V> delete(baseUrlFlow: Flow<String>, path: String, token: String, reqBody: V, param: Pair<String, String>? = null) = runCatching {
+  suspend inline fun <reified T, reified V> delete(baseUrlFlow: Flow<String>, path: String, token: String, reqBody: V, params: List<Pair<String, String>>? = null) = runCatching {
     httpClient.delete("${baseUrlFlow.first()}/$path") {
-      param?.run { parameter(first, second) }
+      params?.forEach { it.run { parameter(first, second) }  }
       setBody(reqBody)
       cookie("auth", token)
     }.body<T>()

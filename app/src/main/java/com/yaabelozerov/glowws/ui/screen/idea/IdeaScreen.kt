@@ -1,8 +1,15 @@
 package com.yaabelozerov.glowws.ui.screen.idea
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +35,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -36,7 +45,10 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -45,6 +57,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.material3.OutlinedTextField
@@ -59,6 +72,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -69,6 +83,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import coil.compose.SubcomposeAsyncImage
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
@@ -162,7 +177,7 @@ fun IdeaScreen(
           onModify = { modifiedId = if (it) point.id else null },
           isMain = point.isMain,
           onRemove = { onEvent(IdeaScreenEvent.RemovePoint(point.id)) },
-          onSave = { onEvent(IdeaScreenEvent.SavePoint(point.id, point.content, it)) })
+          onSave = { onEvent(IdeaScreenEvent.ToggleMain(point.id, !point.isMain)) })
       }
       Spacer(modifier = Modifier.height(4.dp))
       AddPointLine(
@@ -269,42 +284,55 @@ fun ImagePoint(
   onModify: (Boolean) -> Unit,
   content: String,
   isMain: Boolean,
-  onSave: (Boolean) -> Unit,
+  onSave: () -> Unit,
   onRemove: () -> Unit
 ) {
-  Crossfade(modifier = modifier, targetState = isBeingModified) { showUi ->
-    Box(
+  val bgColor by animateColorAsState(if (isBeingModified) Color.Black.copy(0.5f) else Color.Black.copy(0f))
+  Box(
+    modifier = modifier
+      .clip(MaterialTheme.shapes.medium)
+      .fillMaxWidth()
+      .clickable {
+        onModify(!isBeingModified)
+      }, contentAlignment = Alignment.BottomEnd
+  ) {
+    Text(content)
+    AsyncImage(
       modifier = Modifier
-        .clip(MaterialTheme.shapes.medium)
         .fillMaxWidth()
-        .clickable {
-          onModify(!showUi)
-        }, contentAlignment = Alignment.BottomEnd
+        .drawWithContent {
+          drawContent()
+          drawRect(color = bgColor, size = size)
+        }, contentScale = ContentScale.FillWidth, model = content, contentDescription = null
+    )
+    AnimatedVisibility(
+      isBeingModified,
+      enter = fadeIn() + slideInVertically(initialOffsetY = { it / 3 }),
+      exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 3 })
     ) {
-      SubcomposeAsyncImage(
-        modifier = Modifier
-          .fillMaxWidth()
-          .drawWithContent {
-            drawContent()
-            if (showUi) drawRect(color = Color.Black.copy(alpha = 0.5f), size = size)
-          }, contentScale = ContentScale.FillWidth, model = File(content), contentDescription = null
-      )
-      if (showUi) {
-        Row(modifier = Modifier.padding(16.dp)) {
-          OutlinedIconButton(
-            onClick = {
-              onRemove()
-              onModify(false)
-            }) {
-            Icon(Icons.Default.Delete, contentDescription = null)
-          }
-          OutlinedIconToggleButton(
-            checked = isMain, onCheckedChange = {
-              onSave(it)
-              onModify(false)
-            }) {
-            Icon(Icons.Default.Star, contentDescription = null)
-          }
+      Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Card(
+          shape = MaterialTheme.shapes.medium.copy(bottomEnd = CornerSize(4.dp), bottomStart = CornerSize(4.dp)),
+          onClick = {
+            onRemove()
+            onModify(false)
+          }) {
+          Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.padding(16.dp))
+        }
+        Card(
+          shape = if (!isMain) {
+            MaterialTheme.shapes.medium.copy(topEnd = CornerSize(4.dp), topStart = CornerSize(4.dp))
+          } else CircleShape, onClick = {
+            onSave()
+            onModify(false)
+          }) {
+          Icon(
+            Icons.Filled.Star,
+            contentDescription = null,
+            modifier = Modifier
+              .padding(16.dp)
+              .scale(if (isMain) 1.2f else 1f)
+          )
         }
       }
     }
@@ -456,6 +484,8 @@ fun TextPoint(
 
 sealed class IdeaScreenEvent {
   data object GoBack : IdeaScreenEvent()
+
+  data class ToggleMain(val id: Long, val isMain: Boolean) : IdeaScreenEvent()
 
   data class AddPoint(val type: PointType, val index: Long) : IdeaScreenEvent()
 

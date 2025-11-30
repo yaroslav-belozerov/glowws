@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -66,6 +67,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import coil.compose.SubcomposeAsyncImage
 import com.yaabelozerov.glowws.Const
 import com.yaabelozerov.glowws.R
@@ -278,16 +280,15 @@ fun Idea(
                             alpha = if (previewPoint.content.isBlank()) 0.3f else 1f))
 
             PointType.IMAGE ->
-                SubcomposeAsyncImage(
-                    modifier =
-                        Modifier.padding(vertical = 16.dp)
-                            .padding(start = 16.dp)
-                            .then(if (fullImage) Modifier else Modifier.heightIn(0.dp, 128.dp))
-                            .clip(MaterialTheme.shapes.medium)
-                            .weight(1f),
-                    contentScale = ContentScale.FillWidth,
-                    model = File(previewPoint.content),
-                    contentDescription = null)
+              AsyncImage(
+                  modifier =
+                      Modifier
+                          .then(if (fullImage) Modifier else Modifier.heightIn(0.dp, 128.dp))
+                          .clip(MaterialTheme.shapes.medium.copy(topStart = CornerSize(0), bottomStart = CornerSize(0)))
+                          .weight(1f),
+                  contentScale = ContentScale.FillWidth,
+                  model = previewPoint.content.also(::println),
+                  contentDescription = null)
           }
           Crossfade(priority != 0L) { show ->
             if (show) {

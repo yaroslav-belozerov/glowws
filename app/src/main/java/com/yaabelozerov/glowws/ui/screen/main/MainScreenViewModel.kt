@@ -1,6 +1,8 @@
 package com.yaabelozerov.glowws.ui.screen.main
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
@@ -23,6 +25,7 @@ import com.yaabelozerov.glowws.ui.model.select
 import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenEvent
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.post
@@ -40,6 +43,7 @@ import kotlin.reflect.KClass
 @HiltViewModel
 class MainScreenViewModel
 @Inject constructor(
+  @ApplicationContext private val app: Context,
   private val settingsMapper: SettingsMapper,
   private val settingsManager: SettingsManager,
   private val dataStoreManager: AppModule.DataStoreManager
@@ -91,6 +95,9 @@ class MainScreenViewModel
               val token: String = response.body()
               dataStoreManager.setJwt(token)
               dataStoreManager.setInstanceUrl(instanceUrl)
+              launch(Dispatchers.Main) {
+                Toast.makeText(app, "Account created", Toast.LENGTH_SHORT).show()
+              }
               _loginErr.update { "" }
             } else {
               _loginErr.update { response.toString() }
@@ -140,8 +147,8 @@ class MainScreenViewModel
 
   private suspend fun update(token: String, q: MainScreenFilterState) {
     Net.get<List<IdeaModelFull>>(
-      instanceUrl, "ideas", token, (if (q.searchQuery.isBlank()) null else "search" to q.searchQuery)
-    ).onSuccess { ideas -> _state.update { it.setIdeas(ideas) } }.onFailure(Throwable::printStackTrace)
+      instanceUrl, "ideas", token, q.buildParams()
+    ).onSuccess { ideas -> _state.update { it.setIdeas(ideas, instanceUrl.first()) } }.onFailure(Throwable::printStackTrace)
   }
 
   fun updateFilterFlag(flagType: KClass<FilterFlag>, flag: FilterFlag) {
@@ -158,11 +165,13 @@ class MainScreenViewModel
 
   private fun toggleArchiveIdea(ideaId: Long, isArchive: Boolean) {
     viewModelScope.launch {
-      val param = (if (isArchive) null else "search" to _filter.value.searchQuery)
       Net.put<List<IdeaModelFull>>(
-        baseUrlFlow = instanceUrl, path = "ideas/archive/$ideaId", token = jwt.first(), param = param
+        baseUrlFlow = instanceUrl,
+        path = "ideas/archive/$ideaId",
+        token = jwt.first(),
+        _filter.value.buildParams(isArchive)
       ).onSuccess {
-        _state.update { state -> state.setIdeas(it) }
+        _state.update { state -> state.setIdeas(it, instanceUrl.first()) }
       }.onFailure(Throwable::printStackTrace)
     }
   }
@@ -173,9 +182,9 @@ class MainScreenViewModel
         baseUrlFlow = instanceUrl,
         path = "ideas/$ideaId/priority/$priority",
         token = jwt.first(),
-        param = "search" to _filter.value.searchQuery
+        params = _filter.value.buildParams()
       ).onSuccess {
-        _state.update { state -> state.setIdeas(it) }
+        _state.update { state -> state.setIdeas(it, instanceUrl.first()) }
       }.onFailure(Throwable::printStackTrace)
     }
   }
@@ -190,12 +199,15 @@ class MainScreenViewModel
 
   fun toggleArchiveSelected(isArchive: Boolean) {
     viewModelScope.launch {
-      val entries = (if (isArchive) _select else _archiveSelect).value.entries
-      val param = (if (isArchive) null else "search" to _filter.value.searchQuery)
+      val entries = (if (isArchive) _archiveSelect else _select).value.entries
       Net.put<List<IdeaModelFull>, List<Long>>(
-        baseUrlFlow = instanceUrl, path = "ideas/archive/all", token = jwt.first(), reqBody = entries, param = param
+        baseUrlFlow = instanceUrl,
+        path = "ideas/archive/all",
+        token = jwt.first(),
+        reqBody = entries,
+        params = _filter.value.buildParams(isArchive)
       ).onSuccess {
-        _state.update { state -> state.setIdeas(it) }
+        _state.update { state -> state.setIdeas(it, instanceUrl.first()) }
         deselectAll()
         deselectAllArchive()
       }.onFailure(Throwable::printStackTrace)
@@ -215,7 +227,7 @@ class MainScreenViewModel
       ).onSuccess {
         deselectAll()
         deselectAllArchive()
-        _state.update { state -> state.setIdeas(it) }
+        _state.update { state -> state.setIdeas(it, instanceUrl.first()) }
       }.onFailure(Throwable::printStackTrace)
     }
   }
@@ -255,7 +267,7 @@ class MainScreenViewModel
 
       is ArchiveScreenEvent.Remove -> viewModelScope.launch {
         Net.delete<List<IdeaModelFull>>(instanceUrl, "ideas/${event.id}", jwt.first()).onSuccess {
-          _state.update { state -> state.setIdeas(it) }
+          _state.update { state -> state.setIdeas(it, instanceUrl.first()) }
         }.onFailure(Throwable::printStackTrace)
       }
 
