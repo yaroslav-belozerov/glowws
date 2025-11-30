@@ -90,4 +90,8 @@
     <string name="error_unknown">Неизвестная ошибка</string>
     <string name="placeholder_archive_empty">Архивированные идеи появятся здесь</string>
     <string name="placeholder_add_idea">Нажмите, чтобы добавить идею</string>
+    <string name="login">Войти</string>
+    <string name="password">Пароль</string>
+    <string name="instance_url">URL сервера</string>
+    <string name="username">Имя пользователя</string>
 </resources>

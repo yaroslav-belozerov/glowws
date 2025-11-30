@@ -24,6 +24,7 @@ import com.yaabelozerov.glowws.ui.screen.archive.ArchiveScreenEvent
 import com.yaabelozerov.glowws.ui.screen.idea.IdeaScreenViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import kotlinx.coroutines.Dispatchers
@@ -79,6 +80,26 @@ class MainScreenViewModel
           _loginErr.update { "" }
         } else {
           _loginErr.update { response.toString() }
+        }
+      } catch (e: ClientRequestException) {
+        when (e.response.status.value) {
+          404 -> {
+            val response = Net.httpClient.post("${instanceUrl}/sign-up") {
+              setBody(SignInReq(username, password))
+            }
+            if (response.status.value == 200) {
+              val token: String = response.body()
+              dataStoreManager.setJwt(token)
+              dataStoreManager.setInstanceUrl(instanceUrl)
+              _loginErr.update { "" }
+            } else {
+              _loginErr.update { response.toString() }
+            }
+          }
+
+          else -> {
+            _loginErr.update { e.response.toString() }
+          }
         }
       } catch (e: Throwable) {
         _loginErr.update { e.message ?: e.toString() }
