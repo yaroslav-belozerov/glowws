@@ -3,13 +3,13 @@ import {jwt} from '@elysiajs/jwt'
 import 'dotenv/config'
 import {PrismaPg} from '@prisma/adapter-pg'
 import {PointType, Prisma, PrismaClient} from './generated/prisma/client'
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import IdeaWhereInput = Prisma.IdeaWhereInput;
 import IdeaOrderByWithRelationInput = Prisma.IdeaOrderByWithRelationInput;
 import SortOrder = Prisma.SortOrder;
 import staticPlugin from "@elysiajs/static";
 
-const connectionString = `${process.env.DATABASE_URL}`;
+const connectionString = `${process.env.GWWS_DATABASE_URL}`;
 
 const adapter = new PrismaPg({connectionString})
 const db = new PrismaClient({
@@ -20,7 +20,7 @@ const app = new Elysia()
     .use(
         jwt({
             name: 'jwt',
-            secret: `${process.env.JWT_SECRET}`
+            secret: `${process.env.GWWS_JWT_SECRET}`
         })
     )
     .use(
@@ -310,7 +310,7 @@ const app = new Elysia()
         await Bun.write(`./${path}`, await body.file.arrayBuffer())
         return path
     }, {body: t.Object({file: t.File(), filename: t.String()})})
-    .listen(3000);
+    .listen(3030);
 
 console.log(
     `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
