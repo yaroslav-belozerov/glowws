@@ -7,14 +7,15 @@
   },
   "dependencies": {
     "@elysiajs/jwt": "^1.4.0",
-    "@prisma/adapter-pg": "^7.0.0",
+    "@elysiajs/static": "^1.4.7",
+    "@prisma/adapter-pg": "^7.1.0",
     "bcrypt": "^6.0.0",
     "elysia": "latest"
   },
   "devDependencies": {
-    "@prisma/client": "^7.0.0",
+    "@prisma/client": "^7.1.0",
     "bun-types": "latest",
-    "prisma": "^7.0.0"
+    "prisma": "^7.1.0"
   },
   "module": "src/index.js"
 }
