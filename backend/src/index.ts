@@ -2,7 +2,7 @@ import {Elysia, t, ValidationError} from "elysia";
 import {jwt} from '@elysiajs/jwt'
 import 'dotenv/config'
 import {PrismaPg} from '@prisma/adapter-pg'
-import {PointType, Prisma, PrismaClient} from './generated/prisma/client'
+import {PointType, Prisma, PrismaClient} from '@prisma/client'
 import bcrypt from 'bcryptjs';
 import IdeaWhereInput = Prisma.IdeaWhereInput;
 import IdeaOrderByWithRelationInput = Prisma.IdeaOrderByWithRelationInput;
