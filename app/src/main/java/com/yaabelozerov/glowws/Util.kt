@@ -40,7 +40,7 @@ sealed class Const {
   }
 
   object File {
-    const val MODEL_CHUNK_SIZE = 2048
+    const val MODEL_CHUNK_SIZE = 2048L
     const val IMAGE_CHUNK_SIZE = 512
   }
 }

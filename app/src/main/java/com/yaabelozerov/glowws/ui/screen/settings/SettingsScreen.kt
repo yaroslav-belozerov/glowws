@@ -13,13 +13,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material3.Button
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,16 +30,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.common.collect.ImmutableMap
 import com.yaabelozerov.glowws.R
-import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
+import com.yaabelozerov.glowws.data.InferenceState
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
-import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.domain.model.BooleanSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.ChoiceSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.DoubleSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.MultipleChoiceSettingDomainModel
-import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.domain.model.StringSettingDomainModel
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -52,7 +45,7 @@ fun SettingsScreen(
   modifier: Modifier = Modifier,
   svm: SettingsScreenViewModel,
   onModify: (SettingsKeys, String) -> Unit,
-  aiStatus: Triple<Model?, InferenceManagerState, Long>,
+  aiStatus: InferenceState,
   onNavigateToAi: () -> Unit
 ) {
   val settings = svm.state.collectAsState().value
@@ -115,7 +108,7 @@ fun SettingsScreen(
     }
     stickyHeader { SettingsHeader(icon = Icons.Default.AutoAwesome, name = stringResource(id = R.string.s_cat_ai)) }
     item {
-      AiSettingsEntry(status = aiStatus.second, modelName = aiStatus.first?.name) {
+      AiSettingsEntry(status = aiStatus.operation, modelName = aiStatus.selected?.name) {
         onNavigateToAi()
       }
     }

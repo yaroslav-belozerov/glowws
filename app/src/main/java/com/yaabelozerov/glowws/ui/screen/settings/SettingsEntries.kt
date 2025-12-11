@@ -37,9 +37,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yaabelozerov.glowws.Const.String.JSON_DELIMITER
 import com.yaabelozerov.glowws.R
-import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
-import com.yaabelozerov.glowws.data.local.ai.notBusy
+import com.yaabelozerov.glowws.data.InferenceOp
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
+import com.yaabelozerov.glowws.data.notBusy
 import com.yaabelozerov.glowws.domain.model.BooleanSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.ChoiceSettingDomainModel
 import com.yaabelozerov.glowws.domain.model.MultipleChoiceSettingDomainModel
@@ -197,7 +197,7 @@ fun MultipleChoiceSettingsEntry(
 @Composable
 fun AiSettingsEntry(
     modifier: Modifier = Modifier,
-    status: InferenceManagerState,
+    status: InferenceOp,
     modelName: String?,
     onNavigate: () -> Unit
 ) {
@@ -215,7 +215,7 @@ fun AiSettingsEntry(
               Text(
                   text = stringResource(id = status.resId) + if (status.notBusy()) "" else "...",
                   fontSize = if (!modelName.isNullOrBlank()) 16.sp else 20.sp)
-              if (status == InferenceManagerState.ACTIVE) {
+              if (status == InferenceOp.Ready) {
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = null,

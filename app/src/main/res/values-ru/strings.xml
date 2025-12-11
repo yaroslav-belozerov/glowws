@@ -97,4 +97,5 @@
     <string name="log_out">Выйти</string>
     <string name="account_successfully_created">Аккаунт создан!</string>
     <string name="connect_on">Подключение к</string>
+    <string name="downloading">Downloading</string>
 </resources>

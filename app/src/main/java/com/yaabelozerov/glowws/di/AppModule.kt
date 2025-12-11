@@ -10,16 +10,13 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.EnumJsonAdapter
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.yaabelozerov.glowws.Const
-import com.yaabelozerov.glowws.data.InferenceRepositoryImpl
-import com.yaabelozerov.glowws.data.local.ai.InferenceManager
+import com.yaabelozerov.glowws.data.InferenceRepository
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.media.MediaManager
 import com.yaabelozerov.glowws.data.local.room.GlowwsDatabase
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.data.local.room.ModelDao
-import com.yaabelozerov.glowws.data.local.room.ModelVariant
 import com.yaabelozerov.glowws.data.remote.FeedbackService
-import com.yaabelozerov.glowws.domain.InferenceRepository
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
 import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
 import dagger.Module
@@ -27,12 +24,12 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -72,18 +69,11 @@ object AppModule {
 
   @Singleton
   @Provides
-  fun provideInferenceManager(
-      @ApplicationContext app: Context,
-  ): InferenceManager = InferenceManager(app)
-
-  @Singleton
-  @Provides
   fun provideInferenceRepository(
-      infm: InferenceManager,
       @ApplicationContext app: Context,
       dataStoreManager: DataStoreManager,
       modelDao: ModelDao,
-  ): InferenceRepository = InferenceRepositoryImpl(infm, app, dataStoreManager, modelDao)
+  ): InferenceRepository = InferenceRepository(app, modelDao, dataStoreManager)
 
   @Singleton
   @Provides

@@ -93,7 +93,7 @@ fun App(
           } ?: onError(Exception("No idea id in backstack entry"))
         },
         settings = svm.state.collectAsState().value,
-        aiStatus = aivm.aiStatus.collectAsState().value,
+        aiStatus = aivm.aiStatus.collectAsState().value.operation,
       )
     }
     composable(Nav.SettingsScreenRoute.route) {
@@ -116,10 +116,7 @@ fun App(
       slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut()
     }) {
       AiScreen(
-        models = aivm.models.collectAsState().value,
-        onEvent = { event -> aivm.onEvent(event) },
-        status = aivm.aiStatus.collectAsState().value,
-        error = null
+        aivm = aivm
       )
     }
     composable(Nav.FeedbackRoute.route, enterTransition = {

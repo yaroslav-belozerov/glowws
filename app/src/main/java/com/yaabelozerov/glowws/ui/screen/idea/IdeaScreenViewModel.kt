@@ -8,11 +8,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yaabelozerov.glowws.Net
+import com.yaabelozerov.glowws.data.InferenceRepository
 import com.yaabelozerov.glowws.data.local.media.MediaManager
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
 import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.di.AppModule
-import com.yaabelozerov.glowws.domain.InferenceRepository
 import com.yaabelozerov.glowws.domain.model.PointCreateRequest
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.PointMainUpdateRequest
@@ -101,7 +101,7 @@ class IdeaScreenViewModel
         is IdeaScreenEvent.ExecutePointNew -> generateResponseNew(event.index, event.prompt, ideaId)
         is IdeaScreenEvent.ExecuteCancel -> {
           currentJob?.cancel()
-          inferenceRepository.deactivate()
+          inferenceRepository.interrupt(null)
         }
       }
     } catch (e: Exception) {

@@ -5,7 +5,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -34,7 +33,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
@@ -45,10 +43,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -57,7 +53,6 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.material3.OutlinedTextField
@@ -84,19 +79,14 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import coil.compose.SubcomposeAsyncImage
 import com.yaabelozerov.glowws.R
-import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
+import com.yaabelozerov.glowws.data.InferenceOp
 import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
-import com.yaabelozerov.glowws.data.local.room.Model
-import com.yaabelozerov.glowws.data.local.room.ModelType
-import com.yaabelozerov.glowws.data.local.room.ModelVariant
 import com.yaabelozerov.glowws.data.local.room.PointType
 import com.yaabelozerov.glowws.domain.model.PointDomainModel
 import com.yaabelozerov.glowws.domain.model.Prompt
 import com.yaabelozerov.glowws.domain.model.SettingDomainModel
 import com.yaabelozerov.glowws.ui.screen.main.boolean
-import java.io.File
 
 @Composable
 fun IdeaScreen(
@@ -104,7 +94,7 @@ fun IdeaScreen(
   points: List<PointDomainModel>,
   onEvent: (IdeaScreenEvent) -> Unit,
   settings: Map<SettingsKeys, SettingDomainModel>,
-  aiStatus: Triple<Model?, InferenceManagerState, Long>
+  aiStatus: InferenceOp
 ) {
   BackHandler { onEvent(IdeaScreenEvent.GoBack) }
 
@@ -131,7 +121,7 @@ fun IdeaScreen(
           onExecute = {},
           prompts = emptyList(),
           holdForType = settings[SettingsKeys.LONG_PRESS_TYPE].boolean(),
-          aiStatus = Triple(null, InferenceManagerState.IDLE, 0)
+          aiStatus = aiStatus
         )
       }
     }
@@ -205,7 +195,7 @@ fun AddPointLine(
   onExecute: (Prompt) -> Unit,
   prompts: List<Prompt>,
   holdForType: Boolean,
-  aiStatus: Triple<Model?, InferenceManagerState, Long>
+  aiStatus: InferenceOp
 ) {
   var open by remember { mutableStateOf(false) }
   Row(
@@ -261,7 +251,7 @@ fun AddPointLine(
             Text(stringResource(it.resId))
           }
         }
-        if (aiStatus.first != null && aiStatus.second == InferenceManagerState.ACTIVE) items(prompts) {
+        if (aiStatus == InferenceOp.Ready) items(prompts) {
           Button(
             onClick = {
               onExecute(it)
@@ -351,7 +341,7 @@ fun TextPoint(
   onExecute: (Prompt, String) -> Unit,
   onCancel: () -> Unit,
   showPlaceholders: Boolean,
-  status: Triple<Model?, InferenceManagerState, Long>,
+  status: InferenceOp,
   prompts: List<Prompt>
 ) {
   Crossfade(modifier = modifier, targetState = pt.isMain) { main ->
@@ -359,7 +349,7 @@ fun TextPoint(
       modifier = Modifier
         .clip(MaterialTheme.shapes.medium)
         .then(
-          if (status.third != pt.id && !isBeingModified) {
+          if (status !is InferenceOp.Responding || status is InferenceOp.Responding && status.intoPoint != pt.id) {
           Modifier.clickable { onModify(true) }
         } else {
           Modifier
@@ -375,7 +365,7 @@ fun TextPoint(
         )
         .then(modifier),
     ) {
-      if (status.second == InferenceManagerState.RESPONDING && status.third == pt.id) {
+      if (status is InferenceOp.Responding && status.intoPoint == pt.id) {
         LinearProgressIndicator(
           modifier = Modifier.fillMaxWidth(),
           color = MaterialTheme.colorScheme.primary,
@@ -385,7 +375,7 @@ fun TextPoint(
             MaterialTheme.colorScheme.surfaceContainer
           }
         )
-        if (status.first?.type !in ModelType.LOCAL.variants) IconButton(
+        IconButton(
           onClick = onCancel, modifier = Modifier
             .padding(8.dp)
             .align(Alignment.TopEnd)
@@ -434,7 +424,7 @@ fun TextPoint(
             OutlinedButton(onClick = { onModify(false) }) {
               Text(text = stringResource(id = R.string.label_cancel))
             }
-            if (status.first != null && status.second == InferenceManagerState.ACTIVE) {
+            if (status == InferenceOp.Ready) {
               prompts.forEach {
                 OutlinedButton(
                   onClick = {
