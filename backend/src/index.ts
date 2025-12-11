@@ -1,4 +1,5 @@
 import {Elysia, t, ValidationError, file} from "elysia";
+import { readdirSync, existsSync } from 'fs'
 import {jwt} from '@elysiajs/jwt'
 import 'dotenv/config'
 import {PrismaPg} from '@prisma/adapter-pg'
@@ -9,6 +10,7 @@ import IdeaOrderByWithRelationInput = Prisma.IdeaOrderByWithRelationInput;
 import SortOrder = Prisma.SortOrder;
 import staticPlugin from "@elysiajs/static";
 import { Glob } from "bun";
+import path from 'path'
 
 const connectionString = `${process.env.GWWS_DATABASE_URL}`;
 
@@ -23,9 +25,8 @@ const app = new Elysia()
             name: 'jwt',
             secret: `${process.env.GWWS_JWT_SECRET}`
         })
-    )
-    .use(
-        staticPlugin()
+    ).use(
+        staticPlugin({alwaysStatic: false})
     )
     .onError(({error, status}) => {
         console.log(error)
