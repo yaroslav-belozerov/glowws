@@ -12,3 +12,4 @@ local.properties
 kls_database.db
 .env
 /backend/models
+/backend/public
