@@ -55,6 +55,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.io.readByteArray
 
+data class RevertHelper(
+  val temp: String = "",
+  val prev: PointDomainModel? = null
+)
+
 @HiltViewModel
 class IdeaScreenViewModel
 @Inject constructor(
@@ -66,6 +71,9 @@ class IdeaScreenViewModel
 ) : ViewModel() {
   private val instanceUrl = dataStoreManager.instanceUrl()
   private val jwt = dataStoreManager.jwt()
+
+  private val _temp = MutableStateFlow(RevertHelper())
+  val temp = _temp.asStateFlow()
 
   private val _points = MutableStateFlow(emptyList<PointDomainModel>())
   val points = _points.asStateFlow()
@@ -213,10 +221,17 @@ class IdeaScreenViewModel
   private fun generateResponse(s: Prompt, contentStrings: List<String>, pointId: Long) {
     currentJob = viewModelScope.launch {
       Log.i("generateResponse", "Generating ${s.name} with $contentStrings")
-//      inferenceRepository.generate(s, contentStrings, onUpdate = { modifyPoint(pointId, it) }, pointId, onErr = {
-//        currentJob?.cancel()
-//        inferenceRepository.deactivate()
-//      })
+      _temp.update { RevertHelper(prev = _points.value.find { it.id == pointId }) }
+      inferenceRepository.generate(s, contentStrings, onUpdate = {
+        _temp.update { tmp -> tmp.copy(temp = tmp.temp + it) }
+      }, pointId, onErr = {
+        _temp.update { tmp -> tmp.copy(temp = "") }
+        currentJob?.cancel()
+        inferenceRepository.interrupt(null)
+      }, onSuccess = {
+        modifyPoint(pointId, _temp.value.temp, _temp.value.prev?.isMain ?: false)
+        _temp.update { tmp -> tmp.copy(temp = "") }
+      })
     }
   }
 
@@ -224,10 +239,9 @@ class IdeaScreenViewModel
     addPointAtIndex(PointType.TEXT, ideaId, index.toLong()) { pointId ->
       generateResponse(
         prompt, when (prompt) {
-        Prompt.FillIn -> listOf(points.value[index - 1].content, points.value[index + 1].content)
+        Prompt.FillIn -> listOf(points.value[index - 1].content, points.value[index].content)
         Prompt.Summarize, Prompt.Continue -> points.value.filterIndexed { i, it -> i < index && it.type == PointType.TEXT }
           .map { it.content }
-
         else -> error("Unknown prompt type for new point")
       }, pointId)
     }

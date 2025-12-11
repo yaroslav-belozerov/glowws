@@ -59,6 +59,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -91,6 +92,7 @@ import com.yaabelozerov.glowws.ui.screen.main.boolean
 @Composable
 fun IdeaScreen(
   modifier: Modifier = Modifier,
+  ivm: IdeaScreenViewModel,
   points: List<PointDomainModel>,
   onEvent: (IdeaScreenEvent) -> Unit,
   settings: Map<SettingsKeys, SettingDomainModel>,
@@ -158,7 +160,8 @@ fun IdeaScreen(
           onCancel = { onEvent(IdeaScreenEvent.ExecuteCancel) },
           showPlaceholders = settings[SettingsKeys.SHOW_PLACEHOLDERS].boolean(),
           status = aiStatus,
-          prompts = listOf(Prompt.Rephrase)
+          prompts = listOf(Prompt.Rephrase),
+          temp = ivm.temp.collectAsState().value
         )
 
         PointType.IMAGE -> ImagePoint(
@@ -178,7 +181,7 @@ fun IdeaScreen(
         },
         prompts = listOfNotNull(
           Prompt.FillIn.takeIf {
-          point.type == PointType.TEXT && points.getOrNull(points.indexOf(point) - 1)?.type == PointType.TEXT
+          point.type == PointType.TEXT && points.getOrNull(points.indexOf(point) + 1)?.type == PointType.TEXT
         },
           Prompt.Summarize.takeIf { point.type == PointType.TEXT },
           Prompt.Continue.takeIf { point.type == PointType.TEXT }),
@@ -342,14 +345,15 @@ fun TextPoint(
   onCancel: () -> Unit,
   showPlaceholders: Boolean,
   status: InferenceOp,
-  prompts: List<Prompt>
+  prompts: List<Prompt>,
+  temp: RevertHelper
 ) {
   Crossfade(modifier = modifier, targetState = pt.isMain) { main ->
     Box(
       modifier = Modifier
         .clip(MaterialTheme.shapes.medium)
         .then(
-          if (status !is InferenceOp.Responding || status is InferenceOp.Responding && status.intoPoint != pt.id) {
+          if (status !is InferenceOp.Responding || status.intoPoint != pt.id) {
           Modifier.clickable { onModify(true) }
         } else {
           Modifier
@@ -387,11 +391,17 @@ fun TextPoint(
           Text(
             modifier = Modifier.padding(16.dp),
             style = MaterialTheme.typography.headlineSmall,
-            text = if (it.isBlank() && showPlaceholders) {
-              stringResource(id = R.string.placeholder_tap_to_edit)
-            } else {
-              it
-            },
+            text =
+              if (status is InferenceOp.Responding && status.intoPoint == pt.id) {
+                temp.temp
+              } else {
+                if (it.isBlank() && showPlaceholders) {
+                  stringResource(id = R.string.placeholder_tap_to_edit)
+                } else {
+                  it
+                }
+              }
+              ,
             color = (if (main) {
               MaterialTheme.colorScheme.onPrimaryContainer
             } else {

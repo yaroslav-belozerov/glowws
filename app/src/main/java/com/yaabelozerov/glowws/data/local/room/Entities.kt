@@ -43,9 +43,8 @@ sealed interface ModelType {
 
 @Entity
 data class Model(
-  @PrimaryKey val initialName: String,
+  @PrimaryKey val name: String,
   val type: ModelType,
-  val name: String?,
   val path: String?,
   val isChosen: Boolean = false
 )

@@ -54,11 +54,10 @@ constructor(
     viewModelScope.launch {
       inferenceRepository.addLocalModel(uri) {
         modelDao.clearChosen()
-        val initialName = System.currentTimeMillis().toString()
         inferenceRepository.loadModel(
           model =
             Model(
-              initialName, ModelType.OnDevice, it.split("/").last().removeSuffix(".bin"), it, true
+              it.split("/").last(), ModelType.OnDevice,  it, true
             )
         )
         refresh()
@@ -70,7 +69,7 @@ constructor(
     viewModelScope.launch {
       inferenceRepository.loadModel(model) {
         modelDao.clearChosen()
-        modelDao.insertModel(model.copy(isChosen = true))
+        modelDao.upsertModel(model.copy(isChosen = true))
       }
     }
   }
@@ -88,9 +87,8 @@ constructor(
       Net.get<List<String>>(instanceUrl, "models", jwt.first()).onSuccess { models ->
         models.map {
           Model(
-            initialName = it,
-            type = ModelType.Downloadable(false),
             name = it,
+            type = ModelType.Downloadable(false),
             path = it,
             isChosen = false
           )

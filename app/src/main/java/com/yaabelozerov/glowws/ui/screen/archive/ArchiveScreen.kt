@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import coil.compose.SubcomposeAsyncImage
 import com.yaabelozerov.glowws.Const
 import com.yaabelozerov.glowws.R
@@ -146,15 +147,15 @@ fun ArchiveIdea(
                           alpha = if (previewPoint.content.isBlank()) 0.3f else 1f))
 
           PointType.IMAGE ->
-              SubcomposeAsyncImage(
-                  modifier =
-                      Modifier.padding(16.dp)
-                          .then(if (fullImage) Modifier else Modifier.height(128.dp))
-                          .fillMaxWidth()
-                          .clip(MaterialTheme.shapes.medium),
-                  contentScale = ContentScale.Crop,
-                  model = File(previewPoint.content),
-                  contentDescription = null)
+            AsyncImage(
+                modifier =
+                    Modifier.padding(16.dp)
+                        .then(if (fullImage) Modifier else Modifier.height(128.dp))
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.small),
+                contentScale = ContentScale.Crop,
+                model = previewPoint.content,
+                contentDescription = null)
         }
         Spacer(modifier = Modifier.width(16.dp))
       }

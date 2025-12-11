@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 interface ModelDao {
   @Query("SELECT * FROM model") fun getAllModels(): Flow<List<Model>>
 
-  @Query("SELECT * FROM model WHERE initialName = :initialName") fun getModel(initialName: String): Flow<Model>
+  @Query("SELECT * FROM model WHERE name = :initialName") fun getModel(initialName: String): Flow<Model>
 
   @Query("SELECT * FROM model WHERE isChosen = 1") suspend fun getLastActiveModel(): Model?
 

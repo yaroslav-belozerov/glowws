@@ -242,8 +242,7 @@ const app = new Elysia()
             return status(401, 'Unauthorized')
         }
         await db.$executeRaw`UPDATE "Idea"
-                             SET "priority"          = ${intP},
-                                 "timestampModified" = DEFAULT
+                             SET "priority"          = ${intP}
                              WHERE id = ${intId}`;
         return getIdeasMainScreen(profile.username, search, sort, sort_dir, filter)
     })
@@ -264,8 +263,7 @@ const app = new Elysia()
             return status(401, 'Unauthorized')
         }
         await db.$executeRaw`UPDATE "Idea"
-                             SET "isArchived"        = NOT "isArchived",
-                                 "timestampModified" = DEFAULT
+                             SET "isArchived"        = NOT "isArchived"
                              WHERE id = ${intId}`;
         return getIdeasMainScreen(profile.username, search, sort, sort_dir, filter)
     })
@@ -278,8 +276,7 @@ const app = new Elysia()
         await db.$transaction(
             body.map((id) =>
                 db.$executeRaw`UPDATE "Idea"
-                               SET "isArchived"        = NOT "isArchived",
-                                   "timestampModified" = DEFAULT
+                               SET "isArchived"        = NOT "isArchived"
                                WHERE id = ${id}`
             )
         )
@@ -343,11 +340,11 @@ console.log(
 );
 
 const getIdeasMainScreen = (username: any, search: any, sort: any, sort_dir: any, filter: any) => {
-    const order = matchSort(sort, sort_dir);
+    const orderBy = matchSort(sort, sort_dir);
     const where = matchFilter(filter, username, search)
     return db.idea.findMany({
-        where: where,
-        orderBy: order,
+        where,
+        orderBy,
         include: {
             points: {
                 orderBy: [{isMain: 'desc'}, {index: 'asc'}],
@@ -365,9 +362,7 @@ function matchFilter(filter: any, owner: any, search: any): IdeaWhereInput {
     const query = `${search}`.replaceAll("%", () => "\\%").replaceAll("_", () => "\\_")
     const points = (search == undefined || search == "" ? {} : {
         some: {
-            pointContent: {
-                contains: `%${query}%`
-            }
+            AND: [{pointContent: {contains: `%${query}%`}}, {type: PointType.TEXT}]
         }
     })
 

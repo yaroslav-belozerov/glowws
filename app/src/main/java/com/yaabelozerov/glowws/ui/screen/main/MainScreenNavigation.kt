@@ -72,20 +72,14 @@ fun App(
       exitTransition = {
         slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down) + fadeOut()
       }) { backStackEntry ->
-      val discardText = stringResource(R.string.m_idea_discarded)
       IdeaScreen(
         modifier = Modifier.consumeWindowInsets(innerPadding),
+        ivm = ivm,
         points = ivm.points.collectAsState().value,
         onEvent = {
           backStackEntry.arguments?.getLong("id")?.let { id ->
             ivm.onEvent(
               event = it, ideaId = id, onBack = {
-//                            mvm.tryDiscardEmpty(id) {
-//                              snackbar.second.launch {
-//                                snackbar.first.showSnackbar(
-//                                    discardText, duration = SnackbarDuration.Short)
-//                              }
-//                            }
                 mvm.fetchMainScreen()
                 navCtrl.navigateUp()
               }, onError = onError

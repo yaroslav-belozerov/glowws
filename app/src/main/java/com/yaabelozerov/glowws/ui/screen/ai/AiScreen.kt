@@ -56,10 +56,15 @@ fun AiScreen(
           modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically
         ) {
           Column {
-            Text(text = model.name.toString())
+            Text(text = model.name)
             if (model.type is ModelType.Downloadable) {
               Text(
                 if (model.type.isDownloaded) "Downloaded" else "Not downloaded",
+                style = MaterialTheme.typography.labelMedium
+              )
+            } else if (model.type is ModelType.OnDevice) {
+              Text(
+                "On device",
                 style = MaterialTheme.typography.labelMedium
               )
             }

@@ -26,6 +26,7 @@ import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -92,7 +93,7 @@ class InferenceRepository(
    * @param onErr called if an exception occurs while generating.
    */
   suspend fun generate(
-    prompt: Prompt, contentStrings: List<String>, onUpdate: (String) -> Unit, pointId: Long, onErr: () -> Unit
+    prompt: Prompt, contentStrings: List<String>, onUpdate: (String) -> Unit, pointId: Long, onErr: () -> Unit, onSuccess: () -> Unit
   ) {
     _state.update { it.copy(operation = InferenceOp.Responding(pointId)) }
     try {
@@ -118,6 +119,7 @@ class InferenceRepository(
             }\nuser: ${contentStrings.joinToString("\nuser: ")}\nassistant:"
           }
           execute(message, onUpdate) {
+            onSuccess()
             _state.update { it.copy(operation = InferenceOp.Ready) }
           }
         }
@@ -141,6 +143,7 @@ class InferenceRepository(
   fun interrupt(e: Exception?) {
     e?.let { Toast.makeText(app, it.localizedMessage, Toast.LENGTH_SHORT).show() }
     _state.update { it.copy(operation = InferenceOp.Ready) }
+    setStop()
   }
 
   /**
@@ -165,28 +168,43 @@ class InferenceRepository(
 
 
       is ModelType.Downloadable -> {
-        if (model.path != null && model.name != null) {
-          val file = File(model.path)
-          if (!file.exists() || !model.type.isDownloaded) {
-            _state.update { it.copy(selected = model, operation = InferenceOp.Downloading(0f)) }
-            Net.httpClient.prepareGet("${instanceUrl.first()}/download") {
-              parameter("file", model.name)
-              cookie("auth", jwt.first())
-            }.execute { httpResponse ->
-              val channel = httpResponse.bodyAsChannel()
-              importModel(model.name, channel, httpResponse.contentLength(), {
-                _state.update { src -> src.copy(operation = InferenceOp.Downloading(it)) }
-              }) {
-                modelDao.upsertModel(model.copy(path = it, type = ModelType.Downloadable(true)))
-                _state.update { src -> src.copy(selected = model, operation = InferenceOp.Ready) }
+        suspend fun performLoad(path: String) {
+          _state.update { it.copy(selected = model, operation = InferenceOp.Activating) }
+
+          tryLoadModel(path).onSuccess { inference ->
+            _state.update { src ->
+              src.copy(selected = model, operation = InferenceOp.Ready, inference = inference)
+            }
+            onSuccess(path)
+          }.onFailure { error ->
+            _err.update { error }
+          }
+        }
+
+        if (model.path != null && File(model.path).exists() && model.type.isDownloaded) {
+          performLoad(model.path)
+        } else {
+          _state.update { it.copy(selected = model, operation = InferenceOp.Downloading(0f)) }
+
+          Net.httpClient.prepareGet("${instanceUrl.first()}/download") {
+            parameter("file", model.name)
+            cookie("auth", jwt.first())
+          }.execute { httpResponse ->
+            val channel = httpResponse.bodyAsChannel()
+            importModel(model.name, channel, httpResponse.contentLength(), { progress ->
+              _state.update { src -> src.copy(operation = InferenceOp.Downloading(progress)) }
+            }) { newPath ->
+              val updatedModel = model.copy(
+                path = newPath,
+                type = ModelType.Downloadable(true)
+              )
+              modelDao.upsertModel(updatedModel)
+              _state.update { src ->
+                src.copy(selected = updatedModel, operation = InferenceOp.Ready)
               }
+              performLoad(updatedModel.path!!)
             }
           }
-          _state.update { it.copy(selected = model, operation = InferenceOp.Activating) }
-          tryLoadModel(model.path).onSuccess {
-            _state.update { src -> src.copy(selected = model, operation = InferenceOp.Ready, inference = it) }
-            onSuccess(model.path)
-          }.onFailure { _err.update { it } }
         }
       }
     }
@@ -203,8 +221,8 @@ class InferenceRepository(
     val previousOp = _state.value.operation
     _state.update { it.copy(operation = InferenceOp.Removing) }
     when (model.type) {
-      ModelType.OnDevice -> model.path?.let {
-        removeModel(model.initialName).onSuccess {
+      ModelType.OnDevice, is ModelType.Downloadable -> model.path?.let {
+        removeModel(model.name).onSuccess {
           _state.update {
             if (it.selected != model) {
               it.copy(operation = previousOp)
@@ -214,8 +232,6 @@ class InferenceRepository(
           }
         }
       }
-
-      else -> TODO()
     }
   }
 
@@ -233,7 +249,6 @@ class InferenceRepository(
           uri.toStrippedFileName(app) + System.currentTimeMillis().toString(),
           ModelType.OnDevice,
           uri.toStrippedFileName(app),
-          ""
         ), operation = InferenceOp.Loading
       )
     }
@@ -327,6 +342,10 @@ class InferenceRepository(
     }
   }
 
+  private val stop = MutableStateFlow(false)
+  val stopSignal = stop.asStateFlow()
+  fun setStop() = stop.update { true }
+
   /**
    * Launches text generation for [prompt] using the loaded inference engine.
    * Streams partial outputs via [onUpdate] and calls [onEnd] when finished.
@@ -342,6 +361,8 @@ class InferenceRepository(
       _state.value.inference?.generateResponseAsync(
         prompt
       ) { part, done ->
+        if (done) stop.update { false }
+        if (stop.value) return@generateResponseAsync
         onUpdate(part)
         if (done) {
           onEnd()
