@@ -1,11 +1,14 @@
 services:
   pg:
     image: postgres
-    env_file: ".env"
+    environment:
+      POSTGRES_USER: "${GWWS_POSTGRES_USER}" 
+      POSTGRES_DB: "${GWWS_POSTGRES_DB}"
+      POSTGRES_PASSWORD: "${GWWS_POSTGRES_PASSWORD}"
     ports:
       - "5434:5434"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     restart: unless-stopped
     command: -p 5434
 
@@ -14,7 +17,7 @@ services:
       context: .
     env_file: ".env"
     environment:
-      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pg:5434/${POSTGRES_DB}"
+      GWWS_DATABASE_URL: "postgresql://${GWWS_POSTGRES_USER}:${GWWS_POSTGRES_PASSWORD}@glowwsdb:5444/${GWWS_POSTGRES_DB}"
     depends_on:
       - pg
 

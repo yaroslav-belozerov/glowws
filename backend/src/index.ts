@@ -1,4 +1,4 @@
-import {Elysia, t, ValidationError} from "elysia";
+import {Elysia, t, ValidationError, file} from "elysia";
 import {jwt} from '@elysiajs/jwt'
 import 'dotenv/config'
 import {PrismaPg} from '@prisma/adapter-pg'
@@ -8,6 +8,7 @@ import IdeaWhereInput = Prisma.IdeaWhereInput;
 import IdeaOrderByWithRelationInput = Prisma.IdeaOrderByWithRelationInput;
 import SortOrder = Prisma.SortOrder;
 import staticPlugin from "@elysiajs/static";
+import { Glob } from "bun";
 
 const connectionString = `${process.env.GWWS_DATABASE_URL}`;
 
@@ -294,6 +295,30 @@ const app = new Elysia()
                 ownerUsername: `${profile.username}`,
             }
         });
+    })
+    .get("/models", async ({jwt, status, cookie: {auth}}) => {
+        // @ts-ignore
+        const profile = await jwt.verify(auth.value)
+        if (!profile) {
+            return status(401, 'Unauthorized')
+        }
+
+        const glob = new Glob("*");
+        const files = await glob.scanSync("./models")
+        return Array.from(files);
+    })
+    .get("/download", async ({jwt, status, cookie: {auth}, query: {file: fileName}}) => {
+        // @ts-ignore
+        const profile = await jwt.verify(auth.value)
+        if (!profile) {
+            return status(401, 'Unauthorized')
+        }
+
+        if (!fileName || fileName.includes("..") || fileName.startsWith("/")) {
+            return status(400, 'Bad Request')
+        }
+
+        return file("models/" + fileName);
     })
     .post("/upload", async ({jwt, status, cookie: {auth}, body}) => {
         // @ts-ignore

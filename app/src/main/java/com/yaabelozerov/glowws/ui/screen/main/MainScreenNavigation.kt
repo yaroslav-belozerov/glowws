@@ -98,11 +98,8 @@ fun App(
     }
     composable(Nav.SettingsScreenRoute.route) {
       SettingsScreen(
-        settings = svm.state.collectAsState().value,
+        svm = svm,
         onModify = { key, value -> svm.modifySetting(key, value) { mvm.fetchSort() } },
-        changed = svm.settingsChanged.collectAsState().value,
-        onReset = { svm.resetSettings() },
-        onLogout = { svm.logout() },
         aiStatus = aivm.aiStatus.collectAsState().value,
         onNavigateToAi = { navCtrl.navigate(Nav.AiScreenRoute.route) })
     }

@@ -126,11 +126,6 @@ fun AiScreen(
                           }
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    if (model.type.needsToken && (model.token.orEmpty()).isBlank()) {
-                      Text(
-                          stringResource(R.string.ai_no_token),
-                          color = MaterialTheme.colorScheme.error)
-                    }
                     IconButton(enabled = status.second.notBusy(), onClick = { open = !open }) {
                       Icon(
                           imageVector =
@@ -178,40 +173,6 @@ fun AiScreen(
                                 newName = it
                                 nameChanged = newName != model.name
                               })
-
-                            if (model.type.needsToken) {
-                                var token by remember { mutableStateOf(model.token ?: "") }
-                                var changed by remember { mutableStateOf(false) }
-                                OutlinedTextField(shape = MaterialTheme.shapes.medium,
-                                    trailingIcon = {
-                                        if (changed) IconButton(onClick = {
-                                            onEvent(AiScreenEvent.Edit(model.copy(token = token)))
-                                            focusManager.clearFocus()
-                                            changed = false
-                                        }) {
-                                            Icon(
-                                                Icons.Default.Check, "OK"
-                                            )
-                                        }
-                                    },
-                                    prefix = {
-                                        Text(
-                                            stringResource(R.string.ai_model_token),
-                                            modifier = Modifier.padding(0.dp, 0.dp, 8.dp, 0.dp)
-                                        )
-                                    },
-                                    singleLine = true,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .focusRequester(focus),
-                                    value = token,
-                                    onValueChange = {
-                                        token = it
-                                        changed = token != model.token
-                                    },
-                                    visualTransformation = PasswordVisualTransformation()
-                                )
-                            }
                         }
                   }
             }

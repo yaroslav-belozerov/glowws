@@ -7,61 +7,59 @@ import android.widget.Toast
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import com.yaabelozerov.glowws.Net
 import com.yaabelozerov.glowws.R
 import com.yaabelozerov.glowws.data.local.ai.InferenceManager
 import com.yaabelozerov.glowws.data.local.ai.InferenceManagerState
 import com.yaabelozerov.glowws.data.local.room.Model
+import com.yaabelozerov.glowws.data.local.room.ModelDao
 import com.yaabelozerov.glowws.data.local.room.ModelVariant
-import com.yaabelozerov.glowws.data.remote.Content
-import com.yaabelozerov.glowws.data.remote.GigaChatMessage
-import com.yaabelozerov.glowws.data.remote.GigaChatMessageRequest
-import com.yaabelozerov.glowws.data.remote.GigaChatService
-import com.yaabelozerov.glowws.data.remote.Message
-import com.yaabelozerov.glowws.data.remote.OpenRouterRequest
-import com.yaabelozerov.glowws.data.remote.OpenRouterResponse
-import com.yaabelozerov.glowws.data.remote.OpenRouterService
-import com.yaabelozerov.glowws.data.remote.getResponse
 import com.yaabelozerov.glowws.di.AppModule
 import com.yaabelozerov.glowws.domain.InferenceRepository
 import com.yaabelozerov.glowws.domain.model.Prompt
 import com.yaabelozerov.glowws.queryName
+import io.ktor.client.request.cookie
+import io.ktor.client.request.parameter
+import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.contentLength
+import io.ktor.http.headers
+import io.ktor.utils.io.ByteReadChannel
 import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.File
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.temporal.ChronoField
+import kotlin.onSuccess
 
 class InferenceRepositoryImpl(
     private val localInferenceManager: InferenceManager,
-    private val openRouterService: OpenRouterService,
-    private val gigaChatService: GigaChatService,
     private val app: Context,
-    private val moshi: Moshi,
-    private val dataStoreManager: AppModule.DataStoreManager
+    private val dataStoreManager: AppModule.DataStoreManager,
+    private val modelDao: ModelDao,
 ) : InferenceRepository {
   private val _source =
       MutableStateFlow<Triple<Model?, InferenceManagerState, Long>>(
           Triple(null, InferenceManagerState.IDLE, -1L))
   override val source = _source.asStateFlow()
 
+  private val instanceUrl = dataStoreManager.instanceUrl()
+  private val jwt = dataStoreManager.jwt()
+
   private val _response = MutableStateFlow("")
-  val streamingAd: JsonAdapter<OpenRouterResponse> = moshi.adapter(OpenRouterResponse::class.java)
-  val regularAd: JsonAdapter<List<Content>> =
-      moshi
-          .adapter<List<Content>?>(
-              Types.newParameterizedType(List::class.java, Content::class.java))
-          .lenient()
 
   override fun deactivate() {
     _source.update { it.copy(second = InferenceManagerState.ACTIVE, third = -1L) }
@@ -75,11 +73,10 @@ class InferenceRepositoryImpl(
       onErr: () -> Unit
   ) {
     _source.update { it.copy(second = InferenceManagerState.RESPONDING, third = pointId) }
-    val token = _source.value.first?.token ?: ""
     _response.update { "" }
     try {
       when (_source.value.first?.type) {
-        ModelVariant.ONDEVICE -> {
+        ModelVariant.ONDEVICE, ModelVariant.DOWNLOADABLE -> {
           val message =
               when (prompt) {
                 Prompt.FillIn ->
@@ -99,122 +96,6 @@ class InferenceRepositoryImpl(
             _source.update { it.copy(second = InferenceManagerState.ACTIVE, third = -1L) }
           }
         }
-
-        ModelVariant.OPENROUTER -> {
-          val remoteMessages =
-              when (prompt) {
-                Prompt.FillIn ->
-                    listOf(
-                        Message(
-                            role = "system",
-                            content =
-                                listOf(Content(text = app.resources.getString(prompt.prompt)))),
-                        Message(content = listOf(Content(text = contentStrings[0]))),
-                        Message(content = listOf(Content(text = contentStrings[1]))))
-
-                Prompt.Rephrase ->
-                    listOf(
-                        Message(
-                            role = "system",
-                            content =
-                                listOf(Content(text = app.resources.getString(prompt.prompt))),
-                        ),
-                        Message(content = listOf(Content(text = contentStrings[0]))))
-
-                Prompt.Summarize,
-                Prompt.Continue ->
-                    listOf(
-                        Message(
-                            role = "system",
-                            content =
-                                listOf(Content(text = app.resources.getString(prompt.prompt))),
-                        )) + contentStrings.map { Message(content = listOf(Content(text = it))) }
-              }
-          openRouterService
-              .generate(
-                  OpenRouterRequest(
-                      messages = remoteMessages, model = _source.value.first!!.path!!),
-                  token)
-              .enqueue(
-                  object : Callback<ResponseBody> {
-                    override fun onResponse(p0: Call<ResponseBody>, p1: Response<ResponseBody>) {
-                      val reader = p1.body()?.byteStream()?.bufferedReader()
-                      if (reader == null) {
-                        _source.update {
-                          it.copy(second = InferenceManagerState.ACTIVE, third = -1L)
-                        }
-                        return
-                      }
-                      val scope = CoroutineScope(Dispatchers.IO)
-                      scope.launch {
-                        getResponse(reader, streamingAd, regularAd) {
-                              _source.update {
-                                it.copy(second = InferenceManagerState.ACTIVE, third = -1L)
-                              }
-                              _response.update { "" }
-                            }
-                            .collect { resp ->
-                              _response.update {
-                                it + resp?.choices?.get(0)?.delta?.content.orEmpty()
-                              }
-                              onUpdate(_response.value)
-                            }
-                      }
-                    }
-
-                    override fun onFailure(p0: Call<ResponseBody>, p1: Throwable) {
-                      Log.e("InferenceRepository", p1.message.toString())
-                    }
-                  })
-        }
-
-        ModelVariant.GIGACHAT -> {
-//          val remoteMessages =
-//              when (prompt) {
-//                Prompt.FillIn ->
-//                    listOf(
-//                        GigaChatMessage(
-//                            role = "system", content = app.resources.getString(prompt.prompt)),
-//                        GigaChatMessage(content = contentStrings[0]),
-//                        GigaChatMessage(content = contentStrings[1]))
-//
-//                Prompt.Rephrase ->
-//                    listOf(
-//                        GigaChatMessage(
-//                            role = "system", content = app.resources.getString(prompt.prompt)),
-//                        GigaChatMessage(content = contentStrings[0]))
-//
-//                Prompt.Summarize,
-//                Prompt.Continue ->
-//                    listOf(
-//                        GigaChatMessage(
-//                            role = "system",
-//                            content = app.resources.getString(prompt.prompt),
-//                        )) + contentStrings.map { GigaChatMessage(content = it) }
-//              }
-//          dataStoreManager.getTempTokenExpiry().collect { expiresAt ->
-//            if (expiresAt == 0L || Instant.ofEpochMilli(expiresAt) < Instant.now()) {
-//              val authResp =
-//                  gigaChatService.auth(rqiu = UUID.randomUUID().toString(), token = "Basic $token")
-//              dataStoreManager.setTempToken(authResp.accessToken)
-//              dataStoreManager.setTempTokenExpiry(authResp.expiresAt)
-//            }
-//            dataStoreManager.getTempToken().collect { tempToken ->
-//              val generated =
-//                  gigaChatService.generate(
-//                      token = "Bearer $tempToken",
-//                      request =
-//                          GigaChatMessageRequest(
-//                              model =
-//                                  _source.value.first?.path ?: error("No model path in GigaChat"),
-//                              messages = remoteMessages))
-//              _response.update { generated.gigaChatChoices[0].message.content }
-//              onUpdate(_response.value)
-//              _source.update { it.copy(second = InferenceManagerState.ACTIVE, third = -1L) }
-//            }
-//          }
-        }
-
         null -> TODO()
       }
     } catch (e: Exception) {
@@ -238,7 +119,27 @@ class InferenceRepositoryImpl(
             }
           }
 
-      else -> _source.update { it.copy(second = InferenceManagerState.ACTIVE) }
+      ModelVariant.DOWNLOADABLE -> {
+        if (model.path != null && model.name != null) {
+          val file = File(model.path)
+          if (!file.exists()) {
+            runCatching {
+              Net.httpClient.prepareGet("${instanceUrl.first()}/download") {
+                parameter("file", model.name)
+                cookie("auth", jwt.first())
+              }.execute { httpResponse ->
+                val channel = httpResponse.bodyAsChannel()
+                localInferenceManager.importModel(model.name, channel, httpResponse.contentLength()) {
+                  modelDao.upsertModel(model.copy(path = it))
+                  _source.update { src -> src.copy(first = model, second = InferenceManagerState.ACTIVE) }
+                }
+              }
+            }.onSuccess {
+              println("SUCCESS!!!")
+            }.onFailure { it.printStackTrace() }
+          }
+        }
+      }
     }
     callback()
   }
@@ -266,14 +167,15 @@ class InferenceRepositoryImpl(
   override suspend fun addLocalModel(uri: Uri, callback: suspend (String) -> Unit) {
     _source.update {
       it.copy(
-          Model(-1L, ModelVariant.ONDEVICE, uri.toStrippedFileName(app), ""),
-          InferenceManagerState.LOADING)
+        first = Model(uri.toStrippedFileName(app) + System.currentTimeMillis().toString(), ModelVariant.ONDEVICE, uri.toStrippedFileName(app), ""),
+        second = InferenceManagerState.LOADING
+      )
     }
     localInferenceManager.importModel(uri, callback)
   }
 
   override fun unloadModel() {
-    _source.update { it.copy(null, InferenceManagerState.IDLE, -1L) }
+    _source.update { it.copy(first = null, second = InferenceManagerState.IDLE, third = -1L) }
     localInferenceManager.unloadModel()
   }
 }

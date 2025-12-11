@@ -4,6 +4,8 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yaabelozerov.glowws.Net
+import com.yaabelozerov.glowws.data.local.ai.InferenceManager
 import com.yaabelozerov.glowws.data.local.room.Model
 import com.yaabelozerov.glowws.data.local.room.ModelDao
 import com.yaabelozerov.glowws.data.local.room.ModelType
@@ -12,9 +14,11 @@ import com.yaabelozerov.glowws.di.AppModule
 import com.yaabelozerov.glowws.di.SettingsManager
 import com.yaabelozerov.glowws.domain.InferenceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -24,6 +28,7 @@ class AiScreenViewModel
 constructor(
     private val settingsManager: SettingsManager,
     private val inferenceRepository: InferenceRepository,
+    private val inferenceManager: InferenceManager,
     private val modelDao: ModelDao,
     private val dataStoreManager: AppModule.DataStoreManager
 ) : ViewModel() {
@@ -35,12 +40,15 @@ constructor(
   private val _models: MutableStateFlow<Map<ModelType, List<Model>>> = MutableStateFlow(emptyMap())
   val models = _models.asStateFlow()
 
+  val jwt = dataStoreManager.jwt()
+  val instanceUrl = dataStoreManager.instanceUrl()
+
   val aiStatus = inferenceRepository.source.also { Log.i("source", it.toString()) }
 
   init {
     viewModelScope.launch {
       modelDao.getLastActiveModel()?.let {
-        inferenceRepository.loadModel(it) { modelDao.upsertModel(it.copy(isChosen = true)) }
+        inferenceRepository.loadModel(it) { modelDao.insertModel(it.copy(isChosen = true)) }
       }
       refresh()
     }
@@ -54,11 +62,11 @@ constructor(
     viewModelScope.launch {
       inferenceRepository.addLocalModel(uri) {
         modelDao.clearChosen()
+        val initialName = System.currentTimeMillis().toString()
         val mod =
             Model(
-                0, ModelVariant.ONDEVICE, it.split("/").last().removeSuffix(".bin"), it, null, true)
-        val id = modelDao.upsertModel(mod)
-        inferenceRepository.loadModel(model = mod.copy(id = id))
+                initialName, ModelVariant.ONDEVICE, it.split("/").last().removeSuffix(".bin"), it, true)
+        inferenceRepository.loadModel(model = mod.copy(initialName = initialName))
         refresh()
       }
     }
@@ -68,7 +76,7 @@ constructor(
     viewModelScope.launch {
       inferenceRepository.loadModel(model) {
         modelDao.clearChosen()
-        modelDao.upsertModel(model.copy(isChosen = true))
+        modelDao.insertModel(model.copy(isChosen = true))
       }
     }
   }
@@ -85,15 +93,23 @@ constructor(
     }
   }
 
-  fun importRemoteModels(list: List<Model>) {
-    viewModelScope.launch {
-      list.forEach { modelDao.upsertModel(it) }
-      refresh()
-    }
+  private suspend fun loadRemoteModels() {
+      Net.get<List<String>>(instanceUrl, "models", jwt.first()).onSuccess { models ->
+        models.map { Model(
+          initialName = it,
+          type = ModelVariant.DOWNLOADABLE,
+          name = it,
+          path = it,
+          isChosen = false
+        ) }.forEach { modelDao.insertModel(it) }
+      }.onFailure {
+        it.printStackTrace()
+      }
   }
 
   fun refresh() {
-    viewModelScope.launch {
+    viewModelScope.launch(Dispatchers.IO) {
+      loadRemoteModels()
       modelDao.getAllModels().collect { models -> _models.update { models.toTypeMap() } }
     }
   }
@@ -101,7 +117,7 @@ constructor(
   fun unloadModel() {
     viewModelScope.launch {
       aiStatus.value.first?.let {
-        modelDao.upsertModel(it.copy(isChosen = false))
+        modelDao.insertModel(it.copy(isChosen = false))
         inferenceRepository.unloadModel()
         refresh()
       }
@@ -110,10 +126,10 @@ constructor(
 
   fun editModel(model: Model) {
     viewModelScope.launch {
-      modelDao.upsertModel(model)
+      modelDao.insertModel(model)
       if (model.type != ModelVariant.ONDEVICE) {
         modelDao.getLastActiveModel()?.let {
-          inferenceRepository.loadModel(it) { modelDao.upsertModel(it.copy(isChosen = true)) }
+          inferenceRepository.loadModel(it) { modelDao.insertModel(it.copy(isChosen = true)) }
         }
       }
       refresh()

@@ -34,6 +34,8 @@ constructor(
   private val _settingsChanged = MutableStateFlow(false)
   val settingsChanged = _settingsChanged.asStateFlow()
 
+  val login = dataStoreManager.login()
+
   private val default =
       ImmutableMap.copyOf(
           settingsMapper.toDomainModel(settingsMapper.matchSettingsSchema(SettingsList())))

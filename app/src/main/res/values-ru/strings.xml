@@ -94,4 +94,7 @@
     <string name="password">Пароль</string>
     <string name="instance_url">URL сервера</string>
     <string name="username">Имя пользователя</string>
+    <string name="log_out">Выйти</string>
+    <string name="account_successfully_created">Аккаунт создан!</string>
+    <string name="connect_on">Подключение к</string>
 </resources>

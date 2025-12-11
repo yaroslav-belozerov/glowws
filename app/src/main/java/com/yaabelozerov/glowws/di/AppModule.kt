@@ -16,10 +16,9 @@ import com.yaabelozerov.glowws.data.local.datastore.SettingsKeys
 import com.yaabelozerov.glowws.data.local.media.MediaManager
 import com.yaabelozerov.glowws.data.local.room.GlowwsDatabase
 import com.yaabelozerov.glowws.data.local.room.IdeaDao
+import com.yaabelozerov.glowws.data.local.room.ModelDao
 import com.yaabelozerov.glowws.data.local.room.ModelVariant
 import com.yaabelozerov.glowws.data.remote.FeedbackService
-import com.yaabelozerov.glowws.data.remote.GigaChatService
-import com.yaabelozerov.glowws.data.remote.OpenRouterService
 import com.yaabelozerov.glowws.domain.InferenceRepository
 import com.yaabelozerov.glowws.domain.mapper.IdeaMapper
 import com.yaabelozerov.glowws.domain.mapper.SettingsMapper
@@ -81,30 +80,10 @@ object AppModule {
   @Provides
   fun provideInferenceRepository(
       infm: InferenceManager,
-      ors: OpenRouterService,
-      gcs: GigaChatService,
       @ApplicationContext app: Context,
-      moshi: Moshi,
-      dataStoreManager: DataStoreManager
-  ): InferenceRepository = InferenceRepositoryImpl(infm, ors, gcs, app, moshi, dataStoreManager)
-
-  @Singleton
-  @Provides
-  fun provideOpenRoutedService(moshi: Moshi): OpenRouterService =
-      Retrofit.Builder()
-          .baseUrl(ModelVariant.OPENROUTER.baseUrl)
-          .addConverterFactory(MoshiConverterFactory.create(moshi))
-          .build()
-          .create(OpenRouterService::class.java)
-
-  @Singleton
-  @Provides
-  fun provideGigaChatService(moshi: Moshi): GigaChatService =
-      Retrofit.Builder()
-          .baseUrl("https://ngw.devices.sberbank.ru:9443/api/v2/oauth/")
-          .addConverterFactory(MoshiConverterFactory.create(moshi))
-          .build()
-          .create(GigaChatService::class.java)
+      dataStoreManager: DataStoreManager,
+      modelDao: ModelDao,
+  ): InferenceRepository = InferenceRepositoryImpl(infm, app, dataStoreManager, modelDao)
 
   @Singleton
   @Provides
@@ -142,5 +121,9 @@ object AppModule {
     private val instanceKey = stringPreferencesKey("instance")
     fun instanceUrl(): Flow<String> = settingsDataStore.data.map { it[instanceKey].orEmpty() }
     suspend fun setInstanceUrl(token: String) = settingsDataStore.edit { it[instanceKey] = token }
+
+    private val loginKey = stringPreferencesKey("login")
+    fun login(): Flow<String> = settingsDataStore.data.map { it[loginKey].orEmpty() }
+    suspend fun setLogin(login: String) = settingsDataStore.edit { it[loginKey] = login }
   }
 }

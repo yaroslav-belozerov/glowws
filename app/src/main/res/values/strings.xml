@@ -94,4 +94,7 @@
     <string name="password">Password</string>
     <string name="instance_url">Instance URL</string>
     <string name="username">Username</string>
+    <string name="log_out">Log out</string>
+    <string name="account_successfully_created">Account successfully created!</string>
+    <string name="connect_on">Connect on</string>
 </resources>

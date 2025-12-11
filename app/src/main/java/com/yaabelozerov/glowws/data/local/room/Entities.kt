@@ -34,22 +34,19 @@ enum class PointType(val resId: Int, val icon: ImageVector) {
 }
 
 enum class ModelType(val resId: Int, vararg val variants: ModelVariant) {
-  LOCAL(R.string.ai_local, ModelVariant.ONDEVICE),
-  NETWORK(R.string.ai_network, ModelVariant.OPENROUTER, ModelVariant.GIGACHAT)
+  LOCAL(R.string.ai_local, ModelVariant.ONDEVICE, ModelVariant.DOWNLOADABLE),
 }
 
-enum class ModelVariant(val needsToken: Boolean = false, val baseUrl: String = "") {
+enum class ModelVariant() {
   ONDEVICE,
-  OPENROUTER(true, "https://openrouter.ai/api/v1/"),
-  GIGACHAT(true, "")
+  DOWNLOADABLE,
 }
 
 @Entity
 data class Model(
-    @PrimaryKey(autoGenerate = true) val id: Long,
+    @PrimaryKey val initialName: String,
     val type: ModelVariant,
     val name: String?,
     val path: String?,
-    val token: String? = null,
     val isChosen: Boolean = false
 )
