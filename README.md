@@ -4,22 +4,20 @@
 - [Status](#-project-status)
 - [Features](#-features)
 - [Installation](#-installation-for-android)
-- [Design Principles](#-design-principles)
+- [Screenshots](#-screenshots)
 - [Links](#-useful-links)
 - [Contribute](#-contributions)
-- [License](#-license)
 
 ## 👁 Project Status
-⏸️ Stable version released. Development temporarily paused.
+▶️ In development. 
 
 ## 💡 Features
-- [x] Fast and powerful idea-taking: add paragraphs, media inside 
+- [x] Fast idea-taking: add paragraphs, media inside 
 - [x] Flexible idea organization with relevance
-- [x] Offline AI-powered paraphrasing and explanation 
+- [x] Offline AI-powered text manipulation 
 
 ## 🏗 Installation for Android
 ### Prebuilt APK
-This is not available on Google Play Store.  
 You can download signed .apk files in [Releases](https://github.com/yaroslav-belozerov/glowws/releases/).
 ### Build yourself
 ```sh
@@ -28,16 +26,23 @@ cd ./glowws
 ./gradlew assembleRelease
 ```
 
-## 🖌️ Design Principles
-**Privacy.** Glowws does not collect any user data without their explicit consent.  
-**Transparency.** Glowws is open-source. Internet connection isn't required to use the app.  
-**Ease of use.** Glowws is fast and minimalist.
+## 🖌️ Screenshots 
+<div style="display: flex; flex-wrap: wrap;">
+<img alt="Glowws Banner" src="/misc/promo/screenshots/login.png" style="width: 30%" />
+<img alt="Glowws Banner" src="/misc/promo/screenshots/main.jpg" style="width: 30%" />
+<img alt="Glowws Banner" src="/misc/promo/screenshots/sort_filter.png" style="width: 30%" />
+<img alt="Glowws Banner" src="/misc/promo/screenshots/archive.png" style="width: 30%" />
+<img alt="Glowws Banner" src="/misc/promo/screenshots/idea_menu.png" style="width: 30%" />
+<img alt="Glowws Banner" src="/misc/promo/screenshots/idea.png" style="width: 30%" />
+<img alt="Glowws Banner" src="/misc/promo/screenshots/gen_options.jpg" style="width: 30%" />
+<img alt="Glowws Banner" src="/misc/promo/screenshots/generation.png" style="width: 30%" />
+<img alt="Glowws Banner" src="/misc/promo/screenshots/settings.png" style="width: 30%" />
+<img alt="Glowws Banner" src="/misc/promo/screenshots/models.png" style="width: 30%" />
+</div>
 
 ## 🔗 Useful links
 - 🎨 [**Design prototype on Figma**](https://www.figma.com/file/XHeWuyqFiYjxuU1FQnz3ca/Glowws?type=design&mode=design&t=pttUdCNgLtngGWx1-1)
 
 ## 👥 Contributions
-Any suggestions or changes are reviewed via GitHub issues. Please open one if you would like to provide feedback or contribute.
+Any suggestions or changes are reviewed via GitHub issues. Please open one if you would like to provide feedback or contribute. The project is licensed under the MIT License.
 
-## ⚖ License
-The project is licensed under the MIT License. The libraries used are subject to their own licenses.
